@@ -38,11 +38,11 @@ export function ActivityPage({ teamId }: { teamId: string }) {
     
     api.getActivityWithFilters(teamId, params.toString())
       .then(res => {
-        const grouped: Record<string, any> = {}
+        const grouped: Record<string, ActivityRow> = {}
         const events: Record<string, number> = {}
         res.data.data.forEach((r: ActivityData) => {
           if (!grouped[r.date]) grouped[r.date] = { date: r.date }
-          grouped[r.date][r.source] = (grouped[r.date][r.source] || 0) + r.count
+          grouped[r.date][r.source] = ((grouped[r.date][r.source] as number) || 0) + r.count
           events[r.event] = (events[r.event] || 0) + r.count
         })
         setData(Object.values(grouped))
