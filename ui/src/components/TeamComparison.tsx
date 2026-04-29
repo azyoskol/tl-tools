@@ -20,19 +20,32 @@ interface ChartData {
 export function TeamComparison() {
   const [data, setData] = useState<TeamData[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [view, setView] = useState<'chart' | 'table'>('chart')
   const { getTeamName } = useTeams()
 
   useEffect(() => {
+    setError(null)
     api.getTeamsComparison()
       .then(res => {
         setData(res.data)
         setLoading(false)
       })
-      .catch(err => { console.error(err); setLoading(false) })
+      .catch(err => { 
+        console.error(err); 
+        setError(err.message || 'Failed to load team comparison data')
+        setLoading(false) 
+      })
   }, [])
 
   if (loading) return <div>Loading comparison...</div>
+  if (error) return <div style={{ color: '#d32f2f', padding: '24px', textAlign: 'center' }}>
+    <div style={{ fontSize: '16px', marginBottom: '8px' }}>Error: {error}</div>
+    <button onClick={() => { setLoading(true); setError(null); api.getTeamsComparison().then(res => { setData(res.data); setLoading(false) }).catch(err => { setError(err.message || 'Failed to load team comparison data'); setLoading(false) }) }} 
+      style={{ padding: '8px 16px', cursor: 'pointer', background: '#1976d2', color: '#fff', border: 'none', borderRadius: '4px' }}>
+      Retry
+    </button>
+  </div>
   if (!data.length) return <div>No comparison data</div>
 
   const chartData: ChartData[] = data.map(t => ({

@@ -9,18 +9,31 @@ const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff8042', '#0088FE', '#00C49F'
 export function Dashboard() {
   const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const { getTeamName } = useTeams()
 
   useEffect(() => {
+    setError(null)
     api.getDashboard()
       .then(res => {
         setData(res.data)
         setLoading(false)
       })
-      .catch(err => { console.error(err); setLoading(false) })
+      .catch(err => { 
+        console.error(err); 
+        setError(err.message || 'Failed to load dashboard data')
+        setLoading(false) 
+      })
   }, [])
 
   if (loading) return <div>Loading dashboard...</div>
+  if (error) return <div style={{ color: '#d32f2f', padding: '24px', textAlign: 'center' }}>
+    <div style={{ fontSize: '16px', marginBottom: '8px' }}>Error: {error}</div>
+    <button onClick={() => { setLoading(true); setError(null); api.getDashboard().then(res => { setData(res.data); setLoading(false) }).catch(err => { setError(err.message || 'Failed to load dashboard data'); setLoading(false) }) }} 
+      style={{ padding: '8px 16px', cursor: 'pointer', background: '#1976d2', color: '#fff', border: 'none', borderRadius: '4px' }}>
+      Retry
+    </button>
+  </div>
   if (!data) return <div>No data available</div>
 
   const { overview, activity, top_teams, hourly, top_authors } = data

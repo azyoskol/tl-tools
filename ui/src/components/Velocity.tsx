@@ -28,14 +28,27 @@ interface VelocityResponse {
 export function Velocity({ teamId }: { teamId: string }) {
   const [data, setData] = useState<VelocityResponse | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    setError(null)
     api.getVelocity(teamId)
       .then(res => { setData(res.data); setLoading(false) })
-      .catch(err => { console.error(err); setLoading(false) })
+      .catch(err => { 
+        console.error(err); 
+        setError(err.message || 'Failed to load velocity data')
+        setLoading(false) 
+      })
   }, [teamId])
 
   if (loading) return <div>Loading velocity...</div>
+  if (error) return <div style={{ color: '#d32f2f', padding: '24px', textAlign: 'center' }}>
+    <div style={{ fontSize: '16px', marginBottom: '8px' }}>Error: {error}</div>
+    <button onClick={() => { setLoading(true); setError(null); api.getVelocity(teamId).then(res => { setData(res.data); setLoading(false) }).catch(err => { setError(err.message || 'Failed to load velocity data'); setLoading(false) }) }} 
+      style={{ padding: '8px 16px', cursor: 'pointer', background: '#1976d2', color: '#fff', border: 'none', borderRadius: '4px' }}>
+      Retry
+    </button>
+  </div>
   if (!data) return <div>No velocity data</div>
 
   return (

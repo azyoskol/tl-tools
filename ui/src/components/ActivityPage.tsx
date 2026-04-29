@@ -29,8 +29,11 @@ export function ActivityPage({ teamId }: { teamId: string }) {
   const [eventCounts, setEventCounts] = useState<Record<string, number>>({})
   const [filters, setFilters] = useState<Filters>({ source: '', from: '', to: '' })
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    setError(null)
+    setLoading(true)
     const params = new URLSearchParams()
     if (filters.source) params.append('source', filters.source)
     if (filters.from) params.append('from_date', filters.from)
@@ -49,7 +52,11 @@ export function ActivityPage({ teamId }: { teamId: string }) {
         setEventCounts(events)
         setLoading(false)
       })
-      .catch(err => { console.error(err); setLoading(false) })
+      .catch(err => { 
+        console.error(err); 
+        setError(err.message || 'Failed to load activity data')
+        setLoading(false) 
+      })
   }, [teamId, filters])
 
   const topSources = React.useMemo(() => {
@@ -70,6 +77,13 @@ export function ActivityPage({ teamId }: { teamId: string }) {
   }, [eventCounts])
 
   if (loading) return <div>Loading activity...</div>
+  if (error) return <div style={{ color: '#d32f2f', padding: '24px', textAlign: 'center' }}>
+    <div style={{ fontSize: '16px', marginBottom: '8px' }}>Error: {error}</div>
+    <button onClick={() => { setFilters({...filters}) }} 
+      style={{ padding: '8px 16px', cursor: 'pointer', background: '#1976d2', color: '#fff', border: 'none', borderRadius: '4px' }}>
+      Retry
+    </button>
+  </div>
 
   return (
     <div style={{ padding: '24px' }}>
