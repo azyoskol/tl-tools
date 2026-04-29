@@ -1,0 +1,19 @@
+clickhouse:
+  host: "localhost"
+  port: 9000
+
+webhook:
+  port: 8080
+
+teams:
+  - id: "550e8400-e29b-41d4-a716-446655440000"
+    name: "Platform Team"
+    sources:
+      - type: "github"
+        config:
+          token: "${GITHUB_TOKEN}"
+          webhook_secret: "${WEBHOOK_SECRET}"
+      - type: "gitlab"
+        config:
+          token: "${GITLAB_TOKEN}"
+          webhook_secret: "${WEBHOOK_SECRET}"
