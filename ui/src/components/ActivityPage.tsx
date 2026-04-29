@@ -10,6 +10,14 @@ interface ActivityData {
   count: number
 }
 
+interface ActivityRow {
+  date: string
+  git?: number
+  pm?: number
+  cicd?: number
+  [key: string]: string | number | undefined
+}
+
 interface Filters {
   source: string
   from: string
@@ -17,7 +25,7 @@ interface Filters {
 }
 
 export function ActivityPage({ teamId }: { teamId: string }) {
-  const [data, setData] = useState<any[]>([])
+  const [data, setData] = useState<ActivityRow[]>([])
   const [eventCounts, setEventCounts] = useState<Record<string, number>>({})
   const [filters, setFilters] = useState<Filters>({ source: '', from: '', to: '' })
   const [loading, setLoading] = useState(true)
@@ -48,7 +56,10 @@ export function ActivityPage({ teamId }: { teamId: string }) {
     const counts: Record<string, number> = {}
     data.forEach(d => {
       Object.keys(d).forEach(k => {
-        if (k !== 'date') counts[k] = (counts[k] || 0) + (d[k] || 0)
+        if (k !== 'date') {
+          const val = d[k]
+          counts[k] = (counts[k] || 0) + (typeof val === 'number' ? val : 0)
+        }
       })
     })
     return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 3)
@@ -112,7 +123,7 @@ export function ActivityPage({ teamId }: { teamId: string }) {
           <div>
             <h4>Top Sources</h4>
             <ul>
-              {topSources.map(([source, count]: [string, any]) => (
+              {topSources.map(([source, count]: [string, number]) => (
                 <li key={source}>{source}: {count} events</li>
               ))}
             </ul>
@@ -120,7 +131,7 @@ export function ActivityPage({ teamId }: { teamId: string }) {
           <div>
             <h4>Top Event Types</h4>
             <ul>
-              {topEvents.map(([event, count]: [string, any]) => (
+              {topEvents.map(([event, count]: [string, number]) => (
                 <li key={event}>{event}: {count} events</li>
               ))}
             </ul>

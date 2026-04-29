@@ -1,6 +1,23 @@
 from fastapi import APIRouter, HTTPException
+from datetime import datetime
+import logging
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/teams", tags=["overview"])
+
+ALLOWED_SOURCES = {'git', 'pm', 'cicd'}
+
+DATE_FORMAT = '%Y-%m-%d'
+
+def validate_date(date_str: str) -> bool:
+    try:
+        datetime.strptime(date_str, DATE_FORMAT)
+        return True
+    except (ValueError, TypeError):
+        return False
+
+def validate_source(source: str) -> bool:
+    return source in ALLOWED_SOURCES
 
 @router.get("/{team_id}/overview")
 def get_overview(team_id: str):
@@ -50,29 +67,40 @@ def get_overview(team_id: str):
 def get_activity(team_id: str, from_date: str = None, to_date: str = None, source: str = None):
     from clickhouse.client import execute
     
+    if from_date and not validate_date(from_date):
+        raise HTTPException(400, "Invalid from_date format. Use YYYY-MM-DD")
+    if to_date and not validate_date(to_date):
+        raise HTTPException(400, "Invalid to_date format. Use YYYY-MM-DD")
+    if source and not validate_source(source):
+        raise HTTPException(400, f"Invalid source. Allowed: {', '.join(ALLOWED_SOURCES)}")
+    
+    params = {"team_id": team_id}
     date_filter = "occurred_at > now() - INTERVAL 7 DAY"
     if from_date:
-        date_filter = f"occurred_at > toDate('{from_date}')"
+        params["from_date"] = from_date
+        date_filter = "occurred_at > toDate(:from_date)"
     if to_date:
+        params["to_date"] = to_date
         if from_date:
-            date_filter += f" AND occurred_at < toDate('{to_date}') + INTERVAL 1 DAY"
+            date_filter += " AND occurred_at < toDate(:to_date) + INTERVAL 1 DAY"
         else:
-            date_filter += f" AND occurred_at < toDate('{to_date}') + INTERVAL 1 DAY"
+            date_filter = "occurred_at < toDate(:to_date) + INTERVAL 1 DAY"
     if source:
-        date_filter += f" AND source_type = '{source}'"
+        params["source"] = source
+        date_filter += " AND source_type = :source"
     
     try:
         result = execute(f"""
             SELECT toDate(occurred_at) as date, source_type, event_type, count()
             FROM events
-            WHERE team_id = '{team_id}'
+            WHERE team_id = :team_id
             AND {date_filter}
             GROUP BY date, source_type, event_type
             ORDER BY date
-        """)
+        """, params)
     except Exception as e:
-        print(f"Error: {e}")
-        result = []
+        logger.error(f"Activity query error: {e}")
+        raise HTTPException(500, "Failed to fetch activity data")
     
     return {
         "team_id": team_id,
