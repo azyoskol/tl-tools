@@ -2,6 +2,15 @@ import { render, screen, waitFor } from '@testing-library/react'
 import { describe, it, expect, vi } from 'vitest'
 import { TeamComparison } from '../../src/components/TeamComparison'
 
+vi.mock('../../src/hooks/useTeams', () => ({
+  useTeams: () => ({
+    teams: { 'team-1': 'Team 1' },
+    loading: false,
+    error: null,
+    getTeamName: (id: string) => 'Team 1',
+  }),
+}))
+
 vi.mock('../../src/api/client', () => ({
   api: {
     getTeamsComparison: vi.fn().mockResolvedValue({
