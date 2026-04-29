@@ -1,6 +1,13 @@
 version: '3.8'
 
 services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
   clickhouse:
     image: clickhouse/clickhouse-server:23.8
     ports:
@@ -73,3 +80,4 @@ services:
 
 volumes:
   clickhouse_data:
+  redis_data:

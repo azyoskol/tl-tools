@@ -13,7 +13,11 @@ import (
 
 	"github.com/ClickHouse/clickhouse-go/v2"
 	"github.com/google/uuid"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"gopkg.in/yaml.v3"
+	
+	"github.com/azyoskol/tl-tools/collectors/shared/retry"
 )
 
 type Config struct {
@@ -46,6 +50,26 @@ type Event struct {
 
 var config Config
 
+var (
+	eventsProcessed = prometheus.NewCounter(
+		prometheus.CounterOpts{
+			Name: "collector_events_total",
+			Help: "Total number of events processed",
+		},
+	)
+	eventsFailed = prometheus.NewCounter(
+		prometheus.CounterOpts{
+			Name: "collector_events_failed_total",
+			Help: "Total number of events failed",
+		},
+	)
+)
+
+func init() {
+	prometheus.MustRegister(eventsProcessed)
+	prometheus.MustRegister(eventsFailed)
+}
+
 func main() {
 	loadConfig(&config)
 
@@ -74,6 +98,7 @@ func loadConfig(cfg *Config) {
 func startWebhookServer(ctx context.Context) {
 	http.HandleFunc("/webhook/github", handleGitHubWebhook)
 	http.HandleFunc("/webhook/gitlab", handleGitLabWebhook)
+	http.Handle("/metrics", promhttp.Handler())
 
 	addr := fmt.Sprintf(":%d", config.Webhook.Port)
 	log.Printf("Starting webhook server on %s", addr)
@@ -141,18 +166,43 @@ func findTeamBySource(sourceType string) string {
 
 func saveEvent(event Event) {
 	ctx := context.Background()
+	
+	err := retry.WithRetry(ctx, func() error {
+		conn, err := clickhouse.Open(&clickhouse.Options{
+			Addr: []string{fmt.Sprintf("%s:%d", config.ClickHouse.Host, config.ClickHouse.Port)},
+		})
+		if err != nil {
+			return fmt.Errorf("failed to connect: %w", err)
+		}
+		defer conn.Close()
+
+		query := `INSERT INTO events (id, source_type, event_type, team_id, payload, occurred_at) VALUES (?, ?, ?, ?, ?, ?)`
+		return conn.AsyncInsert(ctx, query, false, event.ID, event.SourceType, event.EventType, event.TeamID, event.Payload, event.OccurredAt)
+	})
+	
+	if err != nil {
+		log.Printf("Failed to insert event after retries: %v", err)
+		eventsFailed.Inc()
+		saveToDLQ(event, err.Error())
+	} else {
+		eventsProcessed.Inc()
+	}
+}
+
+func saveToDLQ(event Event, errorMsg string) {
+	ctx := context.Background()
 	conn, err := clickhouse.Open(&clickhouse.Options{
 		Addr: []string{fmt.Sprintf("%s:%d", config.ClickHouse.Host, config.ClickHouse.Port)},
 	})
 	if err != nil {
-		log.Printf("Failed to connect to ClickHouse: %v", err)
+		log.Printf("Failed to connect to ClickHouse for DLQ: %v", err)
 		return
 	}
 	defer conn.Close()
 
-	query := `INSERT INTO events (id, source_type, event_type, team_id, payload, occurred_at) VALUES (?, ?, ?, ?, ?, ?)`
-	if err := conn.AsyncInsert(ctx, query, false, event.ID, event.SourceType, event.EventType, event.TeamID, event.Payload, event.OccurredAt); err != nil {
-		log.Printf("Failed to insert event: %v", err)
+	query := `INSERT INTO events_dlq (id, original_payload, source_type, event_type, team_id, error_reason, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)`
+	if err := conn.AsyncInsert(ctx, query, false, event.ID, string(event.Payload), event.SourceType, event.EventType, event.TeamID, errorMsg, time.Now()); err != nil {
+		log.Printf("Failed to save to DLQ: %v", err)
 	}
 }
 
