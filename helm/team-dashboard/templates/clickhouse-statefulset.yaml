@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "team-dashboard.fullname" . }}-clickhouse
+  labels:
+    {{- include "team-dashboard.labels" . | nindent 4 }}
+    component: clickhouse
+spec:
+  serviceName: {{ include "team-dashboard.fullname" . }}-clickhouse
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "team-dashboard.selectorLabels" . | nindent 6 }}
+      component: clickhouse
+  template:
+    metadata:
+      labels:
+        {{- include "team-dashboard.selectorLabels" . | nindent 8 }}
+        component: clickhouse
+    spec:
+      containers:
+        - name: clickhouse
+          image: {{ .Values.clickhouse.image }}
+          ports:
+            - containerPort: 8123
+              name: http
+            - containerPort: 9000
+              name: tcp
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/clickhouse
+          resources:
+            {{- toYaml .Values.clickhouse.resources | nindent 12 }}
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: {{ .Values.clickhouse.storage }}

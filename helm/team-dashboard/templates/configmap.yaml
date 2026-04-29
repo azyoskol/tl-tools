@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "team-dashboard.fullname" . }}-config
+  labels:
+    {{- include "team-dashboard.labels" . | nindent 4 }}
+data:
+  CLICKHOUSE_HOST: {{ include "team-dashboard.fullname" . }}-clickhouse
+  CLICKHOUSE_PORT: "9000"
+  API_PORT: "8000"
+  UI_PORT: "80"
