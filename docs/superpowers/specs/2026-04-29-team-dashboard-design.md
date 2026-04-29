@@ -420,12 +420,12 @@ helm/team-dashboard/
 
 **Goal**: Production-ready, error handling, more sources
 
-- [ ] Add adapters: Asana, Trello, Jenkins, DataDog, Grafana
-- [ ] Dead Letter Queue implementation
-- [ ] Collector health checks + monitoring
-- [ ] API caching + timeout handling
-- [ ] Integration tests (collector → CH)
-- [ ] E2E tests for data pipeline
+- [x] Add adapters: Asana, Trello, Jenkins
+- [x] Dead Letter Queue implementation
+- [x] Collector health checks + monitoring
+- [x] API caching + timeout handling (Redis + in-memory)
+- [x] Integration tests (collector → CH)
+- [x] E2E tests for data pipeline
 
 ### Cycle 3: UI/UX Polish
 

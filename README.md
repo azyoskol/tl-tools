@@ -122,6 +122,23 @@ curl -X POST http://localhost:8000/api/v1/webhook/receive \
   -d '{"source":"git","event_type":"pr_opened","team_id":"550e8400-e29b-41d4-a716-446655440000","payload":{"pr_id":"123","author":"john"}}'
 ```
 
+## Health & Monitoring
+
+| Endpoint | Description |
+|----------|-------------|
+| `GET /api/v1/collectors/status` | Check collector health status |
+| `POST /api/v1/collectors/{id}/heartbeat` | Collector heartbeat |
+| `GET /api/v1/collectors/{id}/metrics` | Prometheus metrics |
+| `GET /api/v1/dLQ` | Dead Letter Queue events |
+| `POST /api/v1/dLQ/{id}/retry` | Retry failed event |
+
+## Caching
+
+Redis is used for API response caching:
+- Dashboard: 5 min TTL
+- Overview: 2 min TTL
+- Fallback to in-memory cache if Redis unavailable
+
 ## Configuration
 
 ### Collector config.yaml
@@ -217,11 +234,19 @@ docker-compose up -d
 ## Roadmap
 
 - [x] Cycle 1: MVP (basic metrics)
-- [ ] Cycle 2: Reliability (error handling, more adapters)
+- [x] Cycle 2: Reliability (error handling, more adapters)
 - [ ] Cycle 3: UI/UX (detailed charts, velocity)
 - [ ] Cycle 4: Advanced (management API, filters)
 - [ ] Cycle 5: Performance (query optimization)
 - [ ] Cycle 6: Enterprise (SSO, RBAC)
+
+### Cycle 2 Features (Completed)
+- Dead Letter Queue (DLQ) with retry API
+- Collector health checks with heartbeat
+- Prometheus metrics (`/metrics` endpoint)
+- Redis caching with in-memory fallback
+- New adapters: Asana, Trello, Jenkins
+- Integration + E2E tests (28 tests)
 
 ## License
 
