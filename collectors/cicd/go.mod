@@ -1,4 +1,4 @@
-module github.com/tl-tools/collectors/cicd
+module github.com/azyoskol/collectors/cicd
 
 go 1.21
 

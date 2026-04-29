@@ -15,7 +15,7 @@ import (
 	"github.com/google/uuid"
 	"gopkg.in/yaml.v3"
 
-	"github.com/tl-tools/collectors/cicd/adapters"
+	"github.com/azyoskol/collectors/cicd/adapters"
 )
 
 type Config struct {

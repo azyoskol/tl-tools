@@ -1,4 +1,4 @@
-module github.com/tl-tools/collectors/git
+module github.com/azyoskol/collectors/git
 
 go 1.21
 

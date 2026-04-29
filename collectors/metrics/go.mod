@@ -1,4 +1,4 @@
-module github.com/tl-tools/collectors/metrics
+module github.com/azyoskol/collectors/metrics
 
 go 1.26.1
 
