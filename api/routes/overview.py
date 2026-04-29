@@ -47,16 +47,27 @@ def get_overview(team_id: str):
     }
 
 @router.get("/{team_id}/activity")
-def get_activity(team_id: str):
+def get_activity(team_id: str, from_date: str = None, to_date: str = None, source: str = None):
     from clickhouse.client import execute
+    
+    date_filter = "occurred_at > now() - INTERVAL 7 DAY"
+    if from_date:
+        date_filter = f"occurred_at > toDate('{from_date}')"
+    if to_date:
+        if from_date:
+            date_filter += f" AND occurred_at < toDate('{to_date}') + INTERVAL 1 DAY"
+        else:
+            date_filter += f" AND occurred_at < toDate('{to_date}') + INTERVAL 1 DAY"
+    if source:
+        date_filter += f" AND source_type = '{source}'"
     
     try:
         result = execute(f"""
-            SELECT toDate(occurred_at) as date, source_type, count()
+            SELECT toDate(occurred_at) as date, source_type, event_type, count()
             FROM events
             WHERE team_id = '{team_id}'
-            AND occurred_at > now() - INTERVAL 7 DAY
-            GROUP BY date, source_type
+            AND {date_filter}
+            GROUP BY date, source_type, event_type
             ORDER BY date
         """)
     except Exception as e:
@@ -65,7 +76,8 @@ def get_activity(team_id: str):
     
     return {
         "team_id": team_id,
-        "data": [{"date": str(r[0]), "source": r[1], "count": r[2]} for r in result]
+        "data": [{"date": str(r[0]), "source": r[1], "event": r[2], "count": r[3]} for r in result],
+        "filters": {"from": from_date, "to": to_date, "source": source}
     }
 
 @router.get("/{team_id}/velocity")
