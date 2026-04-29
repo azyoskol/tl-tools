@@ -12,6 +12,13 @@ interface Filters {
   to?: string
 }
 
+interface ActivityItem {
+  date: string
+  source: string
+  event: string
+  count: number
+}
+
 export function Heatmap({ teamId, filters }: { teamId: string; filters?: Filters }) {
   const [data, setData] = useState<HeatmapData[]>([])
 
@@ -23,7 +30,7 @@ export function Heatmap({ teamId, filters }: { teamId: string; filters?: Filters
     
     api.getActivityWithFilters(teamId, params.toString()).then(res => {
       const hourly: Record<string, number> = {}
-      res.data.data.forEach((r: any) => {
+      res.data.data.forEach((r: ActivityItem) => {
         const day = r.date
         const source = r.source
         const key = `${day}-${source}`

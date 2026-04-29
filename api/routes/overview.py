@@ -23,37 +23,42 @@ def validate_source(source: str) -> bool:
 def get_overview(team_id: str):
     from clickhouse.client import execute
     
+    params = {"team_id": team_id}
+    
     try:
-        prs_awaiting = execute(f"""
+        prs_awaiting = execute("""
             SELECT count() FROM events
-            WHERE team_id = '{team_id}'
+            WHERE team_id = :team_id
             AND source_type = 'git'
             AND event_type IN ('pr_opened', 'pr_review_request')
             AND occurred_at > now() - INTERVAL 2 DAY
-        """)[0][0]
-    except:
+        """, params)[0][0]
+    except Exception as e:
+        logger.error(f"Overview PRs query error: {e}")
         prs_awaiting = 0
     
     try:
-        blocked_tasks = execute(f"""
+        blocked_tasks = execute("""
             SELECT count() FROM events
-            WHERE team_id = '{team_id}'
+            WHERE team_id = :team_id
             AND source_type = 'pm'
             AND event_type = 'task_blocked'
             AND occurred_at > now() - INTERVAL 1 DAY
-        """)[0][0]
-    except:
+        """, params)[0][0]
+    except Exception as e:
+        logger.error(f"Overview blocked tasks query error: {e}")
         blocked_tasks = 0
     
     try:
-        ci_failures = execute(f"""
+        ci_failures = execute("""
             SELECT count() FROM events
-            WHERE team_id = '{team_id}'
+            WHERE team_id = :team_id
             AND source_type = 'cicd'
             AND event_type = 'pipeline_failed'
             AND occurred_at > now() - INTERVAL 1 HOUR
-        """)[0][0]
-    except:
+        """, params)[0][0]
+    except Exception as e:
+        logger.error(f"Overview CI failures query error: {e}")
         ci_failures = 0
     
     return {
@@ -119,45 +124,46 @@ def get_velocity(team_id: str):
 def get_insights(team_id: str):
     from clickhouse.client import execute
     
+    params = {"team_id": team_id}
     alerts = []
     
     try:
-        stale_prs = execute(f"""
+        stale_prs = execute("""
             SELECT count() FROM events
-            WHERE team_id = '{team_id}'
+            WHERE team_id = :team_id
             AND source_type = 'git'
             AND event_type = 'pr_opened'
             AND occurred_at < now() - INTERVAL 2 DAY
-        """)[0][0]
+        """, params)[0][0]
         if stale_prs > 0:
             alerts.append(f"{stale_prs} PRs waiting for review > 2 days")
-    except:
-        pass
+    except Exception as e:
+        logger.error(f"Insights stale PRs query error: {e}")
     
     try:
-        blocked = execute(f"""
+        blocked = execute("""
             SELECT count() FROM events
-            WHERE team_id = '{team_id}'
+            WHERE team_id = :team_id
             AND source_type = 'pm'
             AND event_type = 'task_blocked'
             AND occurred_at > now() - INTERVAL 1 DAY
-        """)[0][0]
+        """, params)[0][0]
         if blocked > 0:
             alerts.append(f"{blocked} tasks blocked")
-    except:
-        pass
+    except Exception as e:
+        logger.error(f"Insights blocked tasks query error: {e}")
     
     try:
-        ci_fail = execute(f"""
+        ci_fail = execute("""
             SELECT count() FROM events
-            WHERE team_id = '{team_id}'
+            WHERE team_id = :team_id
             AND source_type = 'cicd'
             AND event_type = 'pipeline_failed'
             AND occurred_at > now() - INTERVAL 1 HOUR
-        """)[0][0]
+        """, params)[0][0]
         if ci_fail > 0:
             alerts.append(f"{ci_fail} CI failures in last hour")
-    except:
-        pass
+    except Exception as e:
+        logger.error(f"Insights CI failures query error: {e}")
     
     return {"team_id": team_id, "insights": alerts}
