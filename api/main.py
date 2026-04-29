@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routes import teams, overview, health, dashboard, webhook, dlq, collectors
+from routes import teams, overview, health, dashboard, webhook, dlq, collectors, velocity
 from middleware.cache import CacheMiddleware
 from dotenv import load_dotenv
 
@@ -25,6 +25,7 @@ app.include_router(dashboard.router)
 app.include_router(webhook.router)
 app.include_router(dlq.router)
 app.include_router(collectors.router)
+app.include_router(velocity.router)
 
 @app.get("/")
 def root():
