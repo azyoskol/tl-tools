@@ -3,8 +3,9 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import { api } from '../api/client'
 import { DashboardData } from '../types'
 import { useTeams } from '../hooks/useTeams'
+import { CHART_COLORS } from '../constants'
 
-const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff8042', '#0088FE', '#00C49F', '#FFBB28', '#FF8042']
+
 
 export function Dashboard() {
   const [data, setData] = useState<DashboardData | null>(null)
@@ -122,7 +123,7 @@ export function Dashboard() {
                   label={({ author, count }) => `${author}: ${count}`}
                 >
                   {top_authors.map((_, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
                   ))}
                 </Pie>
                 <Tooltip />
