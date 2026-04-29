@@ -25,7 +25,7 @@ def get_velocity(team_id: str):
         velocity = execute("""
             SELECT toDate(occurred_at) as date, count() as tasks
             FROM events
-            WHERE team_id = {team_id:UUID}
+            WHERE team_id = %(team_id)s
             AND source_type = 'pm'
             AND event_type = 'task_completed'
             AND occurred_at > now() - INTERVAL 30 DAY
@@ -40,7 +40,7 @@ def get_velocity(team_id: str):
         cycle_time = execute("""
             SELECT toDate(occurred_at) as date, event_type, count()
             FROM events
-            WHERE team_id = {team_id:UUID}
+            WHERE team_id = %(team_id)s
             AND source_type = 'pm'
             AND event_type IN ('task_created', 'task_completed')
             AND occurred_at > now() - INTERVAL 14 DAY
@@ -55,7 +55,7 @@ def get_velocity(team_id: str):
         lead_time = execute("""
             SELECT toDate(occurred_at) as date, count()
             FROM events
-            WHERE team_id = {team_id:UUID}
+            WHERE team_id = %(team_id)s
             AND source_type = 'git'
             AND event_type = 'pr_merged'
             AND occurred_at > now() - INTERVAL 14 DAY

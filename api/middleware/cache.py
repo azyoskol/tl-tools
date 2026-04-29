@@ -71,7 +71,7 @@ class CacheMiddleware(BaseHTTPMiddleware):
         return response
     
     def _should_skip_cache(self, request: Request) -> bool:
-        skip_paths = ["/health", "/docs", "/openapi", "/api/v1/collectors"]
+        skip_paths = ["/health", "/docs", "/openapi", "/api/v1/collectors", "/api/v1/teams/"]
         for path in skip_paths:
             if request.url.path.startswith(path):
                 return True

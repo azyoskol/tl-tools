@@ -28,7 +28,7 @@ def get_overview(team_id: str):
     try:
         prs_awaiting = execute("""
             SELECT count() FROM events
-            WHERE team_id = :team_id
+            WHERE team_id = %(team_id)s
             AND source_type = 'git'
             AND event_type IN ('pr_opened', 'pr_review_request')
             AND occurred_at > now() - INTERVAL 2 DAY
@@ -40,7 +40,7 @@ def get_overview(team_id: str):
     try:
         blocked_tasks = execute("""
             SELECT count() FROM events
-            WHERE team_id = :team_id
+            WHERE team_id = %(team_id)s
             AND source_type = 'pm'
             AND event_type = 'task_blocked'
             AND occurred_at > now() - INTERVAL 1 DAY
@@ -52,7 +52,7 @@ def get_overview(team_id: str):
     try:
         ci_failures = execute("""
             SELECT count() FROM events
-            WHERE team_id = :team_id
+            WHERE team_id = %(team_id)s
             AND source_type = 'cicd'
             AND event_type = 'pipeline_failed'
             AND occurred_at > now() - INTERVAL 1 HOUR
@@ -98,7 +98,7 @@ def get_activity(team_id: str, from_date: str = None, to_date: str = None, sourc
         result = execute(f"""
             SELECT toDate(occurred_at) as date, source_type, event_type, count()
             FROM events
-            WHERE team_id = :team_id
+            WHERE team_id = %(team_id)s
             AND {date_filter}
             GROUP BY date, source_type, event_type
             ORDER BY date
@@ -113,13 +113,6 @@ def get_activity(team_id: str, from_date: str = None, to_date: str = None, sourc
         "filters": {"from": from_date, "to": to_date, "source": source}
     }
 
-@router.get("/{team_id}/velocity")
-def get_velocity(team_id: str):
-    return {
-        "team_id": team_id,
-        "data": []
-    }
-
 @router.get("/{team_id}/insights")
 def get_insights(team_id: str):
     from clickhouse.client import execute
@@ -130,7 +123,7 @@ def get_insights(team_id: str):
     try:
         stale_prs = execute("""
             SELECT count() FROM events
-            WHERE team_id = :team_id
+            WHERE team_id = %(team_id)s
             AND source_type = 'git'
             AND event_type = 'pr_opened'
             AND occurred_at < now() - INTERVAL 2 DAY
@@ -143,7 +136,7 @@ def get_insights(team_id: str):
     try:
         blocked = execute("""
             SELECT count() FROM events
-            WHERE team_id = :team_id
+            WHERE team_id = %(team_id)s
             AND source_type = 'pm'
             AND event_type = 'task_blocked'
             AND occurred_at > now() - INTERVAL 1 DAY
@@ -156,7 +149,7 @@ def get_insights(team_id: str):
     try:
         ci_fail = execute("""
             SELECT count() FROM events
-            WHERE team_id = :team_id
+            WHERE team_id = %(team_id)s
             AND source_type = 'cicd'
             AND event_type = 'pipeline_failed'
             AND occurred_at > now() - INTERVAL 1 HOUR
