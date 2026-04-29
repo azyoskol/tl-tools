@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routes import teams, overview, health, dashboard, webhook
+from routes import teams, overview, health, dashboard, webhook, dlq
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -20,6 +20,7 @@ app.include_router(overview.router)
 app.include_router(health.router)
 app.include_router(dashboard.router)
 app.include_router(webhook.router)
+app.include_router(dlq.router)
 
 @app.get("/")
 def root():
