@@ -103,6 +103,25 @@ docker exec -i clickhouse clickhouse-client < clickhouse/schema.sql
 docker exec -i clickhouse clickhouse-client < clickhouse/mock_data.sql
 ```
 
+## Webhooks
+
+Configure webhooks in your source systems to send events to the dashboard:
+
+| Endpoint | Description |
+|----------|-------------|
+| `POST /api/v1/webhook/receive` | Generic webhook (source, event_type, payload) |
+| `POST /api/v1/webhook/github` | GitHub webhooks (auto-parsed) |
+| `POST /api/v1/webhook/gitlab` | GitLab webhooks (auto-parsed) |
+| `POST /api/v1/webhook/jira` | Jira webhooks (auto-parsed) |
+| `POST /api/v1/webhook/linear` | Linear webhooks (auto-parsed) |
+
+Example generic webhook:
+```bash
+curl -X POST http://localhost:8000/api/v1/webhook/receive \
+  -H "Content-Type: application/json" \
+  -d '{"source":"git","event_type":"pr_opened","team_id":"550e8400-e29b-41d4-a716-446655440000","payload":{"pr_id":"123","author":"john"}}'
+```
+
 ## Configuration
 
 ### Collector config.yaml

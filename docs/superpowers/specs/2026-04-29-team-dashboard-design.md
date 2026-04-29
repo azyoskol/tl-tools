@@ -199,12 +199,18 @@ WHERE event_type IN ('pr_stale', 'task_overdue', 'ci_failed', 'task_blocked');
 | Endpoint | Description |
 |----------|-------------|
 | `GET /api/v1/teams` | List all teams |
+| `GET /api/v1/teams/{id}` | Get single team |
 | `GET /api/v1/teams/{id}/overview` | Main dashboard — key metrics |
 | `GET /api/v1/teams/{id}/activity` | Activity graphs (commits, PRs, tasks) |
 | `GET /api/v1/teams/{id}/velocity` | Velocity and cycle time trends |
 | `GET /api/v1/teams/{id}/insights` | Automated attention items |
-| `GET /api/v1/teams/{id}/alerts` | Active alerts and notifications |
-| `GET /health/collectors` | Collector status (last success time) |
+| `GET /api/v1/dashboard` | Overall dashboard with aggregated metrics |
+| `POST /api/v1/webhook/receive` | Generic webhook endpoint |
+| `POST /api/v1/webhook/github` | GitHub webhook endpoint |
+| `POST /api/v1/webhook/gitlab` | GitLab webhook endpoint |
+| `POST /api/v1/webhook/jira` | Jira webhook endpoint |
+| `POST /api/v1/webhook/linear` | Linear webhook endpoint |
+| `GET /health` | Health check |
 | `GET /health/clickhouse` | DB connectivity check |
 
 ### 2.4 React Dashboard
@@ -399,13 +405,16 @@ helm/team-dashboard/
 
 **Goal**: Working dashboard with basic metrics
 
-- [ ] Go collectors (git, pm, cicd, metrics) with basic adapters
-- [ ] ClickHouse schema + materialized views
-- [ ] FastAPI with core endpoints
-- [ ] React dashboard with team selector + overview
-- [ ] Docker Compose for local dev
-- [ ] Basic Helm chart for K8s
-- [ ] Unit tests for collectors and API
+- [x] Go collectors (git, pm, cicd, metrics) with basic adapters
+- [x] ClickHouse schema + materialized views
+- [x] FastAPI with core endpoints + webhooks
+- [x] React dashboard with team selector + overview
+- [x] Docker Compose for local dev
+- [x] Basic Helm chart for K8s
+- [x] Unit tests for collectors and API
+- [x] Overall dashboard with aggregated metrics
+- [x] Bar charts (replaced line charts)
+- [x] Additional visualizations (hourly activity, top authors)
 
 ### Cycle 2: Reliability & Coverage
 

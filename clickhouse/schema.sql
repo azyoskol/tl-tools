@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS events (
     event_type String,
     team_id UUID,
     project_id Nullable(UUID),
-    payload JSON,
+    payload String,
     occurred_at DateTime64(3),
     created_at DateTime DEFAULT now()
 ) ENGINE = MergeTree()
@@ -117,7 +117,7 @@ CREATE TABLE IF NOT EXISTS events_dlq (
     source_type Enum8('git', 'pm', 'cicd', 'metrics'),
     event_type String,
     team_id UUID,
-    payload JSON,
+    payload String,
     occurred_at DateTime64(3),
     error_message String,
     created_at DateTime DEFAULT now()
