@@ -6,11 +6,21 @@ const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff8042', '#0088FE', '#00C49F'
 
 export function Dashboard() {
   const [data, setData] = useState<any>(null)
+  const [teams, setTeams] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    api.getDashboard()
-      .then(res => { setData(res.data); setLoading(false) })
+    Promise.all([
+      api.getDashboard(),
+      api.getTeams()
+    ])
+      .then(([dashRes, teamsRes]) => {
+        setData(dashRes.data)
+        const teamMap: Record<string, string> = {}
+        teamsRes.data.forEach((t: any) => { teamMap[t.id] = t.name })
+        setTeams(teamMap)
+        setLoading(false)
+      })
       .catch(err => { console.error(err); setLoading(false) })
   }, [])
 
@@ -126,7 +136,7 @@ export function Dashboard() {
               <tbody>
                 {top_teams.slice(0, 5).map((t: any, i: number) => (
                   <tr key={i} style={{ borderBottom: '1px solid #eee' }}>
-                    <td style={{ padding: '8px' }}>{t.team_id.slice(0, 8)}...</td>
+                    <td style={{ padding: '8px' }}>{teams[t.team_id] || t.team_id.slice(0, 8)}</td>
                     <td style={{ padding: '8px' }}>{t.source}</td>
                     <td style={{ padding: '8px', textAlign: 'right' }}>{t.count}</td>
                   </tr>
