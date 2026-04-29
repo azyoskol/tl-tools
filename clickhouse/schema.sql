@@ -1,5 +1,13 @@
 -- Team Dashboard MVP - ClickHouse Schema
 
+-- Teams table
+CREATE TABLE IF NOT EXISTS teams (
+    id UUID,
+    name String,
+    created_at DateTime DEFAULT now()
+) ENGINE = MergeTree()
+ORDER BY (id);
+
 -- Raw events table
 CREATE TABLE IF NOT EXISTS events (
     id UUID,
