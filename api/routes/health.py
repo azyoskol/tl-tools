@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from clickhouse.driver import Client
+from clickhouse_driver import Client
 import os
 
 router = APIRouter(prefix="/health", tags=["health"])
