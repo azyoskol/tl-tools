@@ -36,17 +36,22 @@ Automated alerts that draw attention to issues:
    - 7-day activity chart
    - Attention items
 
-2. **Activity** — detailed charts by source
-   - Git: commits, PRs, reviews
-   - PM: tasks, blockers
-   - CI/CD: pipelines, failures
-
-3. **Velocity** — retrospective analysis
+2. **Velocity** — retrospective analysis (NEW in Cycle 3)
    - Cycle time distribution
-   - Velocity per sprint
-   - Lead time trends
+   - Velocity per sprint (30-day trend)
+   - Lead time (PR merge time)
 
-4. **Insights** — recommendations
+3. **Activity** — detailed activity with filters (ENHANCED in Cycle 3)
+   - Filters: date range, source type
+   - Stacked bar chart by source (Git, PM, CI/CD)
+   - Heatmap visualization
+   - Top contributors
+
+4. **Comparison** — team comparison view (NEW in Cycle 3)
+   - Toggle between chart and table views
+   - Grouped bar chart: PRs, Tasks, CI Runs per team
+
+5. **Insights** — recommendations
    - Rule-based alerts
    - Productivity trends
 
@@ -131,6 +136,18 @@ curl -X POST http://localhost:8000/api/v1/webhook/receive \
 | `GET /api/v1/collectors/{id}/metrics` | Prometheus metrics |
 | `GET /api/v1/dLQ` | Dead Letter Queue events |
 | `POST /api/v1/dLQ/{id}/retry` | Retry failed event |
+
+## Team APIs
+
+| Endpoint | Description |
+|----------|-------------|
+| `GET /api/v1/teams` | List all teams |
+| `GET /api/v1/teams/{team_id}` | Get team details |
+| `GET /api/v1/teams/{team_id}/overview` | Team overview metrics |
+| `GET /api/v1/teams/{team_id}/activity` | Team activity (supports filters: from_date, to_date, source) |
+| `GET /api/v1/teams/{team_id}/velocity` | Team velocity metrics (cycle time, lead time) |
+| `GET /api/v1/teams/{team_id}/insights` | Team insights/alerts |
+| `GET /api/v1/teams/comparison` | Compare all teams (PRs, tasks, CI runs) |
 
 ## Caching
 
@@ -235,10 +252,18 @@ docker-compose up -d
 
 - [x] Cycle 1: MVP (basic metrics)
 - [x] Cycle 2: Reliability (error handling, more adapters)
-- [ ] Cycle 3: UI/UX (detailed charts, velocity)
+- [x] Cycle 3: UI/UX (detailed charts, velocity)
 - [ ] Cycle 4: Advanced (management API, filters)
 - [ ] Cycle 5: Performance (query optimization)
 - [ ] Cycle 6: Enterprise (SSO, RBAC)
+
+### Cycle 3 Features (Completed)
+- **Velocity Page**: Cycle time, lead time charts with Recharts
+- **Team Comparison**: Toggle between chart and table views
+- **Activity Page**: Date/source filters, heatmap visualization, top contributors
+- **Tab Navigation**: Overview, Velocity, Activity, Comparison tabs
+- **UI Tests**: 4 component tests (Velocity, TeamComparison, ActivityPage)
+- **Security**: SQL injection fixes, input validation, proper error handling
 
 ### Cycle 2 Features (Completed)
 - Dead Letter Queue (DLQ) with retry API
