@@ -11,7 +11,9 @@ def list_teams():
 @router.get("/{team_id}")
 def get_team(team_id: str):
     from clickhouse.client import execute
-    result = execute(f"SELECT id, name FROM teams WHERE id = '{team_id}'")
+    if team_id == "comparison":
+        raise HTTPException(status_code=404, detail="Team not found")
+    result = execute("SELECT id, name FROM teams WHERE id = %(team_id)s", {"team_id": team_id})
     if not result:
         raise HTTPException(status_code=404, detail="Team not found")
     return {"id": result[0][0], "name": result[0][1]}

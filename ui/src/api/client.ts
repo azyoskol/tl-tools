@@ -12,4 +12,5 @@ export const api = {
   getVelocity: (teamId: string) => client.get(`/teams/${teamId}/velocity`),
   getInsights: (teamId: string) => client.get(`/teams/${teamId}/insights`),
   getDashboard: () => client.get('/dashboard'),
+  getTeamsComparison: () => client.get('/teams/comparison'),
 }
