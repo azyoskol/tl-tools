@@ -1,4 +1,4 @@
-module github.com/azyoskol/collectors/pm
+module github.com/azyoskol/tl-tools/collectors/pm
 
 go 1.21
 
