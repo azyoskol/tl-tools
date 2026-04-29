@@ -1,78 +1,484 @@
--- Mock data for Team Dashboard MVP
+-- Mock data for Team Dashboard MVP (10x volume)
 -- Run this after schema.sql to populate test data
 
 -- Insert teams
 INSERT INTO teams (id, name, created_at) VALUES
     ('550e8400-e29b-41d4-a716-446655440000', 'Platform Team', now()),
     ('550e8400-e29b-41d4-a716-446655440001', 'Backend Team', now()),
-    ('550e8400-e29b-41d4-a716-446655440002', 'Frontend Team', now());
+    ('550e8400-e29b-41d4-a716-446655440002', 'Frontend Team', now()),
+    ('550e8400-e29b-41d4-a716-446655440003', 'Mobile Team', now()),
+    ('550e8400-e29b-41d4-a716-446655440004', 'DevOps Team', now());
 
--- Insert Git events (last 7 days)
--- Platform Team - GitHub events
-INSERT INTO events (id, source_type, event_type, team_id, project_id, payload, occurred_at) VALUES
-    (generateUUID(), 'git', 'push', '550e8400-e29b-41d4-a716-446655440000', NULL, '{"author": "alice", "repo": "platform", "message": "fix: auth bug"}', now() - INTERVAL 1 DAY),
-    (generateUUID(), 'git', 'push', '550e8400-e29b-41d4-a716-446655440000', NULL, '{"author": "bob", "repo": "platform", "message": "feat: add user profile"}', now() - INTERVAL 2 DAY),
-    (generateUUID(), 'git', 'push', '550e8400-e29b-41d4-a716-446655440000', NULL, '{"author": "alice", "repo": "platform", "message": "chore: update deps"}', now() - INTERVAL 3 DAY),
-    (generateUUID(), 'git', 'pr_opened', '550e8400-e29b-41d4-a716-446655440000', NULL, '{"pr_id": 101, "author": "alice", "title": "Fix auth bug", "lines_added": 50, "lines_removed": 10}', now() - INTERVAL 1 DAY),
-    (generateUUID(), 'git', 'pr_opened', '550e8400-e29b-41d4-a716-446655440000', NULL, '{"pr_id": 102, "author": "bob", "title": "Add user profile", "lines_added": 200, "lines_removed": 5}', now() - INTERVAL 3 DAY),
-    (generateUUID(), 'git', 'pr_review_request', '550e8400-e29b-41d4-a716-446655440000', NULL, '{"pr_id": 101, "author": "alice", "reviewer": "bob"}', now() - INTERVAL 1 DAY),
-    (generateUUID(), 'git', 'pr_merged', '550e8400-e29b-41d4-a716-446655440000', NULL, '{"pr_id": 99, "author": "charlie", "title": "Refactor API"}', now() - INTERVAL 5 DAY),
-    (generateUUID(), 'git', 'pr_reviewed', '550e8400-e29b-41d4-a716-446655440000', NULL, '{"pr_id": 99, "reviewer": "alice"}', now() - INTERVAL 5 DAY);
+-- Generate 80 Git pushes per team over 7 days (400 total)
+INSERT INTO events (id, source_type, event_type, team_id, project_id, payload, occurred_at)
+SELECT
+    generateUUID() as id,
+    'git' as source_type,
+    'push' as event_type,
+    team_id,
+    NULL as project_id,
+    payload,
+    occurred_at
+FROM (
+    SELECT
+        '550e8400-e29b-41d4-a716-446655440000' as team_id,
+        format('{"author": "%s", "repo": "platform", "message": "%s"}',
+            arrayElement(['alice', 'bob', 'charlie', 'dave', 'eve', 'frank', 'grace', 'henry'],
+                floor(rand() * 8) + 1),
+            arrayElement(['feat: add new feature', 'fix: bug fix', 'chore: update deps', 'refactor: improve code', 'docs: update docs', 'test: add tests'],
+                floor(rand() * 6) + 1)
+        ) as payload,
+        toDateTime('2026-04-22') + INTERVAL floor(rand() * 168) HOUR as occurred_at
+    FROM numbers(80)
+    UNION ALL
+    SELECT
+        '550e8400-e29b-41d4-a716-446655440001' as team_id,
+        format('{"author": "%s", "repo": "api", "message": "%s"}',
+            arrayElement(['alice', 'bob', 'charlie', 'dave', 'eve', 'frank', 'grace', 'henry'],
+                floor(rand() * 8) + 1),
+            arrayElement(['feat: add new feature', 'fix: bug fix', 'chore: update deps', 'refactor: improve code', 'docs: update docs', 'test: add tests'],
+                floor(rand() * 6) + 1)
+        ) as payload,
+        toDateTime('2026-04-22') + INTERVAL floor(rand() * 168) HOUR as occurred_at
+    FROM numbers(80)
+    UNION ALL
+    SELECT
+        '550e8400-e29b-41d4-a716-446655440002' as team_id,
+        format('{"author": "%s", "repo": "web-ui", "message": "%s"}',
+            arrayElement(['alice', 'bob', 'charlie', 'dave', 'eve', 'frank', 'grace', 'henry'],
+                floor(rand() * 8) + 1),
+            arrayElement(['feat: add new feature', 'fix: bug fix', 'chore: update deps', 'refactor: improve code', 'docs: update docs', 'test: add tests'],
+                floor(rand() * 6) + 1)
+        ) as payload,
+        toDateTime('2026-04-22') + INTERVAL floor(rand() * 168) HOUR as occurred_at
+    FROM numbers(80)
+    UNION ALL
+    SELECT
+        '550e8400-e29b-41d4-a716-446655440003' as team_id,
+        format('{"author": "%s", "repo": "mobile-app", "message": "%s"}',
+            arrayElement(['alice', 'bob', 'charlie', 'dave', 'eve', 'frank', 'grace', 'henry'],
+                floor(rand() * 8) + 1),
+            arrayElement(['feat: add new feature', 'fix: bug fix', 'chore: update deps', 'refactor: improve code', 'docs: update docs', 'test: add tests'],
+                floor(rand() * 6) + 1)
+        ) as payload,
+        toDateTime('2026-04-22') + INTERVAL floor(rand() * 168) HOUR as occurred_at
+    FROM numbers(80)
+    UNION ALL
+    SELECT
+        '550e8400-e29b-41d4-a716-446655440004' as team_id,
+        format('{"author": "%s", "repo": "infrastructure", "message": "%s"}',
+            arrayElement(['alice', 'bob', 'charlie', 'dave', 'eve', 'frank', 'grace', 'henry'],
+                floor(rand() * 8) + 1),
+            arrayElement(['feat: add new feature', 'fix: bug fix', 'chore: update deps', 'refactor: improve code', 'docs: update docs', 'test: add tests'],
+                floor(rand() * 6) + 1)
+        ) as payload,
+        toDateTime('2026-04-22') + INTERVAL floor(rand() * 168) HOUR as occurred_at
+    FROM numbers(80)
+);
 
--- Backend Team - GitLab events
-INSERT INTO events (id, source_type, event_type, team_id, project_id, payload, occurred_at) VALUES
-    (generateUUID(), 'git', 'push', '550e8400-e29b-41d4-a716-446655440001', NULL, '{"author": "dave", "repo": "api", "message": "feat: add rate limiting"}', now() - INTERVAL 1 DAY),
-    (generateUUID(), 'git', 'push', '550e8400-e29b-41d4-a716-446655440001', NULL, '{"author": "eve", "repo": "api", "message": "fix: memory leak"}', now() - INTERVAL 2 DAY),
-    (generateUUID(), 'git', 'mr_opened', '550e8400-e29b-41d4-a716-446655440001', NULL, '{"mr_id": 201, "author": "dave", "title": "Rate limiting"}', now() - INTERVAL 1 DAY),
-    (generateUUID(), 'git', 'mr_merged', '550e8400-e29b-41d4-a716-446655440001', NULL, '{"mr_id": 199, "author": "eve", "title": "Memory fix"}', now() - INTERVAL 4 DAY);
+-- Generate 40 PRs per team (200 total)
+INSERT INTO events (id, source_type, event_type, team_id, project_id, payload, occurred_at)
+SELECT
+    generateUUID() as id,
+    'git' as source_type,
+    arrayElement(['pr_opened', 'pr_review_request', 'pr_reviewed', 'pr_merged', 'pr_closed'], floor(rand() * 5) + 1) as event_type,
+    team_id,
+    NULL as project_id,
+    payload,
+    occurred_at
+FROM (
+    SELECT
+        '550e8400-e29b-41d4-a716-446655440000' as team_id,
+        format('{"pr_id": %d, "author": "%s", "title": "PR #%d", "lines_added": %d, "lines_removed": %d}',
+            1000 + number,
+            arrayElement(['alice', 'bob', 'charlie', 'dave', 'eve'], floor(rand() * 5) + 1),
+            1000 + number,
+            floor(rand() * 500) + 10,
+            floor(rand() * 50)
+        ) as payload,
+        toDateTime('2026-04-22') + INTERVAL floor(rand() * 168) HOUR as occurred_at
+    FROM numbers(40)
+    UNION ALL
+    SELECT
+        '550e8400-e29b-41d4-a716-446655440001' as team_id,
+        format('{"mr_id": %d, "author": "%s", "title": "MR #%d", "lines_added": %d, "lines_removed": %d}',
+            2000 + number,
+            arrayElement(['alice', 'bob', 'charlie', 'dave', 'eve'], floor(rand() * 5) + 1),
+            2000 + number,
+            floor(rand() * 500) + 10,
+            floor(rand() * 50)
+        ) as payload,
+        toDateTime('2026-04-22') + INTERVAL floor(rand() * 168) HOUR as occurred_at
+    FROM numbers(40)
+    UNION ALL
+    SELECT
+        '550e8400-e29b-41d4-a716-446655440002' as team_id,
+        format('{"pr_id": %d, "author": "%s", "title": "PR #%d", "lines_added": %d, "lines_removed": %d}',
+            3000 + number,
+            arrayElement(['alice', 'bob', 'charlie', 'dave', 'eve'], floor(rand() * 5) + 1),
+            3000 + number,
+            floor(rand() * 500) + 10,
+            floor(rand() * 50)
+        ) as payload,
+        toDateTime('2026-04-22') + INTERVAL floor(rand() * 168) HOUR as occurred_at
+    FROM numbers(40)
+    UNION ALL
+    SELECT
+        '550e8400-e29b-41d4-a716-446655440003' as team_id,
+        format('{"pr_id": %d, "author": "%s", "title": "PR #%d", "lines_added": %d, "lines_removed": %d}',
+            4000 + number,
+            arrayElement(['alice', 'bob', 'charlie', 'dave', 'eve'], floor(rand() * 5) + 1),
+            4000 + number,
+            floor(rand() * 500) + 10,
+            floor(rand() * 50)
+        ) as payload,
+        toDateTime('2026-04-22') + INTERVAL floor(rand() * 168) HOUR as occurred_at
+    FROM numbers(40)
+    UNION ALL
+    SELECT
+        '550e8400-e29b-41d4-a716-446655440004' as team_id,
+        format('{"pr_id": %d, "author": "%s", "title": "PR #%d", "lines_added": %d, "lines_removed": %d}',
+            5000 + number,
+            arrayElement(['alice', 'bob', 'charlie', 'dave', 'eve'], floor(rand() * 5) + 1),
+            5000 + number,
+            floor(rand() * 500) + 10,
+            floor(rand() * 50)
+        ) as payload,
+        toDateTime('2026-04-22') + INTERVAL floor(rand() * 168) HOUR as occurred_at
+    FROM numbers(40)
+);
 
--- Insert PM events (Jira/Linear)
-INSERT INTO events (id, source_type, event_type, team_id, project_id, payload, occurred_at) VALUES
-    -- Platform Team - Jira
-    (generateUUID(), 'pm', 'task_created', '550e8400-e29b-41d4-a716-446655440000', NULL, '{"task_id": "PROJ-101", "assignee": "alice", "story_points": 3}', now() - INTERVAL 1 DAY),
-    (generateUUID(), 'pm', 'task_created', '550e8400-e29b-41d4-a716-446655440000', NULL, '{"task_id": "PROJ-102", "assignee": "bob", "story_points": 5}', now() - INTERVAL 2 DAY),
-    (generateUUID(), 'pm', 'task_in_progress', '550e8400-e29b-41d4-a716-446655440000', NULL, '{"task_id": "PROJ-101", "assignee": "alice"}', now() - INTERVAL 1 DAY),
-    (generateUUID(), 'pm', 'task_done', '550e8400-e29b-41d4-a716-446655440000', NULL, '{"task_id": "PROJ-99", "assignee": "alice", "story_points": 3}', now() - INTERVAL 3 DAY),
-    (generateUUID(), 'pm', 'task_blocked', '550e8400-e29b-41d4-a716-446655440000', NULL, '{"task_id": "PROJ-102", "assignee": "bob", "blocked_by": "PROJ-105"}', now() - INTERVAL 1 DAY),
-    (generateUUID(), 'pm', 'task_overdue', '550e8400-e29b-41d4-a716-446655440000', NULL, '{"task_id": "PROJ-98", "assignee": "charlie", "due_date": now() - INTERVAL 3 DAY}', now() - INTERVAL 3 DAY),
-    -- Backend Team - Linear
-    (generateUUID(), 'pm', 'task_created', '550e8400-e29b-41d4-a716-446655440001', NULL, '{"task_id": "BACK-201", "assignee": "dave", "story_points": 8}', now() - INTERVAL 2 DAY),
-    (generateUUID(), 'pm', 'task_done', '550e8400-e29b-41d4-a716-446655440001', NULL, '{"task_id": "BACK-199", "assignee": "eve", "story_points": 5}', now() - INTERVAL 4 DAY),
-    (generateUUID(), 'pm', 'task_in_progress', '550e8400-e29b-41d4-a716-446655440001', NULL, '{"task_id": "BACK-201", "assignee": "dave"}', now() - INTERVAL 1 DAY);
+-- Generate PM events: 60 tasks per team (300 total)
+INSERT INTO events (id, source_type, event_type, team_id, project_id, payload, occurred_at)
+SELECT
+    generateUUID() as id,
+    'pm' as source_type,
+    arrayElement(['task_created', 'task_in_progress', 'task_done', 'task_blocked', 'task_overdue'], floor(rand() * 5) + 1) as event_type,
+    team_id,
+    NULL as project_id,
+    payload,
+    occurred_at
+FROM (
+    SELECT
+        '550e8400-e29b-41d4-a716-446655440000' as team_id,
+        format('{"task_id": "PROJ-%d", "assignee": "%s", "story_points": %d}',
+            100 + number,
+            arrayElement(['alice', 'bob', 'charlie', 'dave', 'eve'], floor(rand() * 5) + 1),
+            arrayElement([1, 2, 3, 5, 8, 13], floor(rand() * 6) + 1)
+        ) as payload,
+        toDateTime('2026-04-15') + INTERVAL floor(rand() * 336) HOUR as occurred_at
+    FROM numbers(60)
+    UNION ALL
+    SELECT
+        '550e8400-e29b-41d4-a716-446655440001' as team_id,
+        format('{"task_id": "BACK-%d", "assignee": "%s", "story_points": %d}',
+            100 + number,
+            arrayElement(['alice', 'bob', 'charlie', 'dave', 'eve'], floor(rand() * 5) + 1),
+            arrayElement([1, 2, 3, 5, 8, 13], floor(rand() * 6) + 1)
+        ) as payload,
+        toDateTime('2026-04-15') + INTERVAL floor(rand() * 336) HOUR as occurred_at
+    FROM numbers(60)
+    UNION ALL
+    SELECT
+        '550e8400-e29b-41d4-a716-446655440002' as team_id,
+        format('{"task_id": "FRONT-%d", "assignee": "%s", "story_points": %d}',
+            100 + number,
+            arrayElement(['alice', 'bob', 'charlie', 'dave', 'eve'], floor(rand() * 5) + 1),
+            arrayElement([1, 2, 3, 5, 8, 13], floor(rand() * 6) + 1)
+        ) as payload,
+        toDateTime('2026-04-15') + INTERVAL floor(rand() * 336) HOUR as occurred_at
+    FROM numbers(60)
+    UNION ALL
+    SELECT
+        '550e8400-e29b-41d4-a716-446655440003' as team_id,
+        format('{"task_id": "MOB-%d", "assignee": "%s", "story_points": %d}',
+            100 + number,
+            arrayElement(['alice', 'bob', 'charlie', 'dave', 'eve'], floor(rand() * 5) + 1),
+            arrayElement([1, 2, 3, 5, 8, 13], floor(rand() * 6) + 1)
+        ) as payload,
+        toDateTime('2026-04-15') + INTERVAL floor(rand() * 336) HOUR as occurred_at
+    FROM numbers(60)
+    UNION ALL
+    SELECT
+        '550e8400-e29b-41d4-a716-446655440004' as team_id,
+        format('{"task_id": "DEVOPS-%d", "assignee": "%s", "story_points": %d}',
+            100 + number,
+            arrayElement(['alice', 'bob', 'charlie', 'dave', 'eve'], floor(rand() * 5) + 1),
+            arrayElement([1, 2, 3, 5, 8, 13], floor(rand() * 6) + 1)
+        ) as payload,
+        toDateTime('2026-04-15') + INTERVAL floor(rand() * 336) HOUR as occurred_at
+    FROM numbers(60)
+);
 
--- Insert CI/CD events
-INSERT INTO events (id, source_type, event_type, team_id, project_id, payload, occurred_at) VALUES
-    -- Platform Team - GitHub Actions
-    (generateUUID(), 'cicd', 'pipeline_success', '550e8400-e29b-41d4-a716-446655440000', NULL, '{"pipeline_id": "run-001", "project": "platform", "duration": 180}', now() - INTERVAL 1 HOUR),
-    (generateUUID(), 'cicd', 'pipeline_success', '550e8400-e29b-41d4-a716-446655440000', NULL, '{"pipeline_id": "run-002", "project": "platform", "duration": 195}', now() - INTERVAL 2 HOUR),
-    (generateUUID(), 'cicd', 'pipeline_failed', '550e8400-e29b-41d4-a716-446655440000', NULL, '{"pipeline_id": "run-003", "project": "platform", "duration": 120}', now() - INTERVAL 30 MINUTE),
-    (generateUUID(), 'cicd', 'pipeline_failed', '550e8400-e29b-41d4-a716-446655440000', NULL, '{"pipeline_id": "run-004", "project": "platform", "duration": 90}', now() - INTERVAL 45 MINUTE),
-    (generateUUID(), 'cicd', 'pipeline_success', '550e8400-e29b-41d4-a716-446655440000', NULL, '{"pipeline_id": "run-005", "project": "platform", "duration": 200}', now() - INTERVAL 3 HOUR),
-    -- Backend Team - GitLab CI
-    (generateUUID(), 'cicd', 'pipeline_success', '550e8400-e29b-41d4-a716-446655440001', NULL, '{"pipeline_id": "pipe-101", "project": "api", "duration": 240}', now() - INTERVAL 1 HOUR),
-    (generateUUID(), 'cicd', 'pipeline_success', '550e8400-e29b-41d4-a716-446655440001', NULL, '{"pipeline_id": "pipe-102", "project": "api", "duration": 255}', now() - INTERVAL 2 HOUR),
-    (generateUUID(), 'cicd', 'pipeline_failed', '550e8400-e29b-41d4-a716-446655440001', NULL, '{"pipeline_id": "pipe-103", "project": "api", "duration": 180}', now() - INTERVAL 4 HOUR);
+-- Generate CI/CD events: 30 pipelines per team (150 total)
+INSERT INTO events (id, source_type, event_type, team_id, project_id, payload, occurred_at)
+SELECT
+    generateUUID() as id,
+    'cicd' as source_type,
+    arrayElement(['pipeline_success', 'pipeline_failed'], floor(rand() * 2) + 1) as event_type,
+    team_id,
+    NULL as project_id,
+    payload,
+    occurred_at
+FROM (
+    SELECT
+        '550e8400-e29b-41d4-a716-446655440000' as team_id,
+        format('{"pipeline_id": "run-%d", "project": "platform", "duration": %d}',
+            1000 + number,
+            floor(rand() * 300) + 60
+        ) as payload,
+        toDateTime('2026-04-28') + INTERVAL floor(rand() * 168) HOUR as occurred_at
+    FROM numbers(30)
+    UNION ALL
+    SELECT
+        '550e8400-e29b-41d4-a716-446655440001' as team_id,
+        format('{"pipeline_id": "pipe-%d", "project": "api", "duration": %d}',
+            2000 + number,
+            floor(rand() * 300) + 60
+        ) as payload,
+        toDateTime('2026-04-28') + INTERVAL floor(rand() * 168) HOUR as occurred_at
+    FROM numbers(30)
+    UNION ALL
+    SELECT
+        '550e8400-e29b-41d4-a716-446655440002' as team_id,
+        format('{"pipeline_id": "run-%d", "project": "web-ui", "duration": %d}',
+            3000 + number,
+            floor(rand() * 300) + 60
+        ) as payload,
+        toDateTime('2026-04-28') + INTERVAL floor(rand() * 168) HOUR as occurred_at
+    FROM numbers(30)
+    UNION ALL
+    SELECT
+        '550e8400-e29b-41d4-a716-446655440003' as team_id,
+        format('{"pipeline_id": "build-%d", "project": "mobile-app", "duration": %d}',
+            4000 + number,
+            floor(rand() * 400) + 120
+        ) as payload,
+        toDateTime('2026-04-28') + INTERVAL floor(rand() * 168) HOUR as occurred_at
+    FROM numbers(30)
+    UNION ALL
+    SELECT
+        '550e8400-e29b-41d4-a716-446655440004' as team_id,
+        format('{"pipeline_id": "deploy-%d", "project": "infrastructure", "duration": %d}',
+            5000 + number,
+            floor(rand() * 180) + 30
+        ) as payload,
+        toDateTime('2026-04-28') + INTERVAL floor(rand() * 168) HOUR as occurred_at
+    FROM numbers(30)
+);
 
--- Insert Metrics events (Prometheus)
-INSERT INTO events (id, source_type, event_type, team_id, project_id, payload, occurred_at) VALUES
-    (generateUUID(), 'metrics', 'metric_value', '550e8400-e29b-41d4-a716-446655440000', NULL, '{"metric": "cpu_usage", "value": 45}', now() - INTERVAL 5 MINUTE),
-    (generateUUID(), 'metrics', 'metric_value', '550e8400-e29b-41d4-a716-446655440000', NULL, '{"metric": "memory_usage", "value": 62}', now() - INTERVAL 5 MINUTE),
-    (generateUUID(), 'metrics', 'metric_value', '550e8400-e29b-41d4-a716-446655440001', NULL, '{"metric": "cpu_usage", "value": 38}', now() - INTERVAL 5 MINUTE),
-    (generateUUID(), 'metrics', 'metric_value', '550e8400-e29b-41d4-a716-446655440001', NULL, '{"metric": "request_rate", "value": 1250}', now() - INTERVAL 5 MINUTE);
+-- Generate Metrics: 20 samples per team (100 total)
+INSERT INTO events (id, source_type, event_type, team_id, project_id, payload, occurred_at)
+SELECT
+    generateUUID() as id,
+    'metrics' as source_type,
+    'metric_value' as event_type,
+    team_id,
+    NULL as project_id,
+    payload,
+    occurred_at
+FROM (
+    SELECT
+        '550e8400-e29b-41d4-a716-446655440000' as team_id,
+        format('{"metric": "%s", "value": %d}',
+            arrayElement(['cpu_usage', 'memory_usage', 'request_rate', 'error_rate', 'latency_p99'],
+                floor(rand() * 5) + 1),
+            floor(rand() * 100)
+        ) as payload,
+        toDateTime('2026-04-29') + INTERVAL floor(rand() * 24) HOUR as occurred_at
+    FROM numbers(20)
+    UNION ALL
+    SELECT
+        '550e8400-e29b-41d4-a716-446655440001' as team_id,
+        format('{"metric": "%s", "value": %d}',
+            arrayElement(['cpu_usage', 'memory_usage', 'request_rate', 'error_rate', 'latency_p99'],
+                floor(rand() * 5) + 1),
+            floor(rand() * 100)
+        ) as payload,
+        toDateTime('2026-04-29') + INTERVAL floor(rand() * 24) HOUR as occurred_at
+    FROM numbers(20)
+    UNION ALL
+    SELECT
+        '550e8400-e29b-41d4-a716-446655440002' as team_id,
+        format('{"metric": "%s", "value": %d}',
+            arrayElement(['cpu_usage', 'memory_usage', 'request_rate', 'error_rate', 'latency_p99'],
+                floor(rand() * 5) + 1),
+            floor(rand() * 100)
+        ) as payload,
+        toDateTime('2026-04-29') + INTERVAL floor(rand() * 24) HOUR as occurred_at
+    FROM numbers(20)
+    UNION ALL
+    SELECT
+        '550e8400-e29b-41d4-a716-446655440003' as team_id,
+        format('{"metric": "%s", "value": %d}',
+            arrayElement(['cpu_usage', 'memory_usage', 'request_rate', 'error_rate', 'latency_p99'],
+                floor(rand() * 5) + 1),
+            floor(rand() * 100)
+        ) as payload,
+        toDateTime('2026-04-29') + INTERVAL floor(rand() * 24) HOUR as occurred_at
+    FROM numbers(20)
+    UNION ALL
+    SELECT
+        '550e8400-e29b-41d4-a716-446655440004' as team_id,
+        format('{"metric": "%s", "value": %d}',
+            arrayElement(['cpu_usage', 'memory_usage', 'request_rate', 'error_rate', 'latency_p99'],
+                floor(rand() * 5) + 1),
+            floor(rand() * 100)
+        ) as payload,
+        toDateTime('2026-04-29') + INTERVAL floor(rand() * 24) HOUR as occurred_at
+    FROM numbers(20)
+);
 
--- Insert alerts for attention items
-INSERT INTO events (id, source_type, event_type, team_id, project_id, payload, occurred_at) VALUES
-    (generateUUID(), 'git', 'pr_stale', '550e8400-e29b-41d4-a716-446655440000', NULL, '{"pr_id": 102, "days_waiting": 3}', now() - INTERVAL 1 DAY),
-    (generateUUID(), 'pm', 'task_blocked', '550e8400-e29b-41d4-a716-446655440000', NULL, '{"task_id": "PROJ-102", "blocked_by": "PROJ-105"}', now() - INTERVAL 1 DAY),
-    (generateUUID(), 'pm', 'task_overdue', '550e8400-e29b-41d4-a716-446655440000', NULL, '{"task_id": "PROJ-98", "days_overdue": 3}', now() - INTERVAL 3 DAY),
-    (generateUUID(), 'cicd', 'ci_failed', '550e8400-e29b-41d4-a716-446655440000', NULL, '{"pipeline_id": "run-003", "failures_in_hour": 2}', now() - INTERVAL 30 MINUTE);
+-- Insert alerts for attention items (20 per team = 100 total)
+INSERT INTO events (id, source_type, event_type, team_id, project_id, payload, occurred_at)
+SELECT
+    generateUUID() as id,
+    source_type,
+    event_type,
+    team_id,
+    NULL as project_id,
+    payload,
+    occurred_at
+FROM (
+    SELECT '550e8400-e29b-41d4-a716-446655440000' as team_id,
+        'git' as source_type,
+        'pr_stale' as event_type,
+        format('{"pr_id": %d, "days_waiting": %d}', 1000 + number, floor(rand() * 7) + 1) as payload,
+        toDateTime('2026-04-28') + INTERVAL floor(rand() * 48) HOUR as occurred_at
+    FROM numbers(4)
+    UNION ALL
+    SELECT '550e8400-e29b-41d4-a716-446655440000' as team_id,
+        'pm' as source_type,
+        'task_blocked' as event_type,
+        format('{"task_id": "PROJ-%d", "blocked_by": "PROJ-%d"}', 100 + number, 200 + floor(rand() * 50)) as payload,
+        toDateTime('2026-04-28') + INTERVAL floor(rand() * 48) HOUR as occurred_at
+    FROM numbers(4)
+    UNION ALL
+    SELECT '550e8400-e29b-41d4-a716-446655440000' as team_id,
+        'pm' as source_type,
+        'task_overdue' as event_type,
+        format('{"task_id": "PROJ-%d", "days_overdue": %d}', 100 + number, floor(rand() * 5) + 1) as payload,
+        toDateTime('2026-04-28') + INTERVAL floor(rand() * 48) HOUR as occurred_at
+    FROM numbers(4)
+    UNION ALL
+    SELECT '550e8400-e29b-41d4-a716-446655440000' as team_id,
+        'cicd' as source_type,
+        'ci_failed' as event_type,
+        format('{"pipeline_id": "run-%d", "failures_in_hour": %d}', 1000 + number, floor(rand() * 4) + 1) as payload,
+        toDateTime('2026-04-28') + INTERVAL floor(rand() * 48) HOUR as occurred_at
+    FROM numbers(4)
+    UNION ALL
+    SELECT '550e8400-e29b-41d4-a716-446655440001' as team_id,
+        'git' as source_type,
+        'pr_stale' as event_type,
+        format('{"mr_id": %d, "days_waiting": %d}', 2000 + number, floor(rand() * 7) + 1) as payload,
+        toDateTime('2026-04-28') + INTERVAL floor(rand() * 48) HOUR as occurred_at
+    FROM numbers(4)
+    UNION ALL
+    SELECT '550e8400-e29b-41d4-a716-446655440001' as team_id,
+        'pm' as source_type,
+        'task_blocked' as event_type,
+        format('{"task_id": "BACK-%d", "blocked_by": "BACK-%d"}', 100 + number, 200 + floor(rand() * 50)) as payload,
+        toDateTime('2026-04-28') + INTERVAL floor(rand() * 48) HOUR as occurred_at
+    FROM numbers(4)
+    UNION ALL
+    SELECT '550e8400-e29b-41d4-a716-446655440001' as team_id,
+        'pm' as source_type,
+        'task_overdue' as event_type,
+        format('{"task_id": "BACK-%d", "days_overdue": %d}', 100 + number, floor(rand() * 5) + 1) as payload,
+        toDateTime('2026-04-28') + INTERVAL floor(rand() * 48) HOUR as occurred_at
+    FROM numbers(4)
+    UNION ALL
+    SELECT '550e8400-e29b-41d4-a716-446655440001' as team_id,
+        'cicd' as source_type,
+        'ci_failed' as event_type,
+        format('{"pipeline_id": "pipe-%d", "failures_in_hour": %d}', 2000 + number, floor(rand() * 4) + 1) as payload,
+        toDateTime('2026-04-28') + INTERVAL floor(rand() * 48) HOUR as occurred_at
+    FROM numbers(4)
+    UNION ALL
+    SELECT '550e8400-e29b-41d4-a716-446655440002' as team_id,
+        'git' as source_type,
+        'pr_stale' as event_type,
+        format('{"pr_id": %d, "days_waiting": %d}', 3000 + number, floor(rand() * 7) + 1) as payload,
+        toDateTime('2026-04-28') + INTERVAL floor(rand() * 48) HOUR as occurred_at
+    FROM numbers(4)
+    UNION ALL
+    SELECT '550e8400-e29b-41d4-a716-446655440002' as team_id,
+        'pm' as source_type,
+        'task_blocked' as event_type,
+        format('{"task_id": "FRONT-%d", "blocked_by": "FRONT-%d"}', 100 + number, 200 + floor(rand() * 50)) as payload,
+        toDateTime('2026-04-28') + INTERVAL floor(rand() * 48) HOUR as occurred_at
+    FROM numbers(4)
+    UNION ALL
+    SELECT '550e8400-e29b-41d4-a716-446655440002' as team_id,
+        'pm' as source_type,
+        'task_overdue' as event_type,
+        format('{"task_id": "FRONT-%d", "days_overdue": %d}', 100 + number, floor(rand() * 5) + 1) as payload,
+        toDateTime('2026-04-28') + INTERVAL floor(rand() * 48) HOUR as occurred_at
+    FROM numbers(4)
+    UNION ALL
+    SELECT '550e8400-e29b-41d4-a716-446655440002' as team_id,
+        'cicd' as source_type,
+        'ci_failed' as event_type,
+        format('{"pipeline_id": "run-%d", "failures_in_hour": %d}', 3000 + number, floor(rand() * 4) + 1) as payload,
+        toDateTime('2026-04-28') + INTERVAL floor(rand() * 48) HOUR as occurred_at
+    FROM numbers(4)
+    UNION ALL
+    SELECT '550e8400-e29b-41d4-a716-446655440003' as team_id,
+        'git' as source_type,
+        'pr_stale' as event_type,
+        format('{"pr_id": %d, "days_waiting": %d}', 4000 + number, floor(rand() * 7) + 1) as payload,
+        toDateTime('2026-04-28') + INTERVAL floor(rand() * 48) HOUR as occurred_at
+    FROM numbers(4)
+    UNION ALL
+    SELECT '550e8400-e29b-41d4-a716-446655440003' as team_id,
+        'pm' as source_type,
+        'task_blocked' as event_type,
+        format('{"task_id": "MOB-%d", "blocked_by": "MOB-%d"}', 100 + number, 200 + floor(rand() * 50)) as payload,
+        toDateTime('2026-04-28') + INTERVAL floor(rand() * 48) HOUR as occurred_at
+    FROM numbers(4)
+    UNION ALL
+    SELECT '550e8400-e29b-41d4-a716-446655440003' as team_id,
+        'pm' as source_type,
+        'task_overdue' as event_type,
+        format('{"task_id": "MOB-%d", "days_overdue": %d}', 100 + number, floor(rand() * 5) + 1) as payload,
+        toDateTime('2026-04-28') + INTERVAL floor(rand() * 48) HOUR as occurred_at
+    FROM numbers(4)
+    UNION ALL
+    SELECT '550e8400-e29b-41d4-a716-446655440003' as team_id,
+        'cicd' as source_type,
+        'ci_failed' as event_type,
+        format('{"pipeline_id": "build-%d", "failures_in_hour": %d}', 4000 + number, floor(rand() * 4) + 1) as payload,
+        toDateTime('2026-04-28') + INTERVAL floor(rand() * 48) HOUR as occurred_at
+    FROM numbers(4)
+    UNION ALL
+    SELECT '550e8400-e29b-41d4-a716-446655440004' as team_id,
+        'git' as source_type,
+        'pr_stale' as event_type,
+        format('{"pr_id": %d, "days_waiting": %d}', 5000 + number, floor(rand() * 7) + 1) as payload,
+        toDateTime('2026-04-28') + INTERVAL floor(rand() * 48) HOUR as occurred_at
+    FROM numbers(4)
+    UNION ALL
+    SELECT '550e8400-e29b-41d4-a716-446655440004' as team_id,
+        'pm' as source_type,
+        'task_blocked' as event_type,
+        format('{"task_id": "DEVOPS-%d", "blocked_by": "DEVOPS-%d"}', 100 + number, 200 + floor(rand() * 50)) as payload,
+        toDateTime('2026-04-28') + INTERVAL floor(rand() * 48) HOUR as occurred_at
+    FROM numbers(4)
+    UNION ALL
+    SELECT '550e8400-e29b-41d4-a716-446655440004' as team_id,
+        'pm' as source_type,
+        'task_overdue' as event_type,
+        format('{"task_id": "DEVOPS-%d", "days_overdue": %d}', 100 + number, floor(rand() * 5) + 1) as payload,
+        toDateTime('2026-04-28') + INTERVAL floor(rand() * 48) HOUR as occurred_at
+    FROM numbers(4)
+    UNION ALL
+    SELECT '550e8400-e29b-41d4-a716-446655440004' as team_id,
+        'cicd' as source_type,
+        'ci_failed' as event_type,
+        format('{"pipeline_id": "deploy-%d", "failures_in_hour": %d}', 5000 + number, floor(rand() * 4) + 1) as payload,
+        toDateTime('2026-04-28') + INTERVAL floor(rand() * 48) HOUR as occurred_at
+    FROM numbers(4)
+);
 
--- Refresh materialized views (if needed)
--- ALTER TABLE daily_aggregates MATERIALIZE;
--- ALTER TABLE pr_metrics MATERIALIZE;
--- ALTER TABLE cycle_metrics MATERIALIZE;
--- ALTER TABLE team_workload MATERIALIZE;
--- ALTER TABLE cicd_health MATERIALIZE;
--- ALTER TABLE realtime_alerts MATERIALIZE;
-
-SELECT 'Mock data inserted successfully!' as result;
+SELECT 'Mock data inserted: ~1250 events across 5 teams' as result;
