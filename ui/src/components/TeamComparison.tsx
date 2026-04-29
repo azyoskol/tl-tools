@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { api } from '../api/client'
+import { Team } from '../types'
 
 interface TeamData {
   team_id: string;
@@ -30,7 +31,7 @@ export function TeamComparison() {
       .then(([compRes, teamsRes]) => {
         setData(compRes.data)
         const teamMap: Record<string, string> = {}
-        teamsRes.data.forEach((t: any) => { teamMap[t.id] = t.name })
+        teamsRes.data.forEach((t: Team) => { teamMap[t.id] = t.name })
         setTeams(teamMap)
         setLoading(false)
       })

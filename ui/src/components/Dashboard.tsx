@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 import { api } from '../api/client'
+import { DashboardData, Team } from '../types'
 
 const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff8042', '#0088FE', '#00C49F', '#FFBB28', '#FF8042']
 
 export function Dashboard() {
-  const [data, setData] = useState<any>(null)
+  const [data, setData] = useState<DashboardData | null>(null)
   const [teams, setTeams] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(true)
 
@@ -17,7 +18,7 @@ export function Dashboard() {
       .then(([dashRes, teamsRes]) => {
         setData(dashRes.data)
         const teamMap: Record<string, string> = {}
-        teamsRes.data.forEach((t: any) => { teamMap[t.id] = t.name })
+        teamsRes.data.forEach((t: Team) => { teamMap[t.id] = t.name })
         setTeams(teamMap)
         setLoading(false)
       })
@@ -29,14 +30,14 @@ export function Dashboard() {
 
   const { overview, activity, top_teams, hourly, top_authors } = data
   
-  const grouped: Record<string, any> = {}
-  activity.forEach((r: any) => {
+  const grouped: Record<string, { date: string; [key: string]: string | number }> = {}
+  activity.forEach((r) => {
     if (!grouped[r.date]) grouped[r.date] = { date: r.date }
-    grouped[r.date][r.source] = (grouped[r.date][r.source] || 0) + r.count
+    grouped[r.date][r.source] = (grouped[r.date][r.source] as number || 0) + r.count
   })
   const chartData = Object.values(grouped)
 
-  const hourlyData = hourly.map((h: any) => ({
+  const hourlyData = hourly.map((h) => ({
     hour: `${h.hour}:00`,
     count: h.count
   }))
@@ -112,7 +113,7 @@ export function Dashboard() {
                   outerRadius={60}
                   label={({ author, count }) => `${author}: ${count}`}
                 >
-                  {top_authors.map((_: any, index: number) => (
+                  {top_authors.map((_, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
@@ -134,7 +135,7 @@ export function Dashboard() {
                 </tr>
               </thead>
               <tbody>
-                {top_teams.slice(0, 5).map((t: any, i: number) => (
+                {top_teams.slice(0, 5).map((t, i: number) => (
                   <tr key={i} style={{ borderBottom: '1px solid #eee' }}>
                     <td style={{ padding: '8px' }}>{teams[t.team_id] || t.team_id.slice(0, 8)}</td>
                     <td style={{ padding: '8px' }}>{t.source}</td>

@@ -4,9 +4,10 @@ export interface Team {
 }
 
 export interface OverviewMetrics {
-  prs_awaiting_review: number
-  blocked_tasks: number
-  ci_failures_last_hour: number
+  prs_opened: number
+  tasks_blocked: number
+  ci_failures: number
+  prs_merged: number
 }
 
 export interface ActivityItem {
