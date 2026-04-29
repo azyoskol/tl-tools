@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routes import teams, overview, health, dashboard, webhook, dlq, collectors
+from middleware.cache import CacheMiddleware
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -14,6 +15,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.add_middleware(CacheMiddleware)
 
 app.include_router(teams.router)
 app.include_router(overview.router)
