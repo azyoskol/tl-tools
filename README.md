@@ -1,27 +1,27 @@
 # Team Dashboard
 
-Developer productivity dashboard for multiple teams. Отслеживайте эффективность работы команды в реальном времени.
+Developer productivity dashboard for multiple teams. Track your team's performance in real-time.
 
-## Возможности
+## Features
 
-### Метрики и графики
+### Metrics & Charts
 
-| График | Источник | Для чего |
-|--------|----------|----------|
-| **Commits per day** | GitHub/GitLab | Активность разработки, паттерны работы |
-| **PRs opened/merged** | GitHub/GitLab | Скорость код-ревью, bottleneck |
-| **PR merge time** | GitHub/GitLab | Время от создания до merge |
-| **Cycle time** | Jira/Linear | Время от старта до завершения задачи |
-| **Velocity** | Jira/Linear | Скорость команды в спринтах |
-| **CI/CD success rate** | GitHub Actions/GitLab CI | Стабильность сборок |
-| **CI duration** | GitHub Actions/GitLab CI | Скорость CI/CD |
-| **Blocked tasks** | Jira/Linear | Заблокированные задачи |
-| **WIP count** | Jira/Linear | Задачи в работе (контекст-свитчинг) |
-| **CPU/Memory** | Prometheus | Ресурсы приложений |
+| Chart | Source | Purpose |
+|-------|--------|---------|
+| **Commits per day** | GitHub/GitLab | Development activity, work patterns |
+| **PRs opened/merged** | GitHub/GitLab | Code review speed, bottlenecks |
+| **PR merge time** | GitHub/GitLab | Time from creation to merge |
+| **Cycle time** | Jira/Linear | Time from start to task completion |
+| **Velocity** | Jira/Linear | Team speed per sprint |
+| **CI/CD success rate** | GitHub Actions/GitLab CI | Build stability |
+| **CI duration** | GitHub Actions/GitLab CI | CI/CD speed |
+| **Blocked tasks** | Jira/Linear | Blocked work items |
+| **WIP count** | Jira/Linear | Work in progress (context switching) |
+| **CPU/Memory** | Prometheus | Application resources |
 
-### Attention Items (Инсайты)
+### Attention Items
 
-Автоматические алерты, которые привлекают внимание к проблемам:
+Automated alerts that draw attention to issues:
 
 - ⚠️ PRs waiting for review > 2 days
 - ⚠️ Tasks blocked > 1 day
@@ -29,32 +29,32 @@ Developer productivity dashboard for multiple teams. Отслеживайте э
 - ⚠️ CI failures in last hour
 - ⚠️ Large PRs (>1000 lines)
 
-### Страницы Dashboard
+### Dashboard Pages
 
-1. **Overview** — главная страница с ключевыми метриками
-   - Карточки: PRs awaiting, Blocked tasks, CI failures
-   - График активности за 7 дней
+1. **Overview** — main page with key metrics
+   - Cards: PRs awaiting, Blocked tasks, CI failures
+   - 7-day activity chart
    - Attention items
 
-2. **Activity** — детальные графики по источникам
+2. **Activity** — detailed charts by source
    - Git: commits, PRs, reviews
    - PM: tasks, blockers
    - CI/CD: pipelines, failures
 
-3. **Velocity** — ретроспектива
+3. **Velocity** — retrospective analysis
    - Cycle time distribution
    - Velocity per sprint
    - Lead time trends
 
-4. **Insights** — рекомендации
+4. **Insights** — recommendations
    - Rule-based alerts
-   - Тренды продуктивности
+   - Productivity trends
 
-### Мульти-команда
+### Multi-Team Support
 
-- Селектор команды вверху страницы
-- Отдельные данные для каждой команды
-- Company-wide view для менеджеров
+- Team selector at the top of the page
+- Separate data per team
+- Company-wide view for managers
 
 ## Data Flow
 
@@ -65,49 +65,49 @@ CI/CD        ───┤                      (Materialized Views)
 Prometheus   ───┘
 ```
 
-### Архитектура
+### Architecture
 
-- **Collectors (Go)**: 4 сервиса для сбора данных из разных источников
+- **Collectors (Go)**: 4 services for data collection from different sources
   - `git-collector` — GitHub, GitLab (commits, PRs, MRs)
   - `pm-collector` — Jira, Linear (tasks, sprints)
   - `cicd-collector` — GitHub Actions, GitLab CI, Jenkins
   - `metrics-collector` — Prometheus, DataDog
 
-- **Storage**: ClickHouse с материализованными представлениями
+- **Storage**: ClickHouse with materialized views
 - **API**: FastAPI (Python)
 - **UI**: React + Recharts
 
 ## Quick Start
 
-### Docker Compose (рекомендуется)
+### Docker Compose (recommended)
 
 ```bash
-# Клонировать и запустить
+# Clone and run
 git clone https://github.com/azyoskol/tl-tools.git
 cd tl-tools
 docker-compose up -d
 
-# Доступ
+# Access
 # UI:         http://localhost:3000
 # API:        http://localhost:8000
 # ClickHouse: http://localhost:8123
 ```
 
-### Загрузка тестовых данных
+### Load Test Data
 
 ```bash
-# Создать таблицы
+# Create tables
 docker exec -i clickhouse clickhouse-client < clickhouse/schema.sql
 
-# Загрузить моковые данные
+# Load mock data
 docker exec -i clickhouse clickhouse-client < clickhouse/mock_data.sql
 ```
 
-## Конфигурация
+## Configuration
 
 ### Collector config.yaml
 
-Каждый collector настраивается через `config.yaml`:
+Each collector is configured via `config.yaml`:
 
 ```yaml
 clickhouse:
@@ -123,19 +123,19 @@ teams:
           token: "${GITHUB_TOKEN}"
 ```
 
-### Переменные окружения
+### Environment Variables
 
-| Переменная | Описание |
-|------------|----------|
-| `CLICKHOUSE_HOST` | Хост ClickHouse |
-| `CLICKHOUSE_PORT` | Порт ClickHouse (по умолчанию 9000) |
-| `GITHUB_TOKEN` | Токен GitHub API |
-| `GITLAB_TOKEN` | Токен GitLab API |
-| `JIRA_URL` | URL Jira |
-| `JIRA_EMAIL` | Email Jira |
-| `JIRA_TOKEN` | API токен Jira |
-| `LINEAR_API_KEY` | API ключ Linear |
-| `PROMETHEUS_URL` | URL Prometheus |
+| Variable | Description |
+|----------|-------------|
+| `CLICKHOUSE_HOST` | ClickHouse host |
+| `CLICKHOUSE_PORT` | ClickHouse port (default: 9000) |
+| `GITHUB_TOKEN` | GitHub API token |
+| `GITLAB_TOKEN` | GitLab API token |
+| `JIRA_URL` | Jira URL |
+| `JIRA_EMAIL` | Jira email |
+| `JIRA_TOKEN` | Jira API token |
+| `LINEAR_API_KEY` | Linear API key |
+| `PROMETHEUS_URL` | Prometheus URL |
 
 ## Development
 
@@ -146,7 +146,7 @@ teams:
 - Node.js 20+
 - Docker & Docker Compose
 
-### Запуск отдельно
+### Run Separately
 
 ```bash
 # ClickHouse
@@ -163,7 +163,7 @@ npm install
 npm run dev
 ```
 
-### Тесты
+### Tests
 
 ```bash
 # Python API
@@ -178,30 +178,30 @@ cd collectors/git && go test ./...
 ### Kubernetes (Helm)
 
 ```bash
-# Установка
+# Install
 helm install team-dashboard ./helm/team-dashboard -f values-prod.yaml
 
-# Обновление
+# Upgrade
 helm upgrade team-dashboard ./helm/team-dashboard -f values-prod.yaml
 ```
 
 ### Docker
 
 ```bash
-# Собрать образы
+# Build images
 docker-compose build
 
-# Запустить
+# Run
 docker-compose up -d
 ```
 
 ## Roadmap
 
-- [x] Cycle 1: MVP (базовые метрики)
-- [ ] Cycle 2: Reliability (б error handling, больше адаптеров)
-- [ ] Cycle 3: UI/UX (детальные графики, velocity)
-- [ ] Cycle 4: Advanced (management API, фильтры)
-- [ ] Cycle 5: Performance (оптимизация запросов)
+- [x] Cycle 1: MVP (basic metrics)
+- [ ] Cycle 2: Reliability (error handling, more adapters)
+- [ ] Cycle 3: UI/UX (detailed charts, velocity)
+- [ ] Cycle 4: Advanced (management API, filters)
+- [ ] Cycle 5: Performance (query optimization)
 - [ ] Cycle 6: Enterprise (SSO, RBAC)
 
 ## License
