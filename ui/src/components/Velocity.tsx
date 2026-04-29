@@ -2,8 +2,31 @@ import { useEffect, useState } from 'react'
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { api } from '../api/client'
 
+interface VelocityData {
+  date: string;
+  tasks: number;
+}
+
+interface CycleTimeData {
+  date: string;
+  type: string;
+  count: number;
+}
+
+interface LeadTimeData {
+  date: string;
+  count: number;
+}
+
+interface VelocityResponse {
+  team_id: string;
+  velocity: VelocityData[];
+  cycle_time: CycleTimeData[];
+  lead_time: LeadTimeData[];
+}
+
 export function Velocity({ teamId }: { teamId: string }) {
-  const [data, setData] = useState<any>(null)
+  const [data, setData] = useState<VelocityResponse | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
