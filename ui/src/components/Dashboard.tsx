@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo, memo } from 'react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 import { api } from '../api/client'
 import { DashboardData } from '../types'
@@ -38,18 +38,25 @@ export function Dashboard() {
   if (!data) return <div>No data available</div>
 
   const { overview, activity, top_teams, hourly, top_authors } = data
-  
-  const grouped: Record<string, { date: string; [key: string]: string | number }> = {}
-  activity.forEach((r) => {
-    if (!grouped[r.date]) grouped[r.date] = { date: r.date }
-    grouped[r.date][r.source] = (grouped[r.date][r.source] as number || 0) + r.count
-  })
-  const chartData = Object.values(grouped)
 
-  const hourlyData = hourly.map((h) => ({
+  const chartData = useMemo(() => {
+    const grouped: Record<string, { date: string; [key: string]: string | number }> = {}
+    activity.forEach((r) => {
+      if (!grouped[r.date]) grouped[r.date] = { date: r.date }
+      grouped[r.date][r.source] = (grouped[r.date][r.source] as number || 0) + r.count
+    })
+    return Object.values(grouped)
+  }, [activity])
+
+  const hourlyData = useMemo(() => hourly.map((h) => ({
     hour: `${h.hour}:00`,
     count: h.count
-  }))
+  })), [hourly])
+
+  const topTeamsData = useMemo(() => top_teams.slice(0, 5).map((t) => ({
+    ...t,
+    name: getTeamName(t.team_id)
+  })), [top_teams, getTeamName])
 
   return (
     <div style={{ padding: '24px' }}>
@@ -144,9 +151,9 @@ export function Dashboard() {
                 </tr>
               </thead>
               <tbody>
-                {top_teams.slice(0, 5).map((t, i: number) => (
+                {topTeamsData.map((t, i: number) => (
                   <tr key={i} style={{ borderBottom: '1px solid #eee' }}>
-                    <td style={{ padding: '8px' }}>{getTeamName(t.team_id)}</td>
+                    <td style={{ padding: '8px' }}>{t.name}</td>
                     <td style={{ padding: '8px' }}>{t.source}</td>
                     <td style={{ padding: '8px', textAlign: 'right' }}>{t.count}</td>
                   </tr>
@@ -159,6 +166,54 @@ export function Dashboard() {
     </div>
   )
 }
+
+const ActivityBarChart = memo(({ data }: { data: { date: string; [key: string]: string | number }[] }) => (
+  <ResponsiveContainer width="100%" height="100%">
+    <BarChart data={data}>
+      <CartesianGrid strokeDasharray="3 3" />
+      <XAxis dataKey="date" />
+      <YAxis />
+      <Tooltip />
+      <Legend />
+      <Bar dataKey="git" fill="#8884d8" name="Git" />
+      <Bar dataKey="pm" fill="#82ca9d" name="PM" />
+      <Bar dataKey="cicd" fill="#ffc658" name="CI/CD" />
+    </BarChart>
+  </ResponsiveContainer>
+))
+
+const HourlyBarChart = memo(({ data }: { data: { hour: string; count: number }[] }) => (
+  <ResponsiveContainer width="100%" height="100%">
+    <BarChart data={data}>
+      <CartesianGrid strokeDasharray="3 3" />
+      <XAxis dataKey="hour" />
+      <YAxis />
+      <Tooltip />
+      <Bar dataKey="count" fill="#0088FE" name="Events" />
+    </BarChart>
+  </ResponsiveContainer>
+))
+
+const AuthorsPieChart = memo(({ data }: { data: { author: string; count: number }[] }) => (
+  <ResponsiveContainer width="100%" height={200}>
+    <PieChart>
+      <Pie
+        data={data}
+        dataKey="count"
+        nameKey="author"
+        cx="50%"
+        cy="50%"
+        outerRadius={60}
+        label={({ author, count }) => `${author}: ${count}`}
+      >
+        {data.map((_, index) => (
+          <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+        ))}
+      </Pie>
+      <Tooltip />
+    </PieChart>
+  </ResponsiveContainer>
+))
 
 const cardStyle = {
   background: '#fff',
