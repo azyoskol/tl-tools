@@ -1,0 +1,18 @@
+clickhouse:
+  host: "localhost"
+  port: 9000
+
+pushgateway:
+  host: ""
+  port: 9091
+
+poll_interval: 5
+
+teams:
+  - id: "550e8400-e29b-41d4-a716-446655440000"
+    name: "Platform Team"
+    sources:
+      - type: "prometheus"
+        config:
+          url: "http://prometheus:9090"
+          query: "up"
