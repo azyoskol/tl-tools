@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, memo } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 import { api } from '../api/client'
 import { DashboardData } from '../types'
@@ -166,54 +166,6 @@ export function Dashboard() {
     </div>
   )
 }
-
-const ActivityBarChart = memo(({ data }: { data: { date: string; [key: string]: string | number }[] }) => (
-  <ResponsiveContainer width="100%" height="100%">
-    <BarChart data={data}>
-      <CartesianGrid strokeDasharray="3 3" />
-      <XAxis dataKey="date" />
-      <YAxis />
-      <Tooltip />
-      <Legend />
-      <Bar dataKey="git" fill="#8884d8" name="Git" />
-      <Bar dataKey="pm" fill="#82ca9d" name="PM" />
-      <Bar dataKey="cicd" fill="#ffc658" name="CI/CD" />
-    </BarChart>
-  </ResponsiveContainer>
-))
-
-const HourlyBarChart = memo(({ data }: { data: { hour: string; count: number }[] }) => (
-  <ResponsiveContainer width="100%" height="100%">
-    <BarChart data={data}>
-      <CartesianGrid strokeDasharray="3 3" />
-      <XAxis dataKey="hour" />
-      <YAxis />
-      <Tooltip />
-      <Bar dataKey="count" fill="#0088FE" name="Events" />
-    </BarChart>
-  </ResponsiveContainer>
-))
-
-const AuthorsPieChart = memo(({ data }: { data: { author: string; count: number }[] }) => (
-  <ResponsiveContainer width="100%" height={200}>
-    <PieChart>
-      <Pie
-        data={data}
-        dataKey="count"
-        nameKey="author"
-        cx="50%"
-        cy="50%"
-        outerRadius={60}
-        label={({ author, count }) => `${author}: ${count}`}
-      >
-        {data.map((_, index) => (
-          <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
-        ))}
-      </Pie>
-      <Tooltip />
-    </PieChart>
-  </ResponsiveContainer>
-))
 
 const cardStyle = {
   background: '#fff',
