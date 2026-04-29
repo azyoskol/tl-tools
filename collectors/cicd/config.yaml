@@ -1,0 +1,23 @@
+clickhouse:
+  host: "localhost"
+  port: 9000
+
+webhook:
+  port: 8082
+
+poll_interval: 5
+
+teams:
+  - id: "550e8400-e29b-41d4-a716-446655440000"
+    name: "Platform Team"
+    sources:
+      - type: "github_actions"
+        config:
+          token: "${GITHUB_TOKEN}"
+          owner: "${GITHUB_OWNER}"
+          repos: "repo1,repo2"
+      - type: "gitlab_ci"
+        config:
+          token: "${GITLAB_TOKEN}"
+          url: "${GITLAB_URL}"
+          projects: "group/project1,group/project2"
