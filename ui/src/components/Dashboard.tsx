@@ -1,25 +1,20 @@
 import { useEffect, useState } from 'react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 import { api } from '../api/client'
-import { DashboardData, Team } from '../types'
+import { DashboardData } from '../types'
+import { useTeams } from '../hooks/useTeams'
 
 const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff8042', '#0088FE', '#00C49F', '#FFBB28', '#FF8042']
 
 export function Dashboard() {
   const [data, setData] = useState<DashboardData | null>(null)
-  const [teams, setTeams] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(true)
+  const { getTeamName } = useTeams()
 
   useEffect(() => {
-    Promise.all([
-      api.getDashboard(),
-      api.getTeams()
-    ])
-      .then(([dashRes, teamsRes]) => {
-        setData(dashRes.data)
-        const teamMap: Record<string, string> = {}
-        teamsRes.data.forEach((t: Team) => { teamMap[t.id] = t.name })
-        setTeams(teamMap)
+    api.getDashboard()
+      .then(res => {
+        setData(res.data)
         setLoading(false)
       })
       .catch(err => { console.error(err); setLoading(false) })
@@ -137,7 +132,7 @@ export function Dashboard() {
               <tbody>
                 {top_teams.slice(0, 5).map((t, i: number) => (
                   <tr key={i} style={{ borderBottom: '1px solid #eee' }}>
-                    <td style={{ padding: '8px' }}>{teams[t.team_id] || t.team_id.slice(0, 8)}</td>
+                    <td style={{ padding: '8px' }}>{getTeamName(t.team_id)}</td>
                     <td style={{ padding: '8px' }}>{t.source}</td>
                     <td style={{ padding: '8px', textAlign: 'right' }}>{t.count}</td>
                   </tr>

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { api } from '../api/client'
-import { Team } from '../types'
+import { useTeams } from '../hooks/useTeams'
 
 interface TeamData {
   team_id: string;
@@ -19,20 +19,14 @@ interface ChartData {
 
 export function TeamComparison() {
   const [data, setData] = useState<TeamData[]>([])
-  const [teams, setTeams] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(true)
   const [view, setView] = useState<'chart' | 'table'>('chart')
+  const { getTeamName } = useTeams()
 
   useEffect(() => {
-    Promise.all([
-      api.getTeamsComparison(),
-      api.getTeams()
-    ])
-      .then(([compRes, teamsRes]) => {
-        setData(compRes.data)
-        const teamMap: Record<string, string> = {}
-        teamsRes.data.forEach((t: Team) => { teamMap[t.id] = t.name })
-        setTeams(teamMap)
+    api.getTeamsComparison()
+      .then(res => {
+        setData(res.data)
         setLoading(false)
       })
       .catch(err => { console.error(err); setLoading(false) })
@@ -42,7 +36,7 @@ export function TeamComparison() {
   if (!data.length) return <div>No comparison data</div>
 
   const chartData: ChartData[] = data.map(t => ({
-    name: teams[t.team_id] || t.team_id.slice(0, 8),
+    name: getTeamName(t.team_id),
     PRs: t.prs,
     Tasks: t.tasks,
     "CI Runs": t.ci_runs
