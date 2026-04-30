@@ -15,7 +15,7 @@ import (
 	"github.com/google/uuid"
 	"gopkg.in/yaml.v3"
 
-	"github.com/azyoskol/tl-tools/collectors/pm/adapters"
+	"github.com/getmetraly/metraly/collectors/pm/adapters"
 )
 
 type Config struct {

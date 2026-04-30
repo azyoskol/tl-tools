@@ -17,7 +17,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"gopkg.in/yaml.v3"
 	
-	"github.com/azyoskol/tl-tools/collectors/shared/retry"
+	"github.com/getmetraly/metraly/collectors/shared/retry"
 )
 
 type Config struct {

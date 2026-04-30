@@ -8,6 +8,5 @@ RUN go build -o collector .
 FROM alpine:latest
 RUN apk --no-cache add ca-certificates
 COPY --from=builder /app/collector .
-COPY config.yaml .
 
 CMD ["./collector"]

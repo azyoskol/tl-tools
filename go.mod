@@ -1,4 +1,4 @@
-module github.com/azyoskol/tl-tools
+module github.com/getmetraly/metraly
 
 go 1.26.1
 

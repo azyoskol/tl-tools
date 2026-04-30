@@ -1,16 +1,16 @@
-module github.com/azyoskol/tl-tools/collectors/git
+module github.com/getmetraly/tl-tools/collectors/git
 
 go 1.21
 
 require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.15.0
-	github.com/azyoskol/tl-tools/collectors/shared v0.0.0-00010101000000-000000000000
+	github.com/getmetraly/tl-tools/collectors/shared v0.0.0-00010101000000-000000000000
 	github.com/google/uuid v1.4.0
 	github.com/prometheus/client_golang v1.18.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
-replace github.com/azyoskol/tl-tools/collectors/shared => ../shared
+replace github.com/getmetraly/tl-tools/collectors/shared => ../shared
 
 require (
 	github.com/ClickHouse/ch-go v0.58.2 // indirect

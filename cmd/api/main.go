@@ -1,93 +1,62 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"os"
-	"os/signal"
-	"syscall"
 
-	"github.com/azyoskol/tl-tools/api/pkg/cache"
-	"github.com/azyoskol/tl-tools/api/pkg/config"
-	"github.com/azyoskol/tl-tools/api/pkg/database"
-	"github.com/azyoskol/tl-tools/api/pkg/handlers"
-	"github.com/azyoskol/tl-tools/api/pkg/logger"
-	"github.com/azyoskol/tl-tools/api/pkg/middleware"
 	"github.com/go-chi/chi/v5"
-	chiMiddleware "github.com/go-chi/chi/v5/middleware"
-	"github.com/joho/godotenv"
+
+	"github.com/getmetraly/metraly/internal/pkg/cache"
+	"github.com/getmetraly/metraly/internal/pkg/config"
+	"github.com/getmetraly/metraly/internal/pkg/database"
+	"github.com/getmetraly/metraly/internal/pkg/handlers"
+	"github.com/getmetraly/metraly/internal/pkg/logger"
+	"github.com/getmetraly/metraly/internal/pkg/middleware"
 )
 
 func main() {
-	godotenv.Load()
-
 	cfg := config.NewEnvConfig()
-
 	log := logger.NewStdLogger()
 
 	db, err := database.NewClickHouse(cfg)
 	if err != nil {
-		log.Error("Failed to connect to ClickHouse: %v", err)
+		log.Error("clickhouse connect: %v", err)
 		os.Exit(1)
 	}
 
-	redisCache, err := cache.NewRedisCache(cfg)
+	cacheStore, err := cache.NewRedisCache(cfg)
 	if err != nil {
-		log.Warn("Failed to connect to Redis, using in-memory cache")
+		log.Error("redis connect: %v", err)
+		os.Exit(1)
 	}
 
-	teamsHandler := handlers.NewTeamsHandler(db)
-	dashboardHandler := handlers.NewDashboardHandler(db)
-	healthHandler := handlers.NewHealthHandler(db)
-	overviewHandler := handlers.NewOverviewHandler(db)
-	velocityHandler := handlers.NewVelocityHandler(db)
-	comparisonHandler := handlers.NewComparisonHandler(db)
-	webhookHandler := handlers.NewWebhookHandler(db)
+	healthH := handlers.NewHealthHandler(db)
+	dashboardH := handlers.NewDashboardHandler(db)
+	overviewH := handlers.NewOverviewHandler(db)
+	velocityH := handlers.NewVelocityHandler(db)
+	comparisonH := handlers.NewComparisonHandler(db)
+	webhookH := handlers.NewWebhookHandler(db)
 
 	r := chi.NewRouter()
-	r.Use(chiMiddleware.RequestID)
-	r.Use(chiMiddleware.RealIP)
-	r.Use(chiMiddleware.Logger)
-	r.Use(chiMiddleware.Recoverer)
 	r.Use(middleware.CORS)
+	r.Use(middleware.CacheMiddleware(cacheStore))
 
-	r.Get("/", healthHandler.Root)
+	r.Get("/", healthH.Root)
+	r.Get("/health", healthH.API)
+	r.Get("/health/clickhouse", healthH.ClickHouse)
 
-	r.Route("/health", func(r chi.Router) {
-		r.Get("/api", healthHandler.API)
-		r.Get("/clickhouse", healthHandler.ClickHouse)
-	})
-
-	r.Route("/api/v1", func(r chi.Router) {
-		r.Use(middleware.CacheMiddleware(redisCache))
-		r.Mount("/teams", teamsHandler.Routes())
-		r.Get("/dashboard", dashboardHandler.ServeHTTP)
-		r.Mount("/teams", chi.NewRouter().Group(func(g chi.Router) {
-			g.Route("/{team_id}", func(g chi.Router) {
-				g.Get("/overview", overviewHandler.Overview)
-				g.Get("/activity", overviewHandler.Activity)
-				g.Get("/insights", overviewHandler.Insights)
-				g.Get("/velocity", velocityHandler.ServeHTTP)
-			})
-		}))
-		r.Get("/teams/compare", comparisonHandler.ServeHTTP)
-	})
-
-	r.Post("/api/v1/webhook/receive", webhookHandler.Receive)
+	r.Get("/api/v1/dashboard", dashboardH.ServeHTTP)
+	r.Mount("/api/v1/teams", overviewH.Routes())
+	r.Get("/api/v1/teams/{team_id}/velocity", velocityH.ServeHTTP)
+	r.Get("/api/v1/teams/comparison", comparisonH.ServeHTTP)
+	r.Post("/api/v1/collectors", webhookH.Receive)
 
 	port := cfg.Get("PORT", "8000")
-	log.Info("Starting server on :%s", port)
-
-	srv := &http.Server{Addr: ":" + port, Handler: r}
-
-	go func() {
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Error("ListenAndServe: %v", err)
-		}
-	}()
-
-	ch := make(chan os.Signal, 1)
-	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
-	<-ch
-	log.Info("Shutting down server...")
-	srv.Close()
+	addr := fmt.Sprintf(":%s", port)
+	log.Info("listening on %s", addr)
+	if err := http.ListenAndServe(addr, r); err != nil {
+		log.Error("server: %v", err)
+		os.Exit(1)
+	}
 }

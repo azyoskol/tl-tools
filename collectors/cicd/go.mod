@@ -1,4 +1,4 @@
-module github.com/azyoskol/tl-tools/collectors/cicd
+module github.com/getmetraly/tl-tools/collectors/cicd
 
 go 1.21
 
