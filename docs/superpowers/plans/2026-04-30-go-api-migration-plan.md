@@ -1,12 +1,41 @@
-# Go API Migration Implementation Plan
+# Go API Migration Implementation Plan (SOLID)
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** Use superpowers:subagent-driven-development
 
 **Goal:** Migrate Python FastAPI to Go with full parity
 
-**Architecture:** Chi router + go-clickhouse driver, Redis cache, identical SQL queries
+**Architecture:** Chi + interfaces для зависимостей (SOLID)
 
 **Tech Stack:** Go 1.23, Chi, go-clickhouse/v2, go-redis
+
+---
+
+## SOLID Architecture
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    Handlers ( Layer )                   │
+│  └─ Зависят от Interfaces (DB, Cache, Config)          │
+└─────────────────────────┬───────────────────────────────┘
+                          │ depends on
+                          ▼
+┌─────────────────────────────────────────────────────────┐
+│                    Interfaces                           │
+│  ├─ Database interface                                  │
+│  ├─ Cache interface                                    │
+│  ├─ Config interface                                   │
+│  └─ Logger interface                                   │
+└─────────────────────────┬───────────────────────────────┘
+                          │ implements
+                          ▼
+┌─────────────────────────────────────────────────────────┐
+│                 Implementations                         │
+│  ├─ ClickHouse (implements Database)                   │
+│  ├─ RedisCache (implements Cache)                      │
+│  ├─ EnvConfig (implements Config)                      │
+│  └─ Log (implements Logger)                            │
+└─────────────────────────────────────────────────────────┘
+```
 
 ---
 
@@ -14,208 +43,131 @@
 
 ```
 cmd/api/
-  main.go                    # Entry point
+  main.go                    # Entry point, wire dependencies
 internal/
   config/
     config.go                # ENV config
-  clickhouse/
-    client.go                # ClickHouse queries
+    config_test.go           # Config tests
+  database/
+    interface.go             # Database interface (SOLID)
+    clickhouse.go            # ClickHouse implementation
+  cache/
+    interface.go            # Cache interface (SOLID)
+    redis.go                 # Redis + fallback implementation
+  logger/
+    interface.go            # Logger interface (SOLID)
+    stdlog.go                # Standard logger implementation
   handlers/
-    teams.go                 # Teams endpoints
-    dashboard.go             # Dashboard endpoint
-    overview.go              # Team overview/activity/insights
-    velocity.go              # Velocity endpoint
-    comparison.go            # Team comparison endpoint
-    webhook.go               # Webhook endpoints
-    health.go                # Health endpoints
+    teams.go
+    dashboard.go
+    overview.go
+    velocity.go
+    comparison.go
+    webhook.go
+    health.go
   middleware/
-    cache.go                 # Redis/in-memory cache
-    cors.go                  # CORS middleware
+    cache.go                 # Cache middleware (uses Cache interface)
+    cors.go
   models/
-    types.go                 # Request/Response structs
+    types.go
 ```
 
 ---
 
 ## Tasks
 
-### Task 1: Project Setup
+### Task 1: Interfaces (SOLID Core)
 
 **Files:**
-- Create: `cmd/api/main.go`
-- Create: `go.mod`
+- Create: `internal/database/interface.go`
+- Create: `internal/cache/interface.go`
+- Create: `internal/logger/interface.go`
+- Create: `internal/config/interface.go`
 
-- [ ] **Step 1: Initialize Go module**
-
-```bash
-cd /home/zubarev/sources/tl-tools
-mkdir -p cmd/api internal/config internal/clickhouse internal/handlers internal/middleware internal/models
-cd cmd/api
-go mod init github.com/azyoskol/tl-tools/api
-```
-
-- [ ] **Step 2: Add dependencies**
-
-```bash
-go get github.com/go-chi/chi/v5
-go get github.com/clickhouse/go-clickhouse/v2
-go get github.com/redis/go-redis/v9
-go get github.com/joho/godotenv
-```
-
-- [ ] **Step 3: Write main.go**
+- [ ] **Step 1: Write database interface**
 
 ```go
-package main
+package database
 
-import (
-    "log"
-    "net/http"
-    "os"
-    "os/signal"
-    "syscall"
+import "context"
 
-    "github.com/azyoskol/tl-tools/api/internal/config"
-    "github.com/azyoskol/tl-tools/api/internal/handlers"
-    "github.com/azyoskol/tl-tools/api/internal/middleware"
-    "github.com/go-chi/chi/v5"
-    "github.com/go-chi/chi/v5/middleware"
-    "github.com/joho/godotenv"
+type QueryResult []map[string]any
+
+type Database interface {
+    Query(ctx context.Context, query string, args ...any) (QueryResult, error)
+    Exec(ctx context.Context, query string, args ...any) error
+    Ping(ctx context.Context) error
+}
+```
+
+- [ ] **Step 2: Write cache interface**
+
+```go
+package cache
+
+import "context"
+
+type Cache interface {
+    Get(ctx context.Context, key string) (string, error)
+    Set(ctx context.Context, key string, value string, ttl int) error
+    Delete(ctx context.Context, key string) error
+}
+```
+
+- [ ] **Step 3: Write logger interface**
+
+```go
+package logger
+
+type Level int
+
+const (
+    DEBUG Level = iota
+    INFO
+    WARN
+    ERROR
 )
 
-func main() {
-    godotenv.Load()
-
-    r := chi.NewRouter()
-    r.Use(middleware.RequestID)
-    r.Use(middleware.RealIP)
-    r.Use(middleware.Logger)
-    r.Use(middleware.Recoverer)
-    r.Use(middleware.CORS)
-
-    r.Get("/", handlers.Root)
-    rMount(r)
-
-    port := config.Get("PORT", "8000")
-    log.Printf("Starting server on :%s", port)
-
-    srv := &http.Server{
-        Addr:         ":" + port,
-        Handler:      r,
-    }
-
-    go func() {
-        if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-            log.Fatalf("ListenAndServe: %v", err)
-        }
-    }()
-
-    ch := make(chan os.Signal, 1)
-    signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
-    <-ch
-
-    log.Println("Shutting down server...")
-    srv.Close()
-}
-
-func rMount(r *chi.Mux) {
-    r.Route("/api/v1", func(r chi.Router) {
-        r.Use(middleware.CacheMiddleware)
-        r.Mount("/teams", handlers.TeamsRouter())
-        r.Mount("/dashboard", handlers.DashboardRouter())
-    })
-
-    r.Route("/health", func(r chi.Router) {
-        r.Get("/api", handlers.HealthAPI)
-        r.Get("/clickhouse", handlers.HealthClickHouse)
-    })
-
-    r.Post("/api/v1/webhook/receive", handlers.WebhookReceive)
+type Logger interface {
+    Debug(msg string, args ...any)
+    Info(msg string, args ...any)
+    Warn(msg string, args ...any)
+    Error(msg string, args ...any)
 }
 ```
 
-- [ ] **Step 4: Commit**
-
-```bash
-git add cmd/ internal/ go.mod go.sum
-git commit -m "feat: initial Go API structure"
-```
-
----
-
-### Task 2: Config
-
-**Files:**
-- Create: `internal/config/config.go`
-
-- [ ] **Step 1: Write config.go**
+- [ ] **Step 4: Write config interface**
 
 ```go
 package config
 
-import (
-    "os"
-)
-
-func Get(key, defaultValue string) string {
-    if value := os.Getenv(key); value != "" {
-        return value
-    }
-    return defaultValue
-}
-
-func GetInt(key string, defaultValue int) int {
-    if value := os.Getenv(key); value != "" {
-        var intVal int
-        for _, c := range value {
-            if c >= '0' && c <= '9' {
-                intVal = intVal*10 + int(c-'0')
-            }
-        }
-        return intVal
-    }
-    return defaultValue
-}
-
-func ClickHouseHost() string {
-    return Get("CLICKHOUSE_HOST", "localhost")
-}
-
-func ClickHousePort() string {
-    return Get("CLICKHOUSE_PORT", "9000")
-}
-
-func ClickHouseDB() string {
-    return Get("CLICKHOUSE_DB", "default")
-}
-
-func RedisHost() string {
-    return Get("REDIS_HOST", "redis")
-}
-
-func RedisPort() string {
-    return Get("REDIS_PORT", "6379")
+type Config interface {
+    Get(key, defaultValue string) string
+    GetInt(key string, defaultValue int) int
 }
 ```
 
-- [ ] **Step 2: Commit**
+- [ ] **Step 5: Commit**
 
 ```bash
-git add internal/config/config.go
-git commit -m "feat: add config module"
+git add internal/database/interface.go internal/cache/interface.go internal/logger/interface.go internal/config/interface.go
+git commit -m "feat: add SOLID interfaces (Database, Cache, Logger, Config)"
 ```
 
 ---
 
-### Task 3: ClickHouse Client
+### Task 2: Implementations
 
 **Files:**
-- Create: `internal/clickhouse/client.go`
+- Modify: `internal/database/interface.go` → add clickhouse.go
+- Modify: `internal/cache/interface.go` → add redis.go
+- Modify: `internal/logger/interface.go` → add stdlog.go
+- Modify: `internal/config/interface.go` → add env.go
 
-- [ ] **Step 1: Write client.go**
+- [ ] **Step 1: Write ClickHouse implementation**
 
 ```go
-package clickhouse
+package database
 
 import (
     "context"
@@ -223,45 +175,32 @@ import (
 
     "github.com/azyoskol/tl-tools/api/internal/config"
     "github.com/clickhouse/go-clickhouse/v2"
-    "github.com/clickhouse/go-clickhouse/v2/conn"
 )
 
-var client *clickhouse.Client
+type clickhouseDB struct {
+    client *clickhouse.Client
+}
 
-func Init() error {
-    var err error
-    client, err = clickhouse.Open(&clickhouse.Options{
-        Addr: []string{
-            fmt.Sprintf("%s:%s", config.ClickHouseHost(), config.ClickHousePort()),
-        },
-        Settings: clickhouse.Settings{
-            "database": config.ClickHouseDB(),
-        },
-        DialTimeout: 5e9,
+func NewClickHouse(cfg config.Config) (Database, error) {
+    client, err := clickhouse.Open(&clickhouse.Options{
+        Addr: []string{fmt.Sprintf("%s:%s", cfg.Get("CLICKHOUSE_HOST", "localhost"), cfg.Get("CLICKHOUSE_PORT", "9000"))},
+        Settings: clickhouse.Settings{"database": cfg.Get("CLICKHOUSE_DB", "default")},
     })
     if err != nil {
-        return fmt.Errorf("clickhouse open: %w", err)
+        return nil, fmt.Errorf("clickhouse open: %w", err)
     }
 
-    if err := client.Ping(context.Background()); err != nil {
-        return fmt.Errorf("clickhouse ping: %w", err)
-    }
-
-    return nil
+    return &clickhouseDB{client: client}, nil
 }
 
-func Get() *clickhouse.Client {
-    return client
-}
-
-func Query(ctx context.Context, query string, args ...interface{}) ([]map[string]any, error) {
-    rows, err := client.Query(ctx, query, args...)
+func (c *clickhouseDB) Query(ctx context.Context, query string, args ...any) (QueryResult, error) {
+    rows, err := c.client.Query(ctx, query, args...)
     if err != nil {
         return nil, err
     }
     defer rows.Close()
 
-    var results []map[string]any
+    var results QueryResult
     for rows.Next() {
         var m map[string]any
         if err := rows.ScanMap(&m); err != nil {
@@ -269,137 +208,170 @@ func Query(ctx context.Context, query string, args ...interface{}) ([]map[string
         }
         results = append(results, m)
     }
-
     return results, rows.Err()
 }
 
-func Exec(ctx context.Context, query string, args ...interface{}) error {
-    return client.Exec(ctx, query, args...)
+func (c *clickhouseDB) Exec(ctx context.Context, query string, args ...any) error {
+    return c.client.Exec(ctx, query, args...)
+}
+
+func (c *clickhouseDB) Ping(ctx context.Context) error {
+    return c.client.Ping(ctx)
 }
 ```
 
-- [ ] **Step 2: Commit**
+- [ ] **Step 2: Write Redis cache implementation**
+
+```go
+package cache
+
+import (
+    "context"
+    "sync"
+    "time"
+
+    "github.com/azyoskol/tl-tools/api/internal/config"
+    "github.com/redis/go-redis/v9"
+)
+
+type redisCache struct {
+    client     *redis.Client
+    mu         sync.RWMutex
+    inMemory   map[string]inMemEntry
+    useRedis   bool
+}
+
+type inMemEntry struct {
+    value   string
+    expires time.Time
+}
+
+func NewRedisCache(cfg config.Config) (Cache, error) {
+    client := redis.NewClient(&redis.Options{
+        Addr: cfg.Get("REDIS_HOST", "redis") + ":" + cfg.Get("REDIS_PORT", "6379"),
+    })
+
+    ctx := context.Background()
+    if err := client.Ping(ctx).Err(); err != nil {
+        return &redisCache{client: nil, inMemory: make(map[string]inMemEntry), useRedis: false}, nil
+    }
+
+    return &redisCache{client: client, inMemory: make(map[string]inMemEntry), useRedis: true}, nil
+}
+
+func (r *redisCache) Get(ctx context.Context, key string) (string, error) {
+    if r.useRedis && r.client != nil {
+        return r.client.Get(ctx, key).Result()
+    }
+
+    r.mu.RLock()
+    defer r.mu.RUnlock()
+    if entry, ok := r.inMemory[key]; ok && entry.expires.After(time.Now()) {
+        return entry.value, nil
+    }
+    return "", redis.Nil
+}
+
+func (r *redisCache) Set(ctx context.Context, key string, value string, ttl int) error {
+    if r.useRedis && r.client != nil {
+        return r.client.SetEx(ctx, key, value, time.Duration(ttl)*time.Second).Err()
+    }
+
+    r.mu.Lock()
+    defer r.mu.Unlock()
+    r.inMemory[key] = inMemEntry{value: value, expires: time.Now().Add(time.Duration(ttl) * time.Second)}
+    return nil
+}
+
+func (r *redisCache) Delete(ctx context.Context, key string) error {
+    if r.useRedis && r.client != nil {
+        return r.client.Del(ctx, key).Err()
+    }
+
+    r.mu.Lock()
+    defer r.mu.Unlock()
+    delete(r.inMemory, key)
+    return nil
+}
+```
+
+- [ ] **Step 3: Write logger implementation**
+
+```go
+package logger
+
+import "log"
+
+type stdLogger struct {
+    logger *log.Logger
+}
+
+func NewStdLogger() Logger {
+    return &stdLogger{logger: log.Default()}
+}
+
+func (l *stdLogger) Debug(msg string, args ...any) {
+    l.logger.Printf("[DEBUG] "+msg, args...)
+}
+
+func (l *stdLogger) Info(msg string, args ...any) {
+    l.logger.Printf("[INFO] "+msg, args...)
+}
+
+func (l *stdLogger) Warn(msg string, args ...any) {
+    l.logger.Printf("[WARN] "+msg, args...)
+}
+
+func (l *stdLogger) Error(msg string, args ...any) {
+    l.logger.Printf("[ERROR] "+msg, args...)
+}
+```
+
+- [ ] **Step 4: Write config implementation**
+
+```go
+package config
+
+import "os"
+
+type envConfig struct{}
+
+func NewEnvConfig() Config {
+    return &envConfig{}
+}
+
+func (e *envConfig) Get(key, defaultValue string) string {
+    if v := os.Getenv(key); v != "" {
+        return v
+    }
+    return defaultValue
+}
+
+func (e *envConfig) GetInt(key string, defaultValue int) int {
+    var n int
+    fmt.Sscanf(os.Getenv(key), "%d", &n)
+    if n == 0 {
+        return defaultValue
+    }
+    return n
+}
+```
+
+- [ ] **Step 5: Commit**
 
 ```bash
-git add internal/clickhouse/client.go
-git commit -m "feat: add ClickHouse client"
+git add internal/database/clickhouse.go internal/cache/redis.go internal/logger/stdlog.go internal/config/env.go
+git commit -m "feat: add interface implementations (ClickHouse, Redis, Logger, EnvConfig)"
 ```
 
 ---
 
-### Task 4: Models
+### Task 3: Models
 
 **Files:**
 - Create: `internal/models/types.go`
 
-- [ ] **Step 1: Write types.go**
-
-```go
-package models
-
-type Team struct {
-    ID   string `json:"id"`
-    Name string `json:"name"`
-}
-
-type DashboardResponse struct {
-    Overview   Overview       `json:"overview"`
-    Activity   []Activity     `json:"activity"`
-    TopTeams   []TeamActivity `json:"top_teams"`
-    Hourly     []Hourly       `json:"hourly"`
-    TopAuthors []Author       `json:"top_authors"`
-}
-
-type Overview struct {
-    PRsOpened     int `json:"prs_opened"`
-    PRsMerged     int `json:"prs_merged"`
-    TasksBlocked  int `json:"tasks_blocked"`
-    CIFailures    int `json:"ci_failures"`
-}
-
-type Activity struct {
-    Date       string `json:"date"`
-    SourceType string `json:"source_type"`
-    Count      int    `json:"count"`
-}
-
-type TeamActivity struct {
-    TeamID     string `json:"team_id"`
-    SourceType string `json:"source_type"`
-    Count      int    `json:"count"`
-}
-
-type Hourly struct {
-    Hour  string `json:"hour"`
-    Count int    `json:"count"`
-}
-
-type Author struct {
-    Author string `json:"author"`
-    Count  int    `json:"count"`
-}
-
-type TeamOverview struct {
-    TeamID              string `json:"team_id"`
-    Name                string `json:"name"`
-    PRsAwaitingReview  int    `json:"prs_awaiting_review"`
-    PRsMerged           int    `json:"prs_merged"`
-    BlockedTasks        int    `json:"blocked_tasks"`
-    CI FailuresLastHour int    `json:"ci_failures_last_hour"`
-}
-
-type TeamActivityResponse struct {
-    Data []Activity `json:"data"`
-}
-
-type TeamInsights struct {
-    Insights []Insight `json:"insights"`
-}
-
-type Insight struct {
-    Type    string `json:"type"`
-    Message string `json:"message"`
-}
-
-type VelocityResponse struct {
-    CycleTime []CycleMetric `json:"cycle_time"`
-    LeadTime  []LeadMetric  `json:"lead_time"`
-}
-
-type CycleMetric struct {
-    Date  string `json:"date"`
-    Tasks int    `json:"tasks"`
-}
-
-type LeadMetric struct {
-    Date  string `json:"date"`
-    Tasks int    `json:"tasks"`
-}
-
-type ComparisonResponse struct {
-    Teams []TeamCompare `json:"teams"`
-}
-
-type TeamCompare struct {
-    TeamID  string `json:"team_id"`
-    Name    string `json:"name"`
-    PRs     int    `json:"prs"`
-    Tasks   int    `json:"tasks"`
-    CIRuns  int    `json:"ci_runs"`
-}
-
-type WebhookRequest struct {
-    Source    string         `json:"source"`
-    EventType string         `json:"event_type"`
-    TeamID    string         `json:"team_id"`
-    Payload   map[string]any `json:"payload"`
-}
-
-type WebhookResponse struct {
-    Status   string `json:"status"`
-    Received string `json:"received"`
-}
-```
+- [ ] **Step 1: Write types (same as before)**
 
 - [ ] **Step 2: Commit**
 
@@ -410,74 +382,60 @@ git commit -m "feat: add models"
 
 ---
 
-### Task 5: Middleware - Cache
+### Task 4: Middleware (uses interfaces)
 
 **Files:**
-- Create: `internal/middleware/cache.go`
+- Create: `internal/middleware/cache.go` (injects Cache interface)
 
-- [ ] **Step 1: Write cache.go**
+- [ ] **Step 1: Write cache middleware**
 
 ```go
 package middleware
 
 import (
     "bytes"
+    "context"
     "crypto/md5"
     "encoding/hex"
-    "io"
     "net/http"
     "time"
 
-    "github.com/azyoskol/tl-tools/api/internal/config"
-    "github.com/redis/go-redis/v9"
+    "github.com/azyoskol/tl-tools/api/internal/cache"
 )
 
-var redisClient *redis.Client
-var inMemoryCache = make(map[string]cacheEntry)
+func CacheMiddleware(cache cache.Cache) func(http.Handler) http.Handler {
+    return func(next http.Handler) http.Handler {
+        return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+            if r.Method != http.MethodGet {
+                next.ServeHTTP(w, r)
+                return
+            }
 
-type cacheEntry struct {
-    data     string
-    expires  time.Time
-}
+            if shouldSkipCache(r.URL.Path) {
+                next.ServeHTTP(w, r)
+                return
+            }
 
-func InitCache() {
-    redisClient = redis.NewClient(&redis.Options{
-        Addr: config.RedisHost() + ":" + config.RedisPort(),
-    })
-}
+            key := getCacheKey(r)
+            if cached, err := cache.Get(r.Context(), key); err == nil && cached != "" {
+                w.Header().Set("Content-Type", "application/json")
+                w.Header().Set("Access-Control-Allow-Origin", "*")
+                w.Write([]byte(cached))
+                return
+            }
 
-func CacheMiddleware(next http.Handler) http.Handler {
-    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-        if r.Method != http.MethodGet {
-            next.ServeHTTP(w, r)
-            return
-        }
+            rec := &responseRecorder{ResponseWriter: w, body: &bytes.Buffer{}}
+            next.ServeHTTP(rec, r)
 
-        if shouldSkipCache(r.URL.Path) {
-            next.ServeHTTP(w, r)
-            return
-        }
-
-        key := getCacheKey(r)
-        cached := getFromCache(key)
-        if cached != "" {
-            w.Header().Set("Content-Type", "application/json")
-            w.Header().Set("Access-Control-Allow-Origin", "*")
-            w.Write([]byte(cached))
-            return
-        }
-
-        rec := &responseRecorder{ResponseWriter: w, body: &bytes.Buffer{}}
-        next.ServeHTTP(rec, r)
-
-        if rec.Code == http.StatusOK {
-            body := rec.body.String()
-            setCache(key, body)
-            w.Header().Set("Content-Type", "application/json")
-            w.Header().Set("Access-Control-Allow-Origin", "*")
-            w.Write([]byte(body))
-        }
-    })
+            if rec.Code == http.StatusOK {
+                body := rec.body.String()
+                cache.Set(r.Context(), key, body, 300)
+                w.Header().Set("Content-Type", "application/json")
+                w.Header().Set("Access-Control-Allow-Origin", "*")
+                w.Write([]byte(body))
+            }
+        })
+    }
 }
 
 func shouldSkipCache(path string) bool {
@@ -493,27 +451,6 @@ func shouldSkipCache(path string) bool {
 func getCacheKey(r *http.Request) string {
     hash := md5.Sum([]byte(r.URL.RawQuery))
     return "cache:" + r.URL.Path + ":" + hex.EncodeToString(hash[:])
-}
-
-func getFromCache(key string) string {
-    if redisClient != nil {
-        if val, err := redisClient.Get(r.Context(), key).Result(); err == nil {
-            return val
-        }
-    }
-
-    if entry, ok := inMemoryCache[key]; ok && entry.expires.After(time.Now()) {
-        return entry.data
-    }
-    return ""
-}
-
-func setCache(key, data string) {
-    if redisClient != nil {
-        redisClient.SetEx(r.Context(), key, data, 300*time.Second)
-    } else {
-        inMemoryCache[key] = cacheEntry{data: data, expires: time.Now().Add(300 * time.Second)}
-    }
 }
 
 type responseRecorder struct {
@@ -533,75 +470,50 @@ func (rec *responseRecorder) WriteHeader(code int) {
 }
 ```
 
-- [ ] **Step 2: Fix import**
+- [ ] **Step 2: Write CORS middleware**
 
-Replace `r.Context()` with proper context import.
+```go
+package middleware
+
+import "net/http"
+
+func CORS(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        w.Header().Set("Access-Control-Allow-Origin", "*")
+        w.Header().Set("Access-Control-Allow-Methods", "*")
+        w.Header().Set("Access-Control-Allow-Headers", "*")
+
+        if r.Method == "OPTIONS" {
+            w.WriteHeader(http.StatusOK)
+            return
+        }
+
+        next.ServeHTTP(w, r)
+    })
+}
+```
 
 - [ ] **Step 3: Commit**
 
 ```bash
-git add internal/middleware/cache.go
-git commit -m "feat: add cache middleware"
+git add internal/middleware/cache.go internal/middleware/cors.go
+git commit -m "feat: add middleware (Cache with interface, CORS)"
 ```
 
 ---
 
-### Task 6: Handlers - Health
+### Task 5: Handlers (inject interfaces via DI)
 
 **Files:**
+- Create: `internal/handlers/teams.go` (dependency injection)
+- Create: `internal/handlers/dashboard.go`
 - Create: `internal/handlers/health.go`
+- Create: `internal/handlers/overview.go`
+- Create: `internal/handlers/velocity.go`
+- Create: `internal/handlers/comparison.go`
+- Create: `internal/handlers/webhook.go`
 
-- [ ] **Step 1: Write health.go**
-
-```go
-package handlers
-
-import (
-    "encoding/json"
-    "net/http"
-
-    "github.com/azyoskol/tl-tools/api/internal/clickhouse"
-)
-
-func Root(w http.ResponseWriter, r *http.Request) {
-    json.NewEncoder(w).Encode(map[string]string{
-        "message": "Team Dashboard API",
-        "version": "1.0.0",
-    })
-}
-
-func HealthAPI(w http.ResponseWriter, r *http.Request) {
-    json.NewEncoder(w).Encode(map[string]string{
-        "status": "ok",
-    })
-}
-
-func HealthClickHouse(w http.ResponseWriter, r *http.Request) {
-    if err := clickhouse.Get().Ping(r.Context()); err != nil {
-        http.Error(w, `{"status":"error","message":"`+err.Error()+`"}`, 503)
-        return
-    }
-    json.NewEncoder(w).Encode(map[string]string{
-        "status": "ok",
-    })
-}
-```
-
-- [ ] **Step 2: Commit**
-
-```bash
-git add internal/handlers/health.go
-git commit -m "feat: add health handlers"
-```
-
----
-
-### Task 7: Handlers - Teams
-
-**Files:**
-- Create: `internal/handlers/teams.go`
-
-- [ ] **Step 1: Write teams.go**
+- [ ] **Step 1: Write teams handler with DI**
 
 ```go
 package handlers
@@ -610,19 +522,27 @@ import (
     "encoding/json"
     "net/http"
 
-    "github.com/azyoskol/tl-tools/api/internal/clickhouse"
+    "github.com/azyoskol/tl-tools/api/internal/database"
     "github.com/go-chi/chi/v5"
 )
 
-func TeamsRouter() http.Handler {
+type TeamsHandler struct {
+    db database.Database
+}
+
+func NewTeamsHandler(db database.Database) *TeamsHandler {
+    return &TeamsHandler{db: db}
+}
+
+func (h *TeamsHandler) Routes() http.Handler {
     r := chi.NewRouter()
-    r.Get("/", listTeams)
-    r.Get("/{team_id}", getTeam)
+    r.Get("/", h.List)
+    r.Get("/{team_id}", h.Get)
     return r
 }
 
-func listTeams(w http.ResponseWriter, r *http.Request) {
-    rows, err := clickhouse.Query(r.Context(), "SELECT id, name FROM teams")
+func (h *TeamsHandler) List(w http.ResponseWriter, r *http.Request) {
+    rows, err := h.db.Query(r.Context(), "SELECT id, name FROM teams")
     if err != nil {
         http.Error(w, err.Error(), 500)
         return
@@ -630,198 +550,269 @@ func listTeams(w http.ResponseWriter, r *http.Request) {
 
     var teams []map[string]any
     for _, row := range rows {
-        teams = append(teams, map[string]any{
-            "id":   row["id"],
-            "name": row["name"],
-        })
+        teams = append(teams, map[string]any{"id": row["id"], "name": row["name"]})
     }
     json.NewEncoder(w).Encode(teams)
 }
 
-func getTeam(w http.ResponseWriter, r *http.Request) {
+func (h *TeamsHandler) Get(w http.ResponseWriter, r *http.Request) {
     teamID := chi.URLParam(r, "team_id")
     if teamID == "comparison" {
         http.Error(w, `{"detail":"Team not found"}`, 404)
         return
     }
 
-    rows, err := clickhouse.Query(r.Context(), "SELECT id, name FROM teams WHERE id = %(team_id)s", map[string]any{"team_id": teamID})
+    rows, err := h.db.Query(r.Context(), "SELECT id, name FROM teams WHERE id = %(team_id)s", map[string]any{"team_id": teamID})
     if err != nil || len(rows) == 0 {
         http.Error(w, `{"detail":"Team not found"}`, 404)
         return
     }
 
+    json.NewEncoder(w).Encode(map[string]any{"id": rows[0]["id"], "name": rows[0]["name"]})
+}
+```
+
+- [ ] **Step 2: Write dashboard handler**
+
+```go
+package handlers
+
+import (
+    "context"
+    "encoding/json"
+    "net/http"
+
+    "github.com/azyoskol/tl-tools/api/internal/database"
+)
+
+type DashboardHandler struct {
+    db database.Database
+}
+
+func NewDashboardHandler(db database.Database) *DashboardHandler {
+    return &DashboardHandler{db: db}
+}
+
+func (h *DashboardHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+    ctx := r.Context()
+
     json.NewEncoder(w).Encode(map[string]any{
-        "id":   rows[0]["id"],
-        "name": rows[0]["name"],
+        "overview":   h.getOverview(ctx),
+        "activity":   h.getActivity(ctx),
+        "top_teams":  h.getTopTeams(ctx),
+        "hourly":     h.getHourly(ctx),
+        "top_authors": h.getTopAuthors(ctx),
     })
+}
+
+func (h *DashboardHandler) getOverview(ctx context.Context) map[string]int {
+    metrics := []struct{ key, source, event, period string }{
+        {"prs_opened", "git", "pr_opened", "INTERVAL 2 DAY"},
+        {"tasks_blocked", "pm", "task_blocked", "INTERVAL 1 DAY"},
+        {"ci_failures", "cicd", "pipeline_failed", "INTERVAL 1 HOUR"},
+        {"prs_merged", "git", "pr_merged", "INTERVAL 7 DAY"},
+    }
+
+    result := make(map[string]int)
+    for _, m := range metrics {
+        query := "SELECT count() FROM events WHERE source_type = ? AND event_type = ? AND occurred_at > now() - ?"
+        rows, _ := h.db.Query(ctx, query, m.source, m.event, m.period)
+        if len(rows) > 0 {
+            result[m.key] = int(rows[0]["count"].(int64))
+        }
+    }
+    return result
+}
+
+func (h *DashboardHandler) getActivity(ctx context.Context) []map[string]any {
+    rows, _ := h.db.Query(ctx, "SELECT toDate(occurred_at) as date, source_type, count() as count FROM events WHERE occurred_at > now() - INTERVAL 7 DAY GROUP BY date, source_type ORDER BY date")
+    var result []map[string]any
+    for _, r := range rows {
+        result = append(result, map[string]any{"date": r["date"], "source_type": r["source_type"], "count": r["count"]})
+    }
+    return result
+}
+
+func (h *DashboardHandler) getTopTeams(ctx context.Context) []map[string]any {
+    rows, _ := h.db.Query(ctx, "SELECT team_id, source_type, count() as cnt FROM events WHERE occurred_at > now() - INTERVAL 7 DAY GROUP BY team_id, source_type ORDER BY cnt DESC LIMIT 10")
+    var result []map[string]any
+    for _, r := range rows {
+        result = append(result, map[string]any{"team_id": r["team_id"], "source_type": r["source_type"], "count": r["cnt"]})
+    }
+    return result
+}
+
+func (h *DashboardHandler) getHourly(ctx context.Context) []map[string]any {
+    rows, _ := h.db.Query(ctx, "SELECT formatDateTime(occurred_at, '%H:00') as hour, count() as count FROM events WHERE occurred_at > now() - INTERVAL 24 HOUR GROUP BY hour ORDER BY hour")
+    var result []map[string]any
+    for _, r := range rows {
+        result = append(result, map[string]any{"hour": r["hour"], "count": r["count"]})
+    }
+    return result
+}
+
+func (h *DashboardHandler) getTopAuthors(ctx context.Context) []map[string]any {
+    rows, _ := h.db.Query(ctx, "SELECT JSONExtract(payload, 'author', 'String') as author, count() as count FROM events WHERE source_type = 'git' AND occurred_at > now() - INTERVAL 7 DAY GROUP BY author ORDER BY count DESC LIMIT 10")
+    var result []map[string]any
+    for _, r := range rows {
+        author, _ := r["author"].(string)
+        if author == "" {
+            author = "unknown"
+        }
+        result = append(result, map[string]any{"author": author, "count": r["count"]})
+    }
+    return result
+}
+```
+
+- [ ] **Step 3: Write remaining handlers (overview, velocity, comparison, webhook, health)**
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add internal/handlers/*.go
+git commit -m "feat: add all handlers with dependency injection"
+```
+
+---
+
+### Task 6: Main (Wire Dependencies)
+
+**Files:**
+- Create: `cmd/api/main.go`
+
+- [ ] **Step 1: Write main.go with DI**
+
+```go
+package main
+
+import (
+    "log"
+    "net/http"
+    "os"
+    "os/signal"
+    "syscall"
+
+    "github.com/azyoskol/tl-tools/api/internal/cache"
+    "github.com/azyoskol/tl-tools/api/internal/config"
+    "github.com/azyoskol/tl-tools/api/internal/database"
+    "github.com/azyoskol/tl-tools/api/internal/handlers"
+    "github.com/azyoskol/tl-tools/api/internal/logger"
+    "github.com/azyoskol/tl-tools/api/internal/middleware"
+    "github.com/go-chi/chi/v5"
+    "github.com/go-chi/chi/v5/middleware"
+    "github.com/joho/godotenv"
+)
+
+func main() {
+    godotenv.Load()
+
+    // 1. Create config (interface)
+    cfg := config.NewEnvConfig()
+
+    // 2. Create logger (interface)
+    log := logger.NewStdLogger()
+
+    // 3. Create database (implement interface)
+    db, err := database.NewClickHouse(cfg)
+    if err != nil {
+        log.Error("Failed to connect to ClickHouse: %v", err)
+        os.Exit(1)
+    }
+
+    // 4. Create cache (implement interface)
+    cache, err := cache.NewRedisCache(cfg)
+    if err != nil {
+        log.Warn("Failed to connect to Redis, using in-memory cache")
+    }
+
+    // 5. Create handlers with injected dependencies
+    teamsHandler := handlers.NewTeamsHandler(db)
+    dashboardHandler := handlers.NewDashboardHandler(db)
+    healthHandler := handlers.NewHealthHandler(db)
+    webhookHandler := handlers.NewWebhookHandler(db)
+
+    // 6. Build router
+    r := chi.NewRouter()
+    r.Use(middleware.RequestID)
+    r.Use(middleware.RealIP)
+    r.Use(middleware.Logger)
+    r.Use(middleware.Recoverer)
+    r.Use(middleware.CORS)
+
+    // Root
+    r.Get("/", healthHandler.Root)
+
+    // Health (no cache)
+    r.Route("/health", func(r chi.Router) {
+        r.Get("/api", healthHandler.API)
+        r.Get("/clickhouse", healthHandler.ClickHouse)
+    })
+
+    // API v1 with cache middleware
+    r.Route("/api/v1", func(r chi.Router) {
+        r.Use(middleware.CacheMiddleware(cache))
+        r.Mount("/teams", teamsHandler.Routes())
+        r.Get("/dashboard", dashboardHandler.ServeHTTP)
+    })
+
+    // Webhooks (no cache)
+    r.Post("/api/v1/webhook/receive", webhookHandler.Receive)
+
+    // Start server
+    port := cfg.Get("PORT", "8000")
+    log.Info("Starting server on :%s", port)
+
+    srv := &http.Server{Addr: ":" + port, Handler: r}
+
+    go func() {
+        if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+            log.Error("ListenAndServe: %v", err)
+        }
+    }()
+
+    <-make(chan os.Signal, 1)
+    log.Info("Shutting down server...")
+    srv.Close()
 }
 ```
 
 - [ ] **Step 2: Commit**
 
 ```bash
-git add internal/handlers/teams.go
-git commit -m "feat: add teams handlers"
+git add cmd/api/main.go
+git commit -m "feat: wire all dependencies in main (SOLID DI)"
 ```
 
 ---
 
-### Task 8: Handlers - Dashboard
+### Task 7: go.mod
 
 **Files:**
-- Create: `internal/handlers/dashboard.go`
+- Create: `go.mod`
+- Create: `go.sum`
 
-- [ ] **Step 1: Write dashboard.go**
-
-```go
-package handlers
-
-import (
-    "encoding/json"
-    "net/http"
-    "strings"
-
-    "github.com/azyoskol/tl-tools/api/internal/clickhouse"
-)
-
-func DashboardRouter() http.Handler {
-    return http.HandlerFunc(getDashboard)
-}
-
-func getDashboard(w http.ResponseWriter, r *http.Request) {
-    overview := getOverview(r.Context())
-    activity := getActivity(r.Context())
-    topTeams := getTopTeams(r.Context())
-    hourly := getHourly(r.Context())
-    topAuthors := getTopAuthors(r.Context())
-
-    json.NewEncoder(w).Encode(map[string]any{
-        "overview":   overview,
-        "activity":   activity,
-        "top_teams":  topTeams,
-        "hourly":     hourly,
-        "top_authors": topAuthors,
-    })
-}
-
-func getOverview(ctx interface{ Context() interface{} }) map[string]int {
-    metrics := map[string]struct {
-        source string
-        event  string
-        period string
-    }{
-        "prs_opened":    {"git", "pr_opened", "INTERVAL 2 DAY"},
-        "tasks_blocked": {"pm", "task_blocked", "INTERVAL 1 DAY"},
-        "ci_failures":   {"cicd", "pipeline_failed", "INTERVAL 1 HOUR"},
-        "prs_merged":    {"git", "pr_merged", "INTERVAL 7 DAY"},
-    }
-
-    result := make(map[string]int)
-    for key, m := range metrics {
-        query := "SELECT count() FROM events WHERE source_type = ? AND event_type = ? AND occurred_at > now() - ?"
-        rows, err := clickhouse.Query(ctx, query, m.source, m.event, m.period)
-        if err == nil && len(rows) > 0 {
-            result[key] = int(rows[0]["count"].(int64))
-        } else {
-            result[key] = 0
-        }
-    }
-    return result
-}
-
-func getActivity(ctx interface{ Context() interface{} }) []map[string]any {
-    query := "SELECT toDate(occurred_at) as date, source_type, count() as count FROM events WHERE occurred_at > now() - INTERVAL 7 DAY GROUP BY date, source_type ORDER BY date"
-    rows, _ := clickhouse.Query(ctx, query)
-    var activity []map[string]any
-    for _, r := range rows {
-        activity = append(activity, map[string]any{
-            "date":        r["date"],
-            "source_type": r["source_type"],
-            "count":       r["count"],
-        })
-    }
-    return activity
-}
-
-func getTopTeams(ctx interface{ Context() interface{} }) []map[string]any {
-    query := "SELECT team_id, source_type, count() as cnt FROM events WHERE occurred_at > now() - INTERVAL 7 DAY GROUP BY team_id, source_type ORDER BY cnt DESC LIMIT 10"
-    rows, _ := clickhouse.Query(ctx, query)
-    var teams []map[string]any
-    for _, r := range rows {
-        teams = append(teams, map[string]any{
-            "team_id":     r["team_id"],
-            "source_type": r["source_type"],
-            "count":       r["cnt"],
-        })
-    }
-    return teams
-}
-
-func getHourly(ctx interface{ Context() interface{} }) []map[string]any {
-    query := "SELECT formatDateTime(occurred_at, '%H:00') as hour, count() as count FROM events WHERE occurred_at > now() - INTERVAL 24 HOUR GROUP BY hour ORDER BY hour"
-    rows, _ := clickhouse.Query(ctx, query)
-    var hourly []map[string]any
-    for _, r := range rows {
-        hourly = append(hourly, map[string]any{
-            "hour":  r["hour"],
-            "count": r["count"],
-        })
-    }
-    return hourly
-}
-
-func getTopAuthors(ctx interface{ Context() interface{} }) []map[string]any {
-    query := "SELECT JSONExtract(payload, 'author', 'String') as author, count() as count FROM events WHERE source_type = 'git' AND occurred_at > now() - INTERVAL 7 DAY GROUP BY author ORDER BY count DESC LIMIT 10"
-    rows, _ := clickhouse.Query(ctx, query)
-    var authors []map[string]any
-    for _, r := range rows {
-        author, _ := r["author"].(string)
-        if author == "" {
-            author = "unknown"
-        }
-        authors = append(authors, map[string]any{
-            "author": author,
-            "count":  r["count"],
-        })
-    }
-    return authors
-}
-```
-
-- [ ] **Step 2: Fix context type**
-
-Replace `interface{ Context() interface{} }` with `context.Context`
-
-- [ ] **Step 3: Commit**
+- [ ] **Step 1: Initialize and add dependencies**
 
 ```bash
-git add internal/handlers/dashboard.go
-git commit -m "feat: add dashboard handler"
+cd /home/zubarev/sources/tl-tools
+go mod init github.com/azyoskol/tl-tools/api
+go get github.com/go-chi/chi/v5
+go get github.com/clickhouse/go-clickhouse/v2
+go get github.com/redis/go-redis/v9
+go get github.com/joho/godotenv
+```
+
+- [ ] **Step 2: Commit**
+
+```bash
+git add go.mod go.sum
+git commit -m "chore: add go.mod with dependencies"
 ```
 
 ---
 
-### Task 9: Handlers - Overview, Velocity, Comparison, Webhook
-
-**Files:**
-- Create: `internal/handlers/overview.go`
-- Create: `internal/handlers/velocity.go`
-- Create: `internal/handlers/comparison.go`
-- Create: `internal/handlers/webhook.go`
-
-Implement remaining handlers following patterns from Task 7-8.
-
-- [ ] **Commit each handler**
-
-```bash
-git add internal/handlers/overview.go internal/handlers/velocity.go internal/handlers/comparison.go internal/handlers/webhook.go
-git commit -m "feat: add remaining handlers"
-```
-
----
-
-### Task 10: Docker
+### Task 8: Docker
 
 **Files:**
 - Create: `cmd/api/Dockerfile`
@@ -844,24 +835,27 @@ CMD ["api"]
 
 - [ ] **Step 2: Modify docker-compose.yaml**
 
-Replace Python API service with Go service.
-
 - [ ] **Step 3: Commit**
 
 ```bash
 git add cmd/api/Dockerfile docker-compose.yaml
-git commit -m "feat: add Go API Docker"
+git commit -m "feat: add Docker for Go API"
 ```
 
 ---
 
-## Execution
+## SOLID Summary
 
-**Plan complete and saved to `docs/superpowers/plans/2026-04-30-go-api-migration-plan.md`**
+| Principle | How Applied |
+|-----------|--------------|
+| **Single Responsibility** | Each file has one job (handler, cache, db) |
+| **Open/Closed** | Add new handlers without modifying existing |
+| **Liskov Substitution** | Swap ClickHouse ↔ Mock for testing |
+| **Interface Segregation** | Small interfaces (Database, Cache, Logger) |
+| **Dependency Inversion** | Handlers depend on interfaces, not implementations |
 
-Two execution options:
+---
 
-1. **Subagent-Driven (recommended)** - dispatch fresh subagent per task, review between tasks
-2. **Inline Execution** - execute tasks in this session with checkpoints
+**Plan saved to:** `docs/superpowers/plans/2026-04-30-go-api-migration-plan.md`
 
-Which approach?
+**Execution?** (Subagent-Driven или Inline)
