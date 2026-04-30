@@ -370,7 +370,7 @@ func TestWebhookHandler_ReturnsOk(t *testing.T) {
 	body, _ := json.Marshal(biz.WebhookRequest{
 		Source:    "git",
 		EventType: "pr_opened",
-		TeamID:    "team-1",
+		TeamID:    "550e8400-e29b-41d4-a716-446655440000",
 		Payload:   map[string]any{"pr_id": 123},
 	})
 

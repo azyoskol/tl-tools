@@ -14,10 +14,10 @@ type DatabaseExec interface {
 }
 
 type WebhookRequest struct {
-	Source    string         `json:"source"`
-	EventType string         `json:"event_type"`
-	TeamID    string         `json:"team_id"`
-	Payload   map[string]any `json:"payload"`
+	Source    string         `json:"source" validate:"required,oneof=git pm cicd metrics"`
+	EventType string         `json:"event_type" validate:"required,max=100"`
+	TeamID    string         `json:"team_id,omitempty" validate:"omitempty,uuid"`
+	Payload   map[string]any `json:"payload,omitempty" validate:"omitempty,max=10000"`
 }
 
 type WebhookResponse struct {

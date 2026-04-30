@@ -1,3 +1,9 @@
+// @title Metraly API
+// @version 1.0.0
+// @description Team Engineering Metrics API
+// @contact.name Metraly
+// @license.name MIT
+// @BasePath /
 package main
 
 import (
@@ -11,6 +17,8 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	_ "github.com/getmetraly/metraly/docs"
+	httpSwagger "github.com/swaggo/http-swagger/v2"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 
@@ -69,6 +77,8 @@ func main() {
 	r.Get("/api/v1/teams/{team_id}/velocity", velocityH.ServeHTTP)
 	r.Get("/api/v1/teams/comparison", comparisonH.ServeHTTP)
 	r.Post("/api/v1/collectors", webhookH.Receive)
+
+	r.Get("/docs", httpSwagger.WrapHandler)
 
 	port := cfg.Get("PORT", "8000")
 	addr := fmt.Sprintf(":%s", port)

@@ -1,27 +1,38 @@
 package logger
 
-import "log"
+import (
+	"os"
+	"time"
 
-type stdLogger struct {
-	logger *log.Logger
+	"github.com/rs/zerolog"
+)
+
+type zerologLogger struct {
+	log zerolog.Logger
 }
 
 func NewStdLogger() Logger {
-	return &stdLogger{logger: log.Default()}
+	zerolog.TimeFieldFormat = time.RFC3339
+	return &zerologLogger{
+		log: zerolog.New(os.Stdout).Output(zerolog.ConsoleWriter{
+			Out:        os.Stdout,
+			TimeFormat: time.RFC3339,
+		}).Level(zerolog.InfoLevel),
+	}
 }
 
-func (l *stdLogger) Debug(msg string, args ...any) {
-	l.logger.Printf("[DEBUG] "+msg, args...)
+func (l *zerologLogger) Debug(msg string, args ...any) {
+	l.log.Debug().Msgf(msg, args...)
 }
 
-func (l *stdLogger) Info(msg string, args ...any) {
-	l.logger.Printf("[INFO] "+msg, args...)
+func (l *zerologLogger) Info(msg string, args ...any) {
+	l.log.Info().Msgf(msg, args...)
 }
 
-func (l *stdLogger) Warn(msg string, args ...any) {
-	l.logger.Printf("[WARN] "+msg, args...)
+func (l *zerologLogger) Warn(msg string, args ...any) {
+	l.log.Warn().Msgf(msg, args...)
 }
 
-func (l *stdLogger) Error(msg string, args ...any) {
-	l.logger.Printf("[ERROR] "+msg, args...)
+func (l *zerologLogger) Error(msg string, args ...any) {
+	l.log.Error().Msgf(msg, args...)
 }
