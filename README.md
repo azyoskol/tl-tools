@@ -180,4 +180,4 @@ srv.Shutdown(ctx)
 
 ## License
 
-Licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE) for details.
+This project is licensed under GNU AGPLv3. See [LICENSE](LICENSE) for details.
