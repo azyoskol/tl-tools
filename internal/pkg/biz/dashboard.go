@@ -1,6 +1,10 @@
 package biz
 
-import "context"
+import (
+	"context"
+
+	"golang.org/x/sync/errgroup"
+)
 
 type DashboardService struct {
 	eventRepo EventRepo
@@ -48,28 +52,45 @@ type DashboardResponse struct {
 }
 
 func (s *DashboardService) GetDashboard(ctx context.Context) (DashboardResponse, error) {
-	overview, err := s.GetOverview(ctx)
-	if err != nil {
-		return DashboardResponse{}, err
-	}
+	eg, ctx := errgroup.WithContext(ctx)
 
-	activity, err := s.GetActivity(ctx)
-	if err != nil {
-		return DashboardResponse{}, err
-	}
+	var overview OverviewMetrics
+	var activity []ActivityItem
+	var topTeams []TopTeam
+	var hourly []HourlyStats
+	var topAuthors []TopAuthor
 
-	topTeams, err := s.GetTopTeams(ctx)
-	if err != nil {
-		return DashboardResponse{}, err
-	}
+	eg.Go(func() error {
+		var err error
+		overview, err = s.GetOverview(ctx)
+		return err
+	})
 
-	hourly, err := s.GetHourly(ctx)
-	if err != nil {
-		return DashboardResponse{}, err
-	}
+	eg.Go(func() error {
+		var err error
+		activity, err = s.GetActivity(ctx)
+		return err
+	})
 
-	topAuthors, err := s.GetTopAuthors(ctx)
-	if err != nil {
+	eg.Go(func() error {
+		var err error
+		topTeams, err = s.GetTopTeams(ctx)
+		return err
+	})
+
+	eg.Go(func() error {
+		var err error
+		hourly, err = s.GetHourly(ctx)
+		return err
+	})
+
+	eg.Go(func() error {
+		var err error
+		topAuthors, err = s.GetTopAuthors(ctx)
+		return err
+	})
+
+	if err := eg.Wait(); err != nil {
 		return DashboardResponse{}, err
 	}
 
@@ -83,26 +104,36 @@ func (s *DashboardService) GetDashboard(ctx context.Context) (DashboardResponse,
 }
 
 func (s *DashboardService) GetOverview(ctx context.Context) (OverviewMetrics, error) {
+	eg, ctx := errgroup.WithContext(ctx)
+
 	var result OverviewMetrics
 
-	metrics := []struct {
-		target *int
-		source string
-		event  string
-		period string
-	}{
-		{&result.PRsOpened, "git", "pr_opened", "INTERVAL 2 DAY"},
-		{&result.TasksBlocked, "pm", "task_blocked", "INTERVAL 1 DAY"},
-		{&result.CIFailures, "cicd", "pipeline_failed", "INTERVAL 1 HOUR"},
-		{&result.PRsMerged, "git", "pr_merged", "INTERVAL 7 DAY"},
-	}
+	eg.Go(func() error {
+		cnt, err := s.eventRepo.CountEvents(ctx, "git", "pr_opened", "INTERVAL 2 DAY")
+		result.PRsOpened = cnt
+		return err
+	})
 
-	for _, m := range metrics {
-		cnt, err := s.eventRepo.CountEvents(ctx, m.source, m.event, m.period)
-		if err != nil {
-			return OverviewMetrics{}, err
-		}
-		*m.target = cnt
+	eg.Go(func() error {
+		cnt, err := s.eventRepo.CountEvents(ctx, "pm", "task_blocked", "INTERVAL 1 DAY")
+		result.TasksBlocked = cnt
+		return err
+	})
+
+	eg.Go(func() error {
+		cnt, err := s.eventRepo.CountEvents(ctx, "cicd", "pipeline_failed", "INTERVAL 1 HOUR")
+		result.CIFailures = cnt
+		return err
+	})
+
+	eg.Go(func() error {
+		cnt, err := s.eventRepo.CountEvents(ctx, "git", "pr_merged", "INTERVAL 7 DAY")
+		result.PRsMerged = cnt
+		return err
+	})
+
+	if err := eg.Wait(); err != nil {
+		return OverviewMetrics{}, err
 	}
 
 	return result, nil
