@@ -182,37 +182,55 @@ Handlers занимаются только:
 1. Router matches route to DashboardHandler
 2. Handler extracts context from request
 3. Handler calls svc.GetDashboard(ctx)
-4. Service orchestrates:
-   - GetOverview(ctx) → 4 count queries
-   - GetActivity(ctx) → aggregation query
-   - GetTopTeams(ctx) → top teams query
-   - GetHourly(ctx) → hourly distribution
-   - GetTopAuthors(ctx) → author rankings
-5. Service maps raw DB results to typed structs
-6. Handler marshals response to JSON
-7. Middleware may cache response in Redis
+4. Service uses WaitGroup for parallel queries:
+   - GetOverview(ctx) → 4 parallel count queries
+   - GetActivity(ctx) → aggregation query (parallel)
+   - GetTopTeams(ctx) → top teams query (parallel)
+   - GetHourly(ctx) → hourly distribution (parallel)
+   - GetTopAuthors(ctx) → author rankings (parallel)
+5. Mutex protects shared result struct
+6. Service maps raw DB results to typed structs
+7. Handler marshals response to JSON
+8. Middleware may cache response in Redis
 ```
 
 ## Graceful Shutdown
 
-API сервер поддерживает graceful shutdown:
+API сервер использует `errGroup` для координированного shutdown HTTP и gRPC серверов:
 
 ```go
-srv := &http.Server{Addr: addr, Handler: r}
+eg, ctx := errgroup.WithContext(context.Background())
 
-go func() {
+eg.Go(func() error {
     log.Info("listening on %s", addr)
-    srv.ListenAndServe()
-}()
+    return srv.ListenAndServe()
+})
 
-quit := make(chan os.Signal, 1)
-signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-<-quit
+eg.Go(func() error {
+    log.Info("gRPC listening on %s", grpcAddr)
+    return grpcServer.Serve(lis)
+})
 
-log.Info("shutting down...")
-ctx, cancel := context.WithTimeout(30*time.Second)
-defer cancel()
-srv.Shutdown(ctx)
+eg.Go(func() error {
+    quit := make(chan os.Signal, 1)
+    signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+    select {
+    case <-ctx.Done():
+        return ctx.Err()
+    case <-quit:
+        return nil
+    }
+})
+
+eg.Go(func() error {
+    <-ctx.Done()
+    shutdownCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+    srv.Shutdown(shutdownCtx)
+    grpcServer.GracefulStop()
+    return nil
+})
+
+eg.Wait()
 ```
 
 ## Testing
