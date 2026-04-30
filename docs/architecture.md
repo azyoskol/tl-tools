@@ -10,8 +10,8 @@ Metraly — это API для сбора и анализа метрик кома
 ┌─────────────────────────────────────────────┐
 │              UI (React)                     │  port 3000
 └─────────────────────────────────────────────┘
-                      │
-                      ▼
+                       │
+                       ▼
 ┌─────────────────────────────────────────────┐
 │           API Server (Go/Chi)              │  port 8000
 │  ┌─────────────┐  ┌─────────────────────┐ │
@@ -19,26 +19,34 @@ Metraly — это API для сбора и анализа метрик кома
 │  │ - HTTP validation                  │ │
 │  │ - Request/response marshaling      │ │
 │  └─────────────┘  └─────────────────────┘ │
+│           │                                 │
+│           ▼                                 │
+│  ┌─────────────────────────────────────────┤
+│  │           gRPC Server (internal)       │  port 9000
+│  └─────────────────────────────────────────┘
 └─────────────────────────────────────────────┘
-                      │
-          ┌───────────┴───────────┐
-          ▼                       ▼
+                       │
+           ┌───────────┴───────────┐
+           ▼                       ▼
 ┌──────────────────┐    ┌──────────────────┐
 │  biz (Services) │    │  Cache (Redis)  │
-│                  │    │                  │
+│  (Interfaces)   │    │                  │
 │ - DashboardSvc   │    │  Response cache  │
 │ - TeamsSvc       │    │  5 min TTL       │
-└──────────────────┘    └──────────────────┘
-          │
-          ▼
+│ - WebhookSvc     │    │                  │
+│ - VelocitySvc    │    └──────────────────┘
+│ - ComparisonSvc  │
+└──────────────────┘
+           │
+           ▼
 ┌──────────────────┐
 │  repo (Data)     │
 │                  │
 │ - EventRepo      │
 │ - TeamRepo       │
 └──────────────────┘
-          │
-          ▼
+           │
+           ▼
 ┌──────────────────┐
 │  Database        │
 │                  │
@@ -54,6 +62,12 @@ internal/pkg/
 ├── biz/                    # Business logic layer
 │   ├── dashboard.go       # Dashboard metrics logic
 │   ├── dashboard_test.go # Unit tests with mocks
+│   ├── teams.go           # Teams service
+│   ├── webhook.go        # Webhook ingestion service
+│   ├── velocity.go       # Velocity metrics service
+│   ├── comparison.go     # Team comparison service
+│   ├── interfaces.go     # Service interfaces (SOLID)
+│   ├── helpers.go        # Shared helpers
 │   └── repo.go           # Repository interface
 │
 ├── cache/                 # Caching layer
@@ -92,10 +106,41 @@ internal/pkg/
 ├── models/                # Shared types
 │   └── types.go
 │
+├── grpc/                  # gRPC server for internal communication
+│   └── proto/
+│       ├── metraly.proto  # Protocol buffers
+│       ├── *.pb.go       # Generated code
+│       └── server.go     # gRPC server implementation
+│
 └── repo/                  # Repository implementations
     ├── interface.go      # Repo interfaces
     └── event_ch.go       # ClickHouse implementation
 ```
+
+## SOLID Principles
+
+Проект следует принципам SOLID:
+
+### SRP (Single Responsibility)
+- **Handlers** — только HTTP валидация и маршалинг
+- **Biz** — только бизнес-логика
+- **Repo** — только доступ к данным
+
+### DIP (Dependency Inversion)
+Handlers зависят от абстракций (интерфейсов), не от конкретных реализаций:
+
+```go
+type DashboardHandler struct {
+    svc biz.DashboardServiceInterface  // Интерфейс
+}
+
+type DashboardServiceInterface interface {
+    GetDashboard(ctx context.Context) (DashboardResponse, error)
+}
+```
+
+### OCP (Open/Closed)
+Новые сервисы добавляются через новые интерфейсы без изменения существующего кода.
 
 ## Key Components
 
@@ -175,21 +220,30 @@ srv.Shutdown(ctx)
 ### Unit Tests
 
 - **biz/** — мокаем `EventRepo` интерфейс
-- **handlers** — мокаем `Database` интерфейс
+- **handlers** — мокаем сервисные интерфейсы (SOLID)
 - **cache** — используем in-memory реализацию
+
+### Integration Tests
+
+Все HTTP handlers имеют integration тесты в `handlers/integration_test.go`:
+- Dashboard endpoints
+- Teams endpoints (list, get, overview, activity, insights)
+- Velocity endpoint
+- Comparison endpoint
+- Webhook endpoint
 
 ### Test Coverage
 
 ```
 make test
-# 19 tests pass
+# 27 tests pass
 ```
 
 ## Docker Services
 
 | Service   | Image                        | Ports     |
 |-----------|------------------------------|-----------|
-| api       | metraly-api (built locally) | 8000      |
+| api       | metraly-api (built locally) | 8000, 9000|
 | clickhouse| clickhouse/clickhouse:23.8  | 8123, 9000|
 | redis     | redis:7-alpine              | 6379      |
 | ui        | metraly-ui (built locally)  | 3000      |
@@ -216,7 +270,24 @@ make docker-ps          # Show containers
 
 ## Configuration
 
-Через environment variables:
+Конфигурация через YAML файл (`config.yaml`) с override через environment variables:
+
+```yaml
+database:
+  clickhouse:
+    host: "localhost"
+    port: 8123
+cache:
+  redis:
+    host: "redis"
+    port: 6379
+app:
+  host: "0.0.0.0"
+  port: 8000
+  grpc_port: 9000
+```
+
+Environment variables имеют приоритет над YAML:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
@@ -225,6 +296,7 @@ make docker-ps          # Show containers
 | REDIS_HOST | redis | Redis host |
 | REDIS_PORT | 6379 | Redis port |
 | PORT | 8000 | API port |
+| GRPC_PORT | 9000 | gRPC port |
 
 ## Dependencies
 
