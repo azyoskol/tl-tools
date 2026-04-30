@@ -2,6 +2,12 @@ package biz
 
 import "context"
 
+type HealthServiceInterface interface {
+	Root(ctx context.Context) HealthResponse
+	API(ctx context.Context) HealthResponse
+	Ping(ctx context.Context) error
+}
+
 type WebhookServiceInterface interface {
 	Receive(ctx context.Context, req WebhookRequest) (WebhookResponse, error)
 }

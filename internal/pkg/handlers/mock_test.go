@@ -33,3 +33,19 @@ type mockWebhookService struct {
 func (m *mockWebhookService) Receive(_ context.Context, req biz.WebhookRequest) (biz.WebhookResponse, error) {
 	return biz.WebhookResponse{Status: "ok", EventType: req.EventType}, m.err
 }
+
+type mockHealthService struct {
+	pingErr error
+}
+
+func (m *mockHealthService) Root(_ context.Context) biz.HealthResponse {
+	return biz.HealthResponse{Message: "Team Dashboard API", Version: "1.0.0"}
+}
+
+func (m *mockHealthService) API(_ context.Context) biz.HealthResponse {
+	return biz.HealthResponse{Status: "ok"}
+}
+
+func (m *mockHealthService) Ping(_ context.Context) error {
+	return m.pingErr
+}

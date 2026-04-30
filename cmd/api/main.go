@@ -46,8 +46,9 @@ func main() {
 	webhookSvc := biz.NewWebhookService(db)
 	velocitySvc := biz.NewVelocityService(db)
 	comparisonSvc := biz.NewComparisonService(db)
+	healthSvc := biz.NewHealthService(db)
 
-	healthH := handlers.NewHealthHandler(db)
+	healthH := handlers.NewHealthHandler(healthSvc)
 	teamsH := handlers.NewTeamsHandler(teamsSvc)
 	dashboardH := handlers.NewDashboardHandler(dashboardSvc)
 	velocityH := handlers.NewVelocityHandler(velocitySvc)
