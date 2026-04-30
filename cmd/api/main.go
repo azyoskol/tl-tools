@@ -31,11 +31,20 @@ import (
 	"github.com/getmetraly/metraly/internal/pkg/logger"
 	"github.com/getmetraly/metraly/internal/pkg/middleware"
 	"github.com/getmetraly/metraly/internal/pkg/repo"
+	"github.com/getmetraly/metraly/internal/pkg/telemetry"
 )
 
 func main() {
 	cfg := config.NewDefaultConfig()
 	log := logger.NewStdLogger()
+
+	tele, err := telemetry.NewTelemetry("metraly-api")
+	if err != nil {
+		log.Warn("telemetry init failed: %v", err)
+	} else if tele != nil {
+		defer tele.Shutdown(context.Background())
+		log.Info("telemetry initialized")
+	}
 
 	db, err := database.NewClickHouse(cfg)
 	if err != nil {
