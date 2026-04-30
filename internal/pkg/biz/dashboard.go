@@ -2,8 +2,7 @@ package biz
 
 import (
 	"context"
-
-	"golang.org/x/sync/errgroup"
+	"sync"
 )
 
 type DashboardService struct {
@@ -52,88 +51,137 @@ type DashboardResponse struct {
 }
 
 func (s *DashboardService) GetDashboard(ctx context.Context) (DashboardResponse, error) {
-	eg, ctx := errgroup.WithContext(ctx)
+	var wg sync.WaitGroup
+	var mu sync.Mutex
 
-	var overview OverviewMetrics
-	var activity []ActivityItem
-	var topTeams []TopTeam
-	var hourly []HourlyStats
-	var topAuthors []TopAuthor
+	var result DashboardResponse
 
-	eg.Go(func() error {
-		var err error
-		overview, err = s.GetOverview(ctx)
-		return err
-	})
+	var overviewErr, activityErr, topTeamsErr, hourlyErr, topAuthorsErr error
 
-	eg.Go(func() error {
-		var err error
-		activity, err = s.GetActivity(ctx)
-		return err
-	})
+	wg.Add(5)
 
-	eg.Go(func() error {
-		var err error
-		topTeams, err = s.GetTopTeams(ctx)
-		return err
-	})
+	go func() {
+		defer wg.Done()
+		r, err := s.GetOverview(ctx)
+		mu.Lock()
+		result.Overview = r
+		overviewErr = err
+		mu.Unlock()
+	}()
 
-	eg.Go(func() error {
-		var err error
-		hourly, err = s.GetHourly(ctx)
-		return err
-	})
+	go func() {
+		defer wg.Done()
+		r, err := s.GetActivity(ctx)
+		mu.Lock()
+		result.Activity = r
+		activityErr = err
+		mu.Unlock()
+	}()
 
-	eg.Go(func() error {
-		var err error
-		topAuthors, err = s.GetTopAuthors(ctx)
-		return err
-	})
+	go func() {
+		defer wg.Done()
+		r, err := s.GetTopTeams(ctx)
+		mu.Lock()
+		result.TopTeams = r
+		topTeamsErr = err
+		mu.Unlock()
+	}()
 
-	if err := eg.Wait(); err != nil {
-		return DashboardResponse{}, err
+	go func() {
+		defer wg.Done()
+		r, err := s.GetHourly(ctx)
+		mu.Lock()
+		result.Hourly = r
+		hourlyErr = err
+		mu.Unlock()
+	}()
+
+	go func() {
+		defer wg.Done()
+		r, err := s.GetTopAuthors(ctx)
+		mu.Lock()
+		result.TopAuthors = r
+		topAuthorsErr = err
+		mu.Unlock()
+	}()
+
+	wg.Wait()
+
+	if overviewErr != nil {
+		return DashboardResponse{}, overviewErr
+	}
+	if activityErr != nil {
+		return DashboardResponse{}, activityErr
+	}
+	if topTeamsErr != nil {
+		return DashboardResponse{}, topTeamsErr
+	}
+	if hourlyErr != nil {
+		return DashboardResponse{}, hourlyErr
+	}
+	if topAuthorsErr != nil {
+		return DashboardResponse{}, topAuthorsErr
 	}
 
-	return DashboardResponse{
-		Overview:   overview,
-		Activity:   activity,
-		TopTeams:   topTeams,
-		Hourly:     hourly,
-		TopAuthors: topAuthors,
-	}, nil
+	return result, nil
 }
 
 func (s *DashboardService) GetOverview(ctx context.Context) (OverviewMetrics, error) {
-	eg, ctx := errgroup.WithContext(ctx)
-
+	var wg sync.WaitGroup
+	var mu sync.Mutex
 	var result OverviewMetrics
+	var firstErr error
 
-	eg.Go(func() error {
+	wg.Add(4)
+
+	go func() {
+		defer wg.Done()
 		cnt, err := s.eventRepo.CountEvents(ctx, "git", "pr_opened", "INTERVAL 2 DAY")
+		mu.Lock()
 		result.PRsOpened = cnt
-		return err
-	})
+		if firstErr == nil && err != nil {
+			firstErr = err
+		}
+		mu.Unlock()
+	}()
 
-	eg.Go(func() error {
+	go func() {
+		defer wg.Done()
 		cnt, err := s.eventRepo.CountEvents(ctx, "pm", "task_blocked", "INTERVAL 1 DAY")
+		mu.Lock()
 		result.TasksBlocked = cnt
-		return err
-	})
+		if firstErr == nil && err != nil {
+			firstErr = err
+		}
+		mu.Unlock()
+	}()
 
-	eg.Go(func() error {
+	go func() {
+		defer wg.Done()
 		cnt, err := s.eventRepo.CountEvents(ctx, "cicd", "pipeline_failed", "INTERVAL 1 HOUR")
+		mu.Lock()
 		result.CIFailures = cnt
-		return err
-	})
+		if firstErr == nil && err != nil {
+			firstErr = err
+		}
+		mu.Unlock()
+	}()
 
-	eg.Go(func() error {
+	go func() {
+		defer wg.Done()
 		cnt, err := s.eventRepo.CountEvents(ctx, "git", "pr_merged", "INTERVAL 7 DAY")
+		mu.Lock()
 		result.PRsMerged = cnt
-		return err
-	})
+		if firstErr == nil && err != nil {
+			firstErr = err
+		}
+		mu.Unlock()
+	}()
 
-	if err := eg.Wait(); err != nil {
-		return OverviewMetrics{}, err
+	wg.Wait()
+
+	if firstErr != nil {
+		return OverviewMetrics{}, firstErr
 	}
 
 	return result, nil

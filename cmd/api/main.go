@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 
 	"github.com/getmetraly/metraly/internal/pkg/biz"
@@ -77,14 +78,6 @@ func main() {
 		Handler: r,
 	}
 
-	go func() {
-		log.Info("listening on %s", addr)
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Error("server: %v", err)
-			os.Exit(1)
-		}
-	}()
-
 	grpcAddr := fmt.Sprintf(":%d", cfg.GetInt("GRPC_PORT", 9000))
 	lis, err := net.Listen("tcp", grpcAddr)
 	if err != nil {
@@ -95,26 +88,48 @@ func main() {
 	grpcSvc := grpcpb.NewServer(webhookSvc, dashboardSvc, teamsSvc)
 	grpcpb.RegisterEventServiceServer(grpcServer, grpcSvc)
 
-	go func() {
+	eg, ctx := errgroup.WithContext(context.Background())
+
+	eg.Go(func() error {
+		log.Info("listening on %s", addr)
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			return fmt.Errorf("HTTP server: %w", err)
+		}
+		return nil
+	})
+
+	eg.Go(func() error {
 		log.Info("gRPC listening on %s", grpcAddr)
 		if err := grpcServer.Serve(lis); err != nil {
-			log.Error("gRPC server: %v", err)
+			return fmt.Errorf("gRPC server: %w", err)
 		}
-	}()
+		return nil
+	})
 
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	<-quit
+	eg.Go(func() error {
+		quit := make(chan os.Signal, 1)
+		signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-quit:
+			return nil
+		}
+	})
 
-	log.Info("shutting down...")
+	eg.Go(func() error {
+		<-ctx.Done()
+		log.Info("shutting down...")
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
+		srv.Shutdown(shutdownCtx)
+		grpcServer.GracefulStop()
+		log.Info("stopped")
+		return nil
+	})
 
-	if err := srv.Shutdown(ctx); err != nil {
-		log.Error("server shutdown: %v", err)
-		os.Exit(1)
+	if err := eg.Wait(); err != nil && err != context.Canceled {
+		log.Error("server error: %v", err)
 	}
-
-	log.Info("stopped")
 }
