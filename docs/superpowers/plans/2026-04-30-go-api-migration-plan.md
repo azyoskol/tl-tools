@@ -173,7 +173,7 @@ import (
     "context"
     "fmt"
 
-    "github.com/getmetraly/tl-tools/api/internal/config"
+    "github.com/getmetraly/metraly/api/internal/config"
     "github.com/clickhouse/go-clickhouse/v2"
 )
 
@@ -230,7 +230,7 @@ import (
     "sync"
     "time"
 
-    "github.com/getmetraly/tl-tools/api/internal/config"
+    "github.com/getmetraly/metraly/api/internal/config"
     "github.com/redis/go-redis/v9"
 )
 
@@ -400,7 +400,7 @@ import (
     "net/http"
     "time"
 
-    "github.com/getmetraly/tl-tools/api/internal/cache"
+    "github.com/getmetraly/metraly/api/internal/cache"
 )
 
 func CacheMiddleware(cache cache.Cache) func(http.Handler) http.Handler {
@@ -522,7 +522,7 @@ import (
     "encoding/json"
     "net/http"
 
-    "github.com/getmetraly/tl-tools/api/internal/database"
+    "github.com/getmetraly/metraly/api/internal/database"
     "github.com/go-chi/chi/v5"
 )
 
@@ -582,7 +582,7 @@ import (
     "encoding/json"
     "net/http"
 
-    "github.com/getmetraly/tl-tools/api/internal/database"
+    "github.com/getmetraly/metraly/api/internal/database"
 )
 
 type DashboardHandler struct {
@@ -693,12 +693,12 @@ import (
     "os/signal"
     "syscall"
 
-    "github.com/getmetraly/tl-tools/api/internal/cache"
-    "github.com/getmetraly/tl-tools/api/internal/config"
-    "github.com/getmetraly/tl-tools/api/internal/database"
-    "github.com/getmetraly/tl-tools/api/internal/handlers"
-    "github.com/getmetraly/tl-tools/api/internal/logger"
-    "github.com/getmetraly/tl-tools/api/internal/middleware"
+    "github.com/getmetraly/metraly/api/internal/cache"
+    "github.com/getmetraly/metraly/api/internal/config"
+    "github.com/getmetraly/metraly/api/internal/database"
+    "github.com/getmetraly/metraly/api/internal/handlers"
+    "github.com/getmetraly/metraly/api/internal/logger"
+    "github.com/getmetraly/metraly/api/internal/middleware"
     "github.com/go-chi/chi/v5"
     "github.com/go-chi/chi/v5/middleware"
     "github.com/joho/godotenv"
@@ -796,7 +796,7 @@ git commit -m "feat: wire all dependencies in main (SOLID DI)"
 
 ```bash
 cd /home/zubarev/sources/tl-tools
-go mod init github.com/getmetraly/tl-tools/api
+go mod init github.com/getmetraly/metraly/api
 go get github.com/go-chi/chi/v5
 go get github.com/clickhouse/go-clickhouse/v2
 go get github.com/redis/go-redis/v9

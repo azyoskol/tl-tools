@@ -1,4 +1,4 @@
-module github.com/getmetraly/tl-tools/collectors/pm
+module github.com/getmetraly/metraly/collectors/pm
 
 go 1.21
 

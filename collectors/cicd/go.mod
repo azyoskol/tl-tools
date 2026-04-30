@@ -1,4 +1,4 @@
-module github.com/getmetraly/tl-tools/collectors/cicd
+module github.com/getmetraly/metraly/collectors/cicd
 
 go 1.21
 

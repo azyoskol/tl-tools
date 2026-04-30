@@ -88,7 +88,7 @@ Prometheus   ───┘
 
 ```bash
 # Clone and run
-git clone https://github.com/getmetraly/tl-tools.git
+git clone https://github.com/getmetraly/metraly.git
 cd tl-tools
 docker-compose up -d
 

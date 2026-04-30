@@ -1,4 +1,4 @@
-module github.com/getmetraly/tl-tools/collectors/metrics
+module github.com/getmetraly/metraly/collectors/metrics
 
 go 1.21
 
