@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -10,11 +11,13 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"google.golang.org/grpc"
 
 	"github.com/getmetraly/metraly/internal/pkg/biz"
 	"github.com/getmetraly/metraly/internal/pkg/cache"
 	"github.com/getmetraly/metraly/internal/pkg/config"
 	"github.com/getmetraly/metraly/internal/pkg/database"
+	grpcpb "github.com/getmetraly/metraly/internal/pkg/grpc/proto"
 	"github.com/getmetraly/metraly/internal/pkg/handlers"
 	"github.com/getmetraly/metraly/internal/pkg/logger"
 	"github.com/getmetraly/metraly/internal/pkg/middleware"
@@ -22,7 +25,7 @@ import (
 )
 
 func main() {
-	cfg := config.NewEnvConfig()
+	cfg := config.NewDefaultConfig()
 	log := logger.NewStdLogger()
 
 	db, err := database.NewClickHouse(cfg)
@@ -39,13 +42,17 @@ func main() {
 
 	eventRepo := repo.NewClickHouseEventRepo(db)
 	dashboardSvc := biz.NewDashboardService(eventRepo)
+	teamsSvc := biz.NewTeamsService(db)
+	webhookSvc := biz.NewWebhookService(db)
+	velocitySvc := biz.NewVelocityService(db)
+	comparisonSvc := biz.NewComparisonService(db)
 
 	healthH := handlers.NewHealthHandler(db)
-	teamsH := handlers.NewTeamsHandler(db)
+	teamsH := handlers.NewTeamsHandler(teamsSvc)
 	dashboardH := handlers.NewDashboardHandler(dashboardSvc)
-	velocityH := handlers.NewVelocityHandler(db)
-	comparisonH := handlers.NewComparisonHandler(db)
-	webhookH := handlers.NewWebhookHandler(db)
+	velocityH := handlers.NewVelocityHandler(velocitySvc)
+	comparisonH := handlers.NewComparisonHandler(comparisonSvc)
+	webhookH := handlers.NewWebhookHandler(webhookSvc)
 
 	r := chi.NewRouter()
 	r.Use(middleware.CORS)
@@ -74,6 +81,23 @@ func main() {
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Error("server: %v", err)
 			os.Exit(1)
+		}
+	}()
+
+	grpcAddr := fmt.Sprintf(":%d", cfg.GetInt("GRPC_PORT", 9000))
+	lis, err := net.Listen("tcp", grpcAddr)
+	if err != nil {
+		log.Error("gRPC listener: %v", err)
+		os.Exit(1)
+	}
+	grpcServer := grpc.NewServer()
+	grpcSvc := grpcpb.NewServer(webhookSvc, dashboardSvc, teamsSvc)
+	grpcpb.RegisterEventServiceServer(grpcServer, grpcSvc)
+
+	go func() {
+		log.Info("gRPC listening on %s", grpcAddr)
+		if err := grpcServer.Serve(lis); err != nil {
+			log.Error("gRPC server: %v", err)
 		}
 	}()
 

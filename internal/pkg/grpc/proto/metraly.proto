@@ -1,0 +1,100 @@
+syntax = "proto3";
+
+package grpc;
+
+option go_package = "github.com/getmetraly/metraly/internal/pkg/grpc;grpc";
+
+service EventService {
+  rpc Ingest(IngestRequest) returns (IngestResponse);
+  rpc GetDashboard(GetDashboardRequest) returns (GetDashboardResponse);
+  rpc GetTeams(GetTeamsRequest) returns (GetTeamsResponse);
+  rpc GetTeam(GetTeamRequest) returns (GetTeamResponse);
+  rpc GetTeamOverview(GetTeamOverviewRequest) returns (GetTeamOverviewResponse);
+}
+
+message IngestRequest {
+  string source = 1;
+  string event_type = 2;
+  string team_id = 3;
+  string payload = 4;
+}
+
+message IngestResponse {
+  string status = 1;
+  string event_type = 2;
+}
+
+message GetDashboardRequest {}
+
+message OverviewMetrics {
+  int32 prs_opened = 1;
+  int32 tasks_blocked = 2;
+  int32 ci_failures = 3;
+  int32 prs_merged = 4;
+}
+
+message ActivityItem {
+  string date = 1;
+  string source_type = 2;
+  int64 count = 3;
+}
+
+message TopTeam {
+  string team_id = 1;
+  string source_type = 2;
+  int64 count = 3;
+}
+
+message HourlyStats {
+  string hour = 1;
+  int64 count = 2;
+}
+
+message TopAuthor {
+  string author = 1;
+  int64 count = 2;
+}
+
+message GetDashboardResponse {
+  OverviewMetrics overview = 1;
+  repeated ActivityItem activity = 2;
+  repeated TopTeam top_teams = 3;
+  repeated HourlyStats hourly = 4;
+  repeated TopAuthor top_authors = 5;
+}
+
+message GetTeamsRequest {}
+
+message Team {
+  string id = 1;
+  string name = 2;
+}
+
+message GetTeamsResponse {
+  repeated Team teams = 1;
+}
+
+message GetTeamRequest {
+  string team_id = 1;
+}
+
+message GetTeamResponse {
+  string id = 1;
+  string name = 2;
+}
+
+message GetTeamOverviewRequest {
+  string team_id = 1;
+}
+
+message TeamOverview {
+  string team_id = 1;
+  int32 prs_awaiting_review = 2;
+  int32 prs_merged = 3;
+  int32 blocked_tasks = 4;
+  int32 ci_failures_last_hour = 5;
+}
+
+message GetTeamOverviewResponse {
+  TeamOverview overview = 1;
+}

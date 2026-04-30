@@ -7,10 +7,12 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/getmetraly/metraly/internal/pkg/biz"
 )
 
 func TestWebhook_returns400_onInvalidJSON(t *testing.T) {
-	h := NewWebhookHandler(&mockDB{})
+	h := NewWebhookHandler(&mockWebhookService{})
 	rec := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/collectors", strings.NewReader("not json"))
 	h.Receive(rec, req)
@@ -21,8 +23,8 @@ func TestWebhook_returns400_onInvalidJSON(t *testing.T) {
 }
 
 func TestWebhook_returns200_onValidPayload(t *testing.T) {
-	h := NewWebhookHandler(&mockDB{})
-	body, _ := json.Marshal(WebhookRequest{
+	h := NewWebhookHandler(&mockWebhookService{})
+	body, _ := json.Marshal(biz.WebhookRequest{
 		Source:    "git",
 		EventType: "pr_opened",
 		TeamID:    "team-1",
@@ -48,11 +50,8 @@ func TestWebhook_returns200_onValidPayload(t *testing.T) {
 }
 
 func TestWebhook_setsDefaultTeamID_whenEmpty(t *testing.T) {
-	var capturedTeamID string
-	db := &mockDB{}
-
-	h := NewWebhookHandler(db)
-	body, _ := json.Marshal(WebhookRequest{
+	h := NewWebhookHandler(&mockWebhookService{})
+	body, _ := json.Marshal(biz.WebhookRequest{
 		Source:    "git",
 		EventType: "pr_opened",
 		TeamID:    "",
@@ -62,7 +61,6 @@ func TestWebhook_setsDefaultTeamID_whenEmpty(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/collectors", bytes.NewReader(body))
 	h.Receive(rec, req)
 
-	_ = capturedTeamID
 	if rec.Code != http.StatusOK {
 		t.Errorf("expected 200 even with empty team_id, got %d", rec.Code)
 	}

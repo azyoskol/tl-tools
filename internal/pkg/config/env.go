@@ -26,3 +26,10 @@ func (e *envConfig) GetInt(key string, defaultValue int) int {
 	}
 	return n
 }
+
+func NewDefaultConfig() Config {
+	if cfg, err := NewYamlConfig("config.yaml"); err == nil {
+		return cfg
+	}
+	return NewEnvConfig()
+}

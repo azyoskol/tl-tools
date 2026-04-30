@@ -1,0 +1,14 @@
+database:
+  clickhouse:
+    host: "localhost"
+    port: 8123
+
+cache:
+  redis:
+    host: "redis"
+    port: 6379
+
+app:
+  host: "0.0.0.0"
+  port: 8000
+  grpc_port: 9000

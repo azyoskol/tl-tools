@@ -8,10 +8,10 @@ import (
 )
 
 type DashboardHandler struct {
-	svc *biz.DashboardService
+	svc biz.DashboardServiceInterface
 }
 
-func NewDashboardHandler(svc *biz.DashboardService) *DashboardHandler {
+func NewDashboardHandler(svc biz.DashboardServiceInterface) *DashboardHandler {
 	return &DashboardHandler{svc: svc}
 }
 
