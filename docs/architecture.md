@@ -53,6 +53,14 @@ Metraly — это API для сбора и анализа метрик кома
 │  ClickHouse      │
 │  (HTTP client)   │
 └──────────────────┘
+            │
+            ▼
+┌──────────────────┐
+│  Telemetry       │
+│                  │
+│  OpenTelemetry   │
+│  Tracer/Metrics  │
+└──────────────────┘
 ```
 
 ## Directory Structure
@@ -331,7 +339,83 @@ Environment variables имеют приоритет над YAML:
 
 1. Добавить больше тестов для repo слоя
 2. Улучшить парсинг типов ClickHouse
-3. Добавить OpenAPI спецификацию
-4. Добавить аутентификацию
-5. Улучшить error handling
-6. Добавить tracing (OpenTelemetry)
+3. Добавить аутентификацию
+4. Добавить rate limiting
+
+## Error Handling
+
+Ошибки возвращаются в формате RFC 7807:
+
+```json
+{
+  "detail": "error message",
+  "status": 400,
+  "code": "BAD_REQUEST"
+}
+```
+
+Типы ошибок:
+- `BadRequest` — 400
+- `NotFound` — 404
+- `ValidationError` — 422
+- `InternalError` — 500
+- `DatabaseError` — 500
+
+Middleware обрабатывает panic recovery.
+
+## Validation
+
+Используется `go-playground/validator` для валидации запросов:
+
+```go
+type WebhookRequest struct {
+    Source    string         `json:"source" validate:"required,oneof=git pm cicd metrics"`
+    EventType string         `json:"event_type" validate:"required,max=100"`
+    TeamID    string         `json:"team_id" validate:"omitempty,uuid"`
+    Payload   map[string]any `json:"payload" validate:"omitempty,max=10000"`
+}
+```
+
+## Observability
+
+### Logging
+
+Используется `zerolog` для structured logging:
+
+```go
+log.Info("request processed", "duration_ms", 150)
+```
+
+Формат: JSON с timestamps в RFC3339.
+
+### Tracing & Metrics
+
+OpenTelemetry SDK интегрирован:
+
+```go
+tele, err := telemetry.NewTelemetry("metraly-api")
+```
+
+- **TracerProvider** — для distributed tracing
+- **MeterProvider** — для метрик
+
+## OpenAPI
+
+Документация доступна на `/docs` (Swagger UI).
+
+### Генерация
+
+```bash
+swag init -g cmd/api/main.go -o docs
+```
+
+## gRPC
+
+Внутренний gRPC сервер на порту 9000 для взаимодействия с collectors.
+
+Proto файл: `internal/pkg/grpc/proto/metraly.proto`
+
+Сервисы:
+- `EventService.Ingest` — приём событий
+- `EventService.GetDashboard` — получение метрик
+- `EventService.GetTeams` — получение команд

@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-05-01
+
+### Added
+- **Error Handling**: AppError with RFC 7807 format (detail, status, code)
+- **Structured Logging**: zerolog with JSON output and console formatting
+- **Validation**: go-playground/validator for request validation
+- **OpenAPI**: Swagger UI at /docs endpoint
+- **Observability**: OpenTelemetry with TracerProvider and MeterProvider
+
+### Changed
+- Handlers now use centralized error handling middleware
+- Logging replaced with zerolog
+
 ## [1.0.0] - 2026-05-01
 
 ### Added
