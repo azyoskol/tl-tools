@@ -1,10 +1,16 @@
 FROM golang:1.26-alpine AS builder
 
 WORKDIR /app
+
+# Copy only deps first for caching
 COPY go.mod go.sum ./
 RUN go mod download
+
+# Copy source
 COPY . .
-RUN go build -o api ./cmd/api/
+
+# Build
+RUN CGO_ENABLED=0 go build -ldflags="-s -w" -o api ./cmd/api/
 
 FROM alpine:latest
 RUN apk --no-cache add ca-certificates

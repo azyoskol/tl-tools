@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   redis:
     image: redis:7-alpine
@@ -25,12 +23,16 @@ services:
       retries: 5
 
   api:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
+      cache_from:
+        - metraly-api:build-cache
     ports:
       - "8000:8000"
     environment:
       CLICKHOUSE_HOST: clickhouse
-      CLICKHOUSE_PORT: 9000
+      CLICKHOUSE_PORT: 8123
       REDIS_HOST: redis
       REDIS_PORT: 6379
     depends_on:
@@ -40,7 +42,10 @@ services:
         condition: service_started
 
   ui:
-    build: ./ui
+    build:
+      context: ./ui
+      cache_from:
+        - metraly-ui:build-cache
     ports:
       - "3000:80"
     depends_on:

@@ -1,4 +1,4 @@
-# Team Dashboard
+# Metraly — Team Engineering Metrics API
 
 Developer productivity dashboard for multiple teams. Track your team's performance in real-time.
 
@@ -8,79 +8,25 @@ Developer productivity dashboard for multiple teams. Track your team's performan
 
 | Chart | Source | Purpose |
 |-------|--------|---------|
-| **Commits per day** | GitHub/GitLab | Development activity, work patterns |
-| **PRs opened/merged** | GitHub/GitLab | Code review speed, bottlenecks |
-| **PR merge time** | GitHub/GitLab | Time from creation to merge |
-| **Cycle time** | Jira/Linear | Time from start to task completion |
-| **Velocity** | Jira/Linear | Team speed per sprint |
-| **CI/CD success rate** | GitHub Actions/GitLab CI | Build stability |
-| **CI duration** | GitHub Actions/GitLab CI | CI/CD speed |
-| **Blocked tasks** | Jira/Linear | Blocked work items |
-| **WIP count** | Jira/Linear | Work in progress (context switching) |
-| **CPU/Memory** | Prometheus | Application resources |
-
-### Attention Items
-
-Automated alerts that draw attention to issues:
-
-- ⚠️ PRs waiting for review > 2 days
-- ⚠️ Tasks blocked > 1 day
-- ⚠️ Tasks overdue > 3 days
-- ⚠️ CI failures in last hour
-- ⚠️ Large PRs (>1000 lines)
+| **PRs opened/merged** | Git | Code review speed, bottlenecks |
+| **Cycle time** | PM tools | Time from start to task completion |
+| **Velocity** | PM tools | Team speed per sprint |
+| **CI/CD success rate** | CI/CD | Build stability |
+| **Blocked tasks** | PM tools | Blocked work items |
 
 ### Dashboard Pages
 
 1. **Overview** — main page with key metrics
-   - Cards: PRs awaiting, Blocked tasks, CI failures
-   - 7-day activity chart
-   - Attention items
+   - Cards: PRs opened, Blocked tasks, CI failures, PRs merged
+   - 7-day activity chart by source type
+   - Top teams and authors
 
-2. **Velocity** — retrospective analysis (NEW in Cycle 3)
-   - Cycle time distribution
-   - Velocity per sprint (30-day trend)
-   - Lead time (PR merge time)
-
-3. **Activity** — detailed activity with filters (ENHANCED in Cycle 3)
-   - Filters: date range, source type
+2. **Activity** — detailed activity with filters
    - Stacked bar chart by source (Git, PM, CI/CD)
-   - Heatmap visualization
-   - Top contributors
+   - Hourly distribution
 
-4. **Comparison** — team comparison view (NEW in Cycle 3)
-   - Toggle between chart and table views
-   - Grouped bar chart: PRs, Tasks, CI Runs per team
-
-5. **Insights** — recommendations
-   - Rule-based alerts
-   - Productivity trends
-
-### Multi-Team Support
-
-- Team selector at the top of the page
-- Separate data per team
-- Company-wide view for managers
-
-## Data Flow
-
-```
-GitHub/GitLab ──┐
-Jira/Linear  ───┼──> Go Collectors ──> ClickHouse ──> FastAPI ──> React UI
-CI/CD        ───┤                      (Materialized Views)
-Prometheus   ───┘
-```
-
-### Architecture
-
-- **Collectors (Go)**: 4 services for data collection from different sources
-  - `git-collector` — GitHub, GitLab (commits, PRs, MRs)
-  - `pm-collector` — Jira, Linear (tasks, sprints)
-  - `cicd-collector` — GitHub Actions, GitLab CI, Jenkins
-  - `metrics-collector` — Prometheus, DataDog
-
-- **Storage**: ClickHouse with materialized views
-- **API**: FastAPI (Python)
-- **UI**: React + Recharts
+3. **Team Comparison** — team comparison view
+   - PRs, Tasks, CI Runs per team
 
 ## Quick Start
 
@@ -88,9 +34,7 @@ Prometheus   ───┘
 
 ```bash
 # Clone and run
-git clone https://github.com/getmetraly/metraly.git
-cd tl-tools
-docker-compose up -d
+docker compose up -d
 
 # Access
 # UI:         http://localhost:3000
@@ -98,180 +42,141 @@ docker-compose up -d
 # ClickHouse: http://localhost:8123
 ```
 
-### Load Test Data
+### Makefile Commands
 
 ```bash
-# Create tables
-docker exec -i clickhouse clickhouse-client < clickhouse/schema.sql
-
-# Load mock data
-docker exec -i clickhouse clickhouse-client < clickhouse/mock_data.sql
+make help              # Show all commands
+make build             # Build Go API
+make test              # Run tests (19 tests)
+make docker-up         # Start services
+make docker-down       # Stop services
+make health            # Check API health
+make dashboard         # Check dashboard data
+make docker-test-data  # Insert test data
 ```
 
-## Webhooks
+## Architecture
 
-Configure webhooks in your source systems to send events to the dashboard:
-
-| Endpoint | Description |
-|----------|-------------|
-| `POST /api/v1/webhook/receive` | Generic webhook (source, event_type, payload) |
-| `POST /api/v1/webhook/github` | GitHub webhooks (auto-parsed) |
-| `POST /api/v1/webhook/gitlab` | GitLab webhooks (auto-parsed) |
-| `POST /api/v1/webhook/jira` | Jira webhooks (auto-parsed) |
-| `POST /api/v1/webhook/linear` | Linear webhooks (auto-parsed) |
-
-Example generic webhook:
-```bash
-curl -X POST http://localhost:8000/api/v1/webhook/receive \
-  -H "Content-Type: application/json" \
-  -d '{"source":"git","event_type":"pr_opened","team_id":"550e8400-e29b-41d4-a716-446655440000","payload":{"pr_id":"123","author":"john"}}'
+```
+HTTP Request
+    ↓
+Handler (validation, marshaling)
+    ↓
+Biz (business logic)
+    ↓
+Repo (data access)
+    ↓
+Database (ClickHouse HTTP)
 ```
 
-## Health & Monitoring
+### Technology Stack
+
+- **Backend**: Go 1.26+, Chi router
+- **Database**: ClickHouse 23.8 (HTTP port 8123)
+- **Cache**: Redis 7 (port 6379)
+- **UI**: React 20 + Vite + Recharts
+
+### Directory Structure
+
+```
+internal/pkg/
+├── biz/          # Business logic (DashboardService)
+├── cache/        # Redis cache with in-memory fallback
+├── config/       # Environment config
+├── database/     # ClickHouse HTTP client
+├── handlers/     # HTTP endpoints
+├── middleware/   # CORS, caching
+├── logger/       # Structured logging
+├── models/        # Shared types
+└── repo/          # Data access layer
+
+cmd/api/main.go   # Entry point with graceful shutdown
+ui/              # React frontend
+```
+
+## API Endpoints
 
 | Endpoint | Description |
 |----------|-------------|
-| `GET /api/v1/collectors/status` | Check collector health status |
-| `POST /api/v1/collectors/{id}/heartbeat` | Collector heartbeat |
-| `GET /api/v1/collectors/{id}/metrics` | Prometheus metrics |
-| `GET /api/v1/dLQ` | Dead Letter Queue events |
-| `POST /api/v1/dLQ/{id}/retry` | Retry failed event |
-
-## Team APIs
-
-| Endpoint | Description |
-|----------|-------------|
+| `GET /` | Welcome message |
+| `GET /health` | API health check |
+| `GET /health/clickhouse` | ClickHouse connectivity |
+| `GET /api/v1/dashboard` | All teams overview metrics |
 | `GET /api/v1/teams` | List all teams |
-| `GET /api/v1/teams/{team_id}` | Get team details |
-| `GET /api/v1/teams/{team_id}/overview` | Team overview metrics |
-| `GET /api/v1/teams/{team_id}/activity` | Team activity (supports filters: from_date, to_date, source) |
-| `GET /api/v1/teams/{team_id}/velocity` | Team velocity metrics (cycle time, lead time) |
-| `GET /api/v1/teams/{team_id}/insights` | Team insights/alerts |
-| `GET /api/v1/teams/comparison` | Compare all teams (PRs, tasks, CI runs) |
-
-## Caching
-
-Redis is used for API response caching:
-- Dashboard: 5 min TTL
-- Overview: 2 min TTL
-- Fallback to in-memory cache if Redis unavailable
+| `GET /api/v1/teams/{id}` | Team details |
+| `GET /api/v1/teams/{id}/overview` | Team overview metrics |
+| `GET /api/v1/teams/{id}/activity` | Team activity |
+| `GET /api/v1/teams/{id}/velocity` | Velocity metrics |
+| `GET /api/v1/teams/{id}/insights` | Team insights |
+| `GET /api/v1/teams/comparison` | Compare all teams |
 
 ## Configuration
 
-### Collector config.yaml
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `CLICKHOUSE_HOST` | localhost | ClickHouse host |
+| `CLICKHOUSE_PORT` | 8123 | ClickHouse HTTP port |
+| `REDIS_HOST` | redis | Redis host |
+| `REDIS_PORT` | 6379 | Redis port |
+| `PORT` | 8000 | API server port |
 
-Each collector is configured via `config.yaml`:
+## Testing
 
-```yaml
-clickhouse:
-  host: "clickhouse"
-  port: 9000
+```bash
+# Run all tests
+make test
 
-teams:
-  - id: "550e8400-..."
-    name: "Platform Team"
-    sources:
-      - type: "github"
-        config:
-          token: "${GITHUB_TOKEN}"
+# Output: 19 tests pass
 ```
 
-### Environment Variables
+### Test Coverage
 
-| Variable | Description |
-|----------|-------------|
-| `CLICKHOUSE_HOST` | ClickHouse host |
-| `CLICKHOUSE_PORT` | ClickHouse port (default: 9000) |
-| `GITHUB_TOKEN` | GitHub API token |
-| `GITLAB_TOKEN` | GitLab API token |
-| `JIRA_URL` | Jira URL |
-| `JIRA_EMAIL` | Jira email |
-| `JIRA_TOKEN` | Jira API token |
-| `LINEAR_API_KEY` | Linear API key |
-| `PROMETHEUS_URL` | Prometheus URL |
+- **biz/** — DashboardService with mock EventRepo
+- **cache/** — Redis fallback to in-memory
+- **config/** — Env variable handling
+- **handlers/** — HTTP handlers with mock DB
+- **middleware/** — CORS and caching
 
 ## Development
 
 ### Prerequisites
 
-- Go 1.21+
-- Python 3.11+
+- Go 1.26+
 - Node.js 20+
 - Docker & Docker Compose
 
-### Run Separately
+### Run Locally
 
 ```bash
-# ClickHouse
-docker run -d -p 9000:9000 clickhouse/clickhouse-server:23.8
-
-# API
-cd api
-pip install -r requirements.txt
-uvicorn main:app --reload
-
-# UI
-cd ui
-npm install
-npm run dev
-```
-
-### Tests
-
-```bash
-# Python API
-cd api && pytest
-
-# Go collectors
-cd collectors/git && go test ./...
-```
-
-## Deployment
-
-### Kubernetes (Helm)
-
-```bash
-# Install
-helm install team-dashboard ./helm/team-dashboard -f values-prod.yaml
-
-# Upgrade
-helm upgrade team-dashboard ./helm/team-dashboard -f values-prod.yaml
-```
-
-### Docker
-
-```bash
-# Build images
-docker-compose build
+# Build
+make build
 
 # Run
-docker-compose up -d
+make run
+
+# With Docker
+make docker-up
+```
+
+### Graceful Shutdown
+
+API server supports graceful shutdown with 30s timeout:
+
+```go
+srv := &http.Server{Addr: addr, Handler: r}
+go srv.ListenAndServe()
+
+// On SIGINT/SIGTERM:
+srv.Shutdown(ctx)
 ```
 
 ## Roadmap
 
-- [x] Cycle 1: MVP (basic metrics)
-- [x] Cycle 2: Reliability (error handling, more adapters)
-- [x] Cycle 3: UI/UX (detailed charts, velocity)
-- [ ] Cycle 4: Advanced (management API, filters)
-- [ ] Cycle 5: Performance (query optimization)
-- [ ] Cycle 6: Enterprise (SSO, RBAC)
-
-### Cycle 3 Features (Completed)
-- **Velocity Page**: Cycle time, lead time charts with Recharts
-- **Team Comparison**: Toggle between chart and table views
-- **Activity Page**: Date/source filters, heatmap visualization, top contributors
-- **Tab Navigation**: Overview, Velocity, Activity, Comparison tabs
-- **UI Tests**: 4 component tests (Velocity, TeamComparison, ActivityPage)
-- **Security**: SQL injection fixes, input validation, proper error handling
-
-### Cycle 2 Features (Completed)
-- Dead Letter Queue (DLQ) with retry API
-- Collector health checks with heartbeat
-- Prometheus metrics (`/metrics` endpoint)
-- Redis caching with in-memory fallback
-- New adapters: Asana, Trello, Jenkins
-- Integration + E2E tests (28 tests)
+- [x] MVP - Basic metrics and dashboard
+- [x] Go API migration
+- [ ] Advanced filtering
+- [ ] Query optimization
+- [ ] Enterprise features (SSO, RBAC)
 
 ## License
 
