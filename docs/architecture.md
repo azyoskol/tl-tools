@@ -330,17 +330,6 @@ Environment variables имеют приоритет над YAML:
 - **UI**: React, Recharts, Axios
 - **Infra**: ClickHouse 23.8, Redis 7, Nginx
 
-## Known Issues
-
-- Даты и UUID возвращаются как пустые строки (нужно улучшить JSON parsing для Date/UUID типов)
-- Тестовые данные минимальные
-
-## Future Improvements
-
-1. Добавить больше тестов для repo слоя
-2. Улучшить парсинг типов ClickHouse
-3. Добавить аутентификацию
-4. Добавить rate limiting
 
 ## Error Handling
 

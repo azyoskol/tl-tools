@@ -17,40 +17,12 @@ Worktrees should be created inside project directory (`.worktrees/`), not in glo
 - **Database**: ClickHouse
 - **Cache**: Redis
 
-## Agent Skills Configuration
-
-### Available Skills
-
-Install these skills for best agent experience:
-
-- **diagnose**: For debugging issues ("diagnose this", "debug this")
-- **grill-me**: For stress-testing plans and designs
-- **grill-with-docs**: For challenging plans against domain model
-- **improve-codebase-architecture**: For finding refactoring opportunities
-- **tdd**: For test-driven development
-- **to-issues**: For converting plans to issues
-- **to-prd**: For creating PRDs
-- **triage**: For issue workflow management
-
-### Setup Command
-
-```bash
-# Run once to configure skills
-make setup-matt-pocock-skills  # if using setup-matt-pocock-skills skill
-```
-
 ## Issue Tracker
 
-- **Type**: Local markdown files in docs/superpowers/
+- **Type**: Local markdown files in docs/
 - **Labels**: Plans, Specs
 - **Format**: YYYY-MM-DD-{name}-{type}.md
 
-## Triage Labels
-
-- `bug` — Something is broken
-- `feature` — New functionality
-- `improvement` — Enhancement to existing
-- `refactor` — Code restructure
 
 ## Common Commands
 
