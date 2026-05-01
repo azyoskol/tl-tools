@@ -1,5 +1,4 @@
-import type { Dashboard, DashboardWidgetInstance, DashboardLayout } from '../dashboard';
-import { createMockStatCardWidget, createMockMetricChartWidget } from '../mocks/widgets';
+import type { Dashboard, DashboardWidgetInstance } from '../dashboard';
 import type { MetricId } from '../metrics';
 
 export const createMockCTODashboard = (): Dashboard => ({

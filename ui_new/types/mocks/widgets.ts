@@ -1,6 +1,4 @@
-import type { Dashboard, DashboardFilters, WidgetLayout, DashboardWidgetInstance } from '../dashboard';
 import type { WidgetConfig, WidgetType } from '../widgets';
-
 import type { MetricId } from '../metrics';
 
 export const createMockStatCardWidget = (metricId: MetricId, instanceId: string): DashboardWidgetInstance => ({
