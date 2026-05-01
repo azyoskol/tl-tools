@@ -12,11 +12,11 @@ import { PlaceholderScreen } from './screens/PlaceholderScreen';
 
 const screens: Record<string, React.FC> = {
   dashboard: DashboardScreen,
-  cto: RoleDashboardScreen,
-  vp: RoleDashboardScreen,
-  tl: RoleDashboardScreen,
-  devops: RoleDashboardScreen,
-  ic: RoleDashboardScreen,
+  cto: () => <RoleDashboardScreen initialRole="cto" />,
+  vp: () => <RoleDashboardScreen initialRole="vp" />,
+  tl: () => <RoleDashboardScreen initialRole="tl" />,
+  devops: () => <RoleDashboardScreen initialRole="devops" />,
+  ic: () => <RoleDashboardScreen initialRole="ic" />,
   metrics: MetricsScreen,
   wizard: DashboardWizardScreen,
   ai: AIScreen,

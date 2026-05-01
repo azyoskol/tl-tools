@@ -13,8 +13,12 @@ const tabs = [
   { id: 'ic', label: 'Individual', component: ICDashboard },
 ];
 
-export const RoleDashboardScreen: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('cto');
+interface RoleDashboardScreenProps {
+  initialRole?: string;
+}
+
+export const RoleDashboardScreen: React.FC<RoleDashboardScreenProps> = ({ initialRole }) => {
+  const [activeTab, setActiveTab] = useState(initialRole || 'cto');
   const ActiveComponent = tabs.find(t => t.id === activeTab)?.component || CTODashboard;
 
   return (
