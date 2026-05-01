@@ -92,6 +92,7 @@ const DORALevel = ({ level }: { level: string }) => {
 export const MetricsScreen: React.FC = () => {
   const [selectedMetric, setSelectedMetric] = useState('deploy-freq');
   const [expandedGroups, setExpandedGroups] = useState(['dora', 'ci', 'pr', 'teams']);
+  const [search, setSearch] = useState('');
 
   const toggleGroup = (id: string) => {
     setExpandedGroups(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
@@ -100,11 +101,38 @@ export const MetricsScreen: React.FC = () => {
   const metric = findMetric(selectedMetric);
   const data = METRIC_DATA[selectedMetric] || [];
 
+  const filteredTree = METRIC_TREE.map(group => ({
+    ...group,
+    children: group.children.filter(child => 
+      child.label.toLowerCase().includes(search.toLowerCase())
+    ),
+  })).filter(group => group.children.length > 0);
+
   return (
     <div className="fade-up-3" style={{ display: 'flex', height: 'calc(100vh - 56px)', overflow: 'hidden' }}>
       {/* Left sidebar */}
-      <div style={{ width: 240, borderRight: '1px solid var(--border)', padding: '16px 12px', overflow: 'auto' }}>
-        {METRIC_TREE.map((group) => (
+      <div style={{ width: 240, borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ padding: '16px 12px', borderBottom: '1px solid var(--border)' }}>
+          <h3 style={{ fontSize: 13, fontWeight: 600, color: 'var(--muted)', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Metrics</h3>
+          <input
+            type="text"
+            placeholder="Search metrics..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={{
+              width: '100%',
+              padding: '8px 10px',
+              borderRadius: 6,
+              border: '1px solid var(--border)',
+              background: 'var(--glass)',
+              color: 'var(--text)',
+              fontSize: 12,
+              outline: 'none',
+            }}
+          />
+        </div>
+        <div style={{ flex: 1, padding: '12px', overflow: 'auto' }}>
+        {filteredTree.map((group) => (
           <div key={group.id} style={{ marginBottom: 16 }}>
             <div
               onClick={() => toggleGroup(group.id)}
@@ -140,6 +168,7 @@ export const MetricsScreen: React.FC = () => {
             ))}
           </div>
         ))}
+        </div>
       </div>
 
       {/* Main content */}
