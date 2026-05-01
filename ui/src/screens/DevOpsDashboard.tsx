@@ -21,7 +21,7 @@ export const DevOpsDashboard: React.FC = () => {
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
         {mttrTrend.length > 0 && <Widget><h3 style={{ marginBottom: 16 }}>MTTR Trend</h3><AreaChart data={mttrTrend} width={350} height={150} /></Widget>}
-        <Widget><h3 style={{ marginBottom: 16 }}>Deploy Heatmap</h3><Heatmap data={deployHeatData} width={350} height={120} /></Widget>
+        <Widget><h3 style={{ marginBottom: 16 }}>Deploy Heatmap</h3><Heatmap data={deployHeatData} /></Widget>
       </div>
     </div>
   );

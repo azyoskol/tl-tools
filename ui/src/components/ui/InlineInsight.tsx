@@ -1,13 +1,24 @@
 import React from 'react';
 
-interface InlineInsightProps { text: string }
+interface InlineInsightProps { 
+  text: string;
+  action?: string;
+}
 
-export const InlineInsight: React.FC<InlineInsightProps> = ({ text }) => (
+export const InlineInsight: React.FC<InlineInsightProps> = ({ text, action }) => (
   <div style={{
     background: 'linear-gradient(90deg, rgba(180,76,255,0.1), rgba(0,229,255,0.1))',
     borderRadius: '8px', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '12px'
   }}>
     <span style={{ width: 4, height: '100%', minHeight: 24, borderRadius: 2, background: 'var(--grad)' }} />
     <span style={{ color: 'var(--text)', fontSize: '14px' }}>{text}</span>
+    {action && (
+      <button style={{
+        marginLeft: 'auto', padding: '6px 12px', borderRadius: '6px', border: 'none',
+        background: 'rgba(0,229,255,0.2)', color: 'var(--accent-cyan)', cursor: 'pointer', fontSize: '12px'
+      }}>
+        {action}
+      </button>
+    )}
   </div>
 );

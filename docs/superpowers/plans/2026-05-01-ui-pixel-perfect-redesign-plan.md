@@ -1,5 +1,7 @@
 # UI Pixel-Perfect Redesign Implementation Plan
 
+> **Status: WIP** — Not all elements match the new design prototype yet.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Update Metraly UI implementation to achieve pixel-perfect match with the design prototype from Claude Design.
@@ -7,6 +9,32 @@
 **Architecture:** Layer-by-layer rewrite: CSS tokens → Icon system → Sidebar/Topbar → Cards → Screens.
 
 **Tech Stack:** React 18 + TypeScript + Vite (existing), inline styles matching design exactly.
+
+---
+
+## Progress Summary (as of 2026-05-01)
+
+### ✅ Completed
+- Task 1: CSS Design Tokens — added --sidebar-w, --border2, scrollbar 6px, .glass, animation stagger, pulse-dot
+- Task 2: Icon System — 30+ icons in Icon.tsx
+- Task 3: Sidebar — 228px, sections, pinned, status pill, footer, badge hover
+- Task 4: Topbar — 56px, search, bell with notification dot
+- Task 5: Card Components — MetricCard, StatCard with hover effects
+- Task 6: DashboardScreen — 4 metric cards, AI insights, recent activity
+- VPDashboard — Sprint velocity, PR cycle by team, heatmap, delivery risk table
+- RoleDashboardScreen — respects initialRole prop
+
+### ⚠️ WIP / Incomplete
+- CTODashboard — partially done
+- TLDashboard — needs rewrite
+- DevOpsDashboard — needs rewrite  
+- ICDashboard — needs rewrite
+- MetricsScreen — rewritten but not fully aligned with design
+- Remaining screens (AIScreen, PluginScreen, WizardScreen, etc.)
+
+### 🔲 Not Started
+- Visual regression tests (Task 0)
+- Full verification against design prototype
 
 ---
 
@@ -55,7 +83,9 @@ ui/src/
 
 ---
 
-## Task 0: Visual Regression Tests Setup
+## Task 0: Visual Regression Tests Setup ⚠️ WIP
+
+> **Note:** Not started. Skipped for initial UI implementation phase.
 
 **Goal:** Create tests to verify pixel-perfect implementation matches design exactly.
 
@@ -990,16 +1020,18 @@ git commit -m "feat: rewrite DashboardScreen with design data"
 
 ---
 
-## Task 7: Role Dashboards (CTO, VP, TL, DevOps, IC)
+## Task 7: Role Dashboards (CTO, VP, TL, DevOps, IC) ⚠️ WIP
+
+> **Note:** VP dashboard implemented. CTO, TL, DevOps, IC need work.
 
 **Files:**
-- Rewrite: `ui/src/screens/CTODashboard.tsx`
-- Rewrite: `ui/src/screens/VPDashboard.tsx`
-- Rewrite: `ui/src/screens/TLDashboard.tsx`
-- Rewrite: `ui/src/screens/DevOpsDashboard.tsx`
-- Rewrite: `ui/src/screens/ICDashboard.tsx`
+- Rewrite: `ui/src/screens/CTODashboard.tsx` ⚠️ partial
+- Rewrite: `ui/src/screens/VPDashboard.tsx` ✅ done
+- Rewrite: `ui/src/screens/TLDashboard.tsx` ⚠️ not started
+- Rewrite: `ui/src/screens/DevOpsDashboard.tsx` ⚠️ not started
+- Rewrite: `ui/src/screens/ICDashboard.tsx` ⚠️ not started
 
-- [ ] **Step 1: Rewrite CTODashboard.tsx**
+<!-- - [ ] **Step 1: Rewrite CTODashboard.tsx** -->
 
 Reference design in `dashboard-roles.jsx` lines 104-181:
 - 4 StatCards: Engineering Health, Deploy Frequency, Lead Time, Change Failure Rate
@@ -1112,15 +1144,17 @@ git commit -m "feat: rewrite role dashboards with design data"
 
 ---
 
-## Task 8: Remaining Screens (Modify)
+## Task 8: Remaining Screens (Modify) ⚠️ WIP
+
+> **Note:** MetricsScreen rewritten. Others not fully aligned with design.
 
 **Files:**
-- Modify: `ui/src/screens/MetricsScreen.tsx`
-- Modify: `ui/src/screens/AIScreen.tsx`
-- Modify: `ui/src/screens/PluginScreen.tsx`
-- Modify: `ui/src/screens/WizardScreen.tsx`
-- Modify: `ui/src/screens/DashboardWizardScreen.tsx`
-- Modify: `ui/src/screens/PlaceholderScreen.tsx`
+- Modify: `ui/src/screens/MetricsScreen.tsx` ⚠️ partial
+- Modify: `ui/src/screens/AIScreen.tsx` ⚠️ not started
+- Modify: `ui/src/screens/PluginScreen.tsx` ⚠️ not started
+- Modify: `ui/src/screens/WizardScreen.tsx` ⚠️ not started
+- Modify: `ui/src/screens/DashboardWizardScreen.tsx` ⚠️ not started
+- Modify: `ui/src/screens/PlaceholderScreen.tsx` ⚠️ not started
 
 - [ ] **Step 1: Update App.tsx to use new Sidebar/Topbar**
 
@@ -1168,14 +1202,15 @@ git commit -m "feat: update App.tsx routing and remaining screens"
 
 ---
 
-## Task 9: Verification
+## Task 9: Verification 🔲 Not Started
 
-> **Important:** After each task implementation, run relevant tests to verify implementation matches design:
+> **Important:** Verification against design prototype not completed yet. Visual tests not implemented.
+
 > ```bash
 > npm test -- --testPathPattern=visual/
 > ```
 
-- [ ] **Step 1: Build the UI**
+<!-- - [ ] **Step 1: Build the UI** -->
 
 ```bash
 cd /home/zubarev/sources/metraly/ui && npm run build
