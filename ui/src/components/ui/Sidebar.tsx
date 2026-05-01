@@ -22,12 +22,12 @@ interface NavSection {
 const sections: NavSection[] = [
   { label: 'Dashboards', items: [
     { id: 'dashboard', icon: 'home', label: 'Overview' },
-    { id: 'dash-cto', icon: 'trendingUp', label: 'CTO' },
-    { id: 'dash-vp', icon: 'users', label: 'VP Engineering' },
-    { id: 'dash-tl', icon: 'gitPR', label: 'Tech Lead' },
-    { id: 'dash-devops', icon: 'cpu', label: 'DevOps / SRE' },
-    { id: 'dash-ic', icon: 'activity', label: 'My View' },
-    { id: 'dash-wizard', icon: 'plus', label: 'New Dashboard', accent: true },
+    { id: 'cto', icon: 'trendingUp', label: 'CTO' },
+    { id: 'vp', icon: 'users', label: 'VP Engineering' },
+    { id: 'tl', icon: 'gitPR', label: 'Tech Lead' },
+    { id: 'devops', icon: 'cpu', label: 'DevOps / SRE' },
+    { id: 'ic', icon: 'activity', label: 'My View' },
+    { id: 'wizard', icon: 'plus', label: 'New Dashboard', accent: true },
   ]},
   { label: 'Analytics', items: [
     { id: 'metrics', icon: 'bar2', label: 'Metrics Explorer' },
@@ -35,7 +35,7 @@ const sections: NavSection[] = [
   ]},
   { label: 'Configure', items: [
     { id: 'plugins', icon: 'puzzle', label: 'Marketplace' },
-    { id: 'wizard', icon: 'link', label: 'Connect Sources' },
+    { id: 'sources', icon: 'link', label: 'Connect Sources' },
   ]},
   { label: 'System', items: [
     { id: 'settings', icon: 'settings', label: 'Settings' },
@@ -44,7 +44,7 @@ const sections: NavSection[] = [
 
 export const Sidebar: React.FC<SidebarProps> = ({ active, onNavigate }) => {
   const [pinned, setPinned] = React.useState<string[]>(() => {
-    try { return JSON.parse(localStorage.getItem('metraly-pinned') || '["dash-cto","dash-devops"]'); } catch { return ['dash-cto','dash-devops']; }
+    try { return JSON.parse(localStorage.getItem('metraly-pinned') || '["cto","devops"]'); } catch { return ['cto','devops']; }
   });
   const [hoveredPin, setHoveredPin] = React.useState<string | null>(null);
 
