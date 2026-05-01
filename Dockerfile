@@ -16,6 +16,7 @@ FROM alpine:latest
 RUN apk --no-cache add ca-certificates
 WORKDIR /app
 COPY --from=builder /app/api .
+COPY --from=builder /app/docs ./docs
 
 EXPOSE 8000
 CMD ["./api"]
