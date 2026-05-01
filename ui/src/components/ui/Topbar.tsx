@@ -1,19 +1,36 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { Icon } from './Icon';
 
-interface TopbarProps { onSearch?: (q: string) => void }
-
-export const Topbar: React.FC<TopbarProps> = ({ onSearch }) => {
-  const [query, setQuery] = useState('');
-  return (
-    <header style={{ height: 60, background: 'var(--glass)', borderBottom: '1px solid var(--border)', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'var(--bg)', borderRadius: 8, padding: '8px 16px', width: 400 }}>
-        <span style={{ color: 'var(--muted)' }}>🔍</span>
-        <input value={query} onChange={e => { setQuery(e.target.value); onSearch?.(e.target.value); }} placeholder="Search metrics, teams..." style={{ background: 'transparent', border: 'none', color: 'var(--text)', fontSize: '14px', width: '100%', outline: 'none' }} />
+export const Topbar: React.FC = () => (
+  <header style={{
+    height: 56, borderBottom: '1px solid var(--border)',
+    display: 'flex', alignItems: 'center', padding: '0 24px',
+    gap: 16, flexShrink: 0, background: 'rgba(11,15,25,0.6)',
+    backdropFilter: 'blur(8px)',
+  }}>
+    <div style={{ flex: 1 }}>
+      <div style={{ fontFamily: 'var(--font-head)', fontWeight: 600, fontSize: 16, color: 'var(--text)' }}>
+        Engineering Dashboard
       </div>
-      <button style={{ background: 'transparent', border: 'none', color: 'var(--muted)', cursor: 'pointer', position: 'relative' }}>
-        <span style={{ fontSize: 20 }}>🔔</span>
-        <span style={{ position: 'absolute', top: -2, right: -2, width: 8, height: 8, background: 'var(--error)', borderRadius: '50%' }} />
-      </button>
-    </header>
-  );
-};
+    </div>
+    <div style={{
+      display: 'flex', alignItems: 'center',
+      background: 'var(--glass)', border: '1px solid var(--border)',
+      borderRadius: 8, padding: '6px 12px', gap: 8, width: 220,
+    }}>
+      <Icon name="search" size={13} color="var(--muted)"/>
+      <span style={{ fontSize: 13, color: 'var(--muted)', fontFamily: 'var(--font-body)' }}>Quick search…</span>
+      <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--muted)', fontFamily: 'var(--font-mono)', background: 'rgba(255,255,255,0.05)', padding: '1px 5px', borderRadius: 4 }}>⌘K</span>
+    </div>
+    <button style={{
+      background: 'none', border: '1px solid var(--border)', borderRadius: 8,
+      padding: '6px 8px', cursor: 'pointer', color: 'var(--muted2)', position: 'relative',
+    }}>
+      <Icon name="bell" size={15}/>
+      <div style={{
+        position: 'absolute', top: 4, right: 4, width: 7, height: 7,
+        background: 'var(--cyan)', borderRadius: '50%', border: '1.5px solid var(--bg)',
+      }}/>
+    </button>
+  </header>
+);

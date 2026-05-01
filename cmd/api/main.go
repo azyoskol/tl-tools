@@ -19,5 +19,5 @@ func main() {
 	r.Get("/api/v1/insights", handlers.InsightsHandler)
 	r.Get("/api/v1/dashboards", handlers.GetDashboardsHandler)
 	r.Post("/api/v1/dashboards", handlers.PostDashboardHandler)
-	http.ListenAndServe(":8080", r)
+	http.ListenAndServe(":8000", r)
 }
