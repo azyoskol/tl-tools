@@ -3,8 +3,6 @@ import React from 'react';
 interface GaugeProps {
   value: number;
   max?: number;
-  width?: number;
-  height?: number;
   color?: string;
   label?: string;
 }
@@ -12,27 +10,27 @@ interface GaugeProps {
 export const Gauge: React.FC<GaugeProps> = ({
   value,
   max = 100,
-  width = 120,
-  height = 70,
   color = '#00E5FF',
-  label
+  label,
 }) => {
-  const radius = width / 2 - 10;
-  const startAngle = Math.PI;
-  const endAngle = 2 * Math.PI;
-  const valueAngle = startAngle + (value / max) * (endAngle - startAngle);
-  const arc = (a: number) => `${width/2 + radius * Math.cos(a)},${height + radius * Math.sin(a) - height}`;
+  const cx = 70, cy = 88, r = 60;
+  const fraction = Math.min(value / max, 0.9999);
+  const angle = Math.PI * fraction;
+
+  // Start = left, end = right, sweep clockwise (goes up in screen coords)
+  const sx = cx - r, sy = cy;
+  const ex = cx + r, ey = cy;
+  const vx = cx - r * Math.cos(angle);
+  const vy = cy - r * Math.sin(angle);
 
   return (
-    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
-      <path d={`M ${arc(startAngle)} A ${radius} ${radius} 0 0 1 ${arc(endAngle)}`}
-        fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="8" strokeLinecap="round" />
-      <path d={`M ${arc(startAngle)} A ${radius} ${radius} 0 0 1 ${arc(valueAngle)}`}
-        fill="none" stroke={color} strokeWidth="8" strokeLinecap="round" />
-      <text x={width/2} y={height - 10} textAnchor="middle" fill="#E8EDF5" fontSize="18" fontWeight="600">
-        {Math.round(value)}%
-      </text>
-      {label && <text x={width/2} y={height - 28} textAnchor="middle" fill="#6B7A9A" fontSize="10">{label}</text>}
+    <svg viewBox="0 0 140 88" style={{ width: '100%', maxWidth: 200, overflow: 'visible', display: 'block' }}>
+      <path d={`M ${sx},${sy} A ${r} ${r} 0 0 1 ${ex},${ey}`}
+        fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="10" strokeLinecap="round" />
+      <path d={`M ${sx},${sy} A ${r} ${r} 0 0 1 ${vx},${vy}`}
+        fill="none" stroke={color} strokeWidth="10" strokeLinecap="round" />
+      {label && <text x={cx} y={cy - r / 2 - 4} textAnchor="middle" fill="var(--muted)" fontSize="11">{label}</text>}
+      <text x={cx} y={cy - 6} textAnchor="middle" fill="var(--text)" fontSize="22" fontWeight="600">{Math.round(value)}%</text>
     </svg>
   );
 };
