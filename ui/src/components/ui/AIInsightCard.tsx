@@ -13,10 +13,9 @@ export const AIInsightCard: React.FC<AIInsightCardProps> = ({ title, body, actio
         background: 'linear-gradient(135deg, var(--cyan), var(--purple))',
         borderRadius: '12px',
         padding: '1px',
-        position: 'relative',
-        opacity: hovered ? 0.8 : 1,
-        transition: 'opacity 0.2s, transform 0.2s',
-        transform: hovered ? 'scale(1.02)' : 'scale(1)',
+        transition: 'opacity 0.2s',
+        opacity: hovered ? 1 : 1,
+        cursor: 'pointer',
       }}
     >
       <div style={{ 
@@ -25,22 +24,20 @@ export const AIInsightCard: React.FC<AIInsightCardProps> = ({ title, body, actio
         padding: '20px',
         height: '100%',
         transition: 'background 0.2s',
+        borderLeft: hovered ? '2px solid var(--cyan)' : '2px solid transparent',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-          <span className="pulse-dot" style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--purple)' }} />
+          <span 
+            className="pulse-dot" 
+            style={{ 
+              width: 8, 
+              height: 8, 
+              borderRadius: '50%', 
+              background: hovered ? 'var(--muted)' : 'var(--purple)',
+              opacity: hovered ? 0.5 : 1,
+            }} 
+          />
           <span style={{ fontSize: '12px', fontWeight: 600, background: 'var(--grad)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>AI INSIGHT</span>
-          {hovered && (
-            <span style={{ 
-              marginLeft: 'auto', 
-              fontSize: '10px', 
-              color: 'var(--success)', 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: '4px' 
-            }}>
-              ✓ Seen
-            </span>
-          )}
         </div>
         <h4 style={{ fontSize: '16px', marginBottom: '8px', color: 'var(--text)' }}>{title}</h4>
         <p style={{ color: 'var(--muted)', fontSize: '14px', marginBottom: action ? '12px' : 0, lineHeight: 1.5 }}>{body}</p>
