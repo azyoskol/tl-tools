@@ -1,7 +1,7 @@
 import type { WidgetConfig, WidgetType } from '../widgets';
-import type { MetricId } from '../metrics';
+import type { DashboardWidgetInstance } from '../dashboard';
 
-export const createMockStatCardWidget = (metricId: MetricId, instanceId: string): DashboardWidgetInstance => ({
+export const createMockStatCardWidget = (metricId: string, instanceId: string): DashboardWidgetInstance => ({
   instanceId,
   widgetType: 'stat-card',
   config: {
@@ -12,7 +12,7 @@ export const createMockStatCardWidget = (metricId: MetricId, instanceId: string)
   } as WidgetConfig,
 });
 
-export const createMockMetricChartWidget = (metricId: MetricId, instanceId: string): DashboardWidgetInstance => ({
+export const createMockMetricChartWidget = (metricId: string, instanceId: string): DashboardWidgetInstance => ({
   instanceId,
   widgetType: 'metric-chart',
   config: {

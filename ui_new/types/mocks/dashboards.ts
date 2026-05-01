@@ -1,5 +1,4 @@
 import type { Dashboard, DashboardWidgetInstance } from '../dashboard';
-import type { MetricId } from '../metrics';
 
 export const createMockCTODashboard = (): Dashboard => ({
   id: 'cto-1',
