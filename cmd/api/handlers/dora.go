@@ -2,48 +2,47 @@ package handlers
 
 import (
 	"encoding/json"
+	"math/rand"
 	"net/http"
 )
 
-type DORAHandler struct{}
-
-func NewDORAHandler() *DORAHandler {
-	return &DORAHandler{}
+func seededRand(seed int) float64 {
+	rand.Seed(int64(seed))
+	return rand.Float64()
 }
 
-func (h *DORAHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	series := []map[string]any{
-		{"date": "2026-01-01", "value": 0.5},
-		{"date": "2026-02-01", "value": 0.8},
-		{"date": "2026-03-01", "value": 1.2},
-		{"date": "2026-04-01", "value": 1.5},
+func makeSeries(seed int, points int, base, variance float64) []float64 {
+	res := make([]float64, points)
+	s := seed
+	for i := 0; i < points; i++ {
+		res[i] = base + (seededRand(s) - 0.5) * variance * 2
+		s++
 	}
+	return res
+}
 
+type DORAMetrics struct {
+	ID     string   `json:"id"`
+	Label  string   `json:"label"`
+	Value  string   `json:"value"`
+	Delta  string   `json:"delta"`
+	Good   bool     `json:"good"`
+	Level  string   `json:"level"`
+	Color  string   `json:"color"`
+	Series []float64 `json:"series"`
+}
+
+type DORAResponse struct {
+	Metrics []DORAMetrics `json:"metrics"`
+}
+
+func DORAHandler(w http.ResponseWriter, r *http.Request) {
+	metrics := []DORAMetrics{
+		{ID: "deploy-freq", Label: "Deployment Frequency", Value: "4.2/day", Delta: "+0.8", Good: true, Level: "Elite", Color: "#00E5FF", Series: makeSeries(1, 30, 4, 1)},
+		{ID: "lead-time", Label: "Lead Time for Changes", Value: "2.1 hrs", Delta: "-0.3", Good: true, Level: "High", Color: "#00E5FF", Series: makeSeries(2, 30, 2.5, 0.8)},
+		{ID: "mttr", Label: "Mean Time to Recovery", Value: "12 min", Delta: "-5 min", Good: true, Level: "Elite", Color: "#00E5FF", Series: makeSeries(3, 30, 15, 5)},
+		{ID: "change-fail", Label: "Change Failure Rate", Value: "4%", Delta: "-2%", Good: true, Level: "Elite", Color: "#00C853", Series: makeSeries(4, 30, 5, 2)},
+	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{
-		"deploy-freq": map[string]any{
-			"current":   "daily",
-			"trend":     "improving",
-			"score":     "elite",
-			"series":    series,
-		},
-		"lead-time": map[string]any{
-			"current":   "2 days",
-			"trend":      "improving",
-			"score":     "elite",
-			"series":    series,
-		},
-		"mttr": map[string]any{
-			"current":   "1 hour",
-			"trend":      "stable",
-			"score":     "high",
-			"series":    series,
-		},
-		"change-fail": map[string]any{
-			"current":   "5%",
-			"trend":      "improving",
-			"score":     "elite",
-			"series":    series,
-		},
-	})
+	json.NewEncoder(w).Encode(DORAResponse{Metrics: metrics})
 }

@@ -1,124 +1,95 @@
 package handlers
-
 import (
 	"encoding/json"
 	"net/http"
-
-	"github.com/go-chi/chi/v5"
 )
-
-type RoleHandler struct{}
-
-func NewRoleHandler() *RoleHandler {
-	return &RoleHandler{}
+type RoleStats struct {
+	Icon     string    `json:"icon"`
+	Label    string    `json:"label"`
+	Value   string    `json:"value"`
+	Trend   string    `json:"trend"`
+	TrendDir string    `json:"trendDir"`
+	Color   string    `json:"color"`
+	Spark   []float64 `json:"spark"`
 }
-
-func (h *RoleHandler) Routes() http.Handler {
-	r := chi.NewRouter()
-	r.Get("/cto", h.CTO)
-	r.Get("/vp", h.VP)
-	r.Get("/tl", h.TL)
-	r.Get("/devops", h.DevOps)
-	r.Get("/ic", h.IC)
-	return r
+type RoleResponse struct {
+	Role    string                  `json:"role"`
+	Stats   []RoleStats            `json:"stats"`
+	Payload map[string]interface{} `json:"payload"`
 }
-
-func (h *RoleHandler) CTO(w http.ResponseWriter, r *http.Request) {
+func RoleHandler(w http.ResponseWriter, r *http.Request) {
+	role := r.URL.Query().Get("role")
+	if role == "" {
+		role = "cto"
+	}
+	var resp RoleResponse
+	switch role {
+	case "cto":
+		resp = RoleResponse{
+			Role: "cto",
+			Stats: []RoleStats{
+				{Icon: "trendingUp", Label: "Engineering Health", Value: "84", Trend: "+3 pts", TrendDir: "up", Color: "cyan", Spark: makeSeries(1, 10, 80, 5)},
+			},
+			Payload: map[string]interface{}{
+				"deployTrend":    makeSeries(1, 14, 4, 1),
+				"velocityByTeam": []map[string]string{{"team": "Platform", "velocity": "42"}, {"team": "Frontend", "velocity": "38"}},
+				"leadTimeTrend":  makeSeries(2, 14, 2, 0.5),
+				"healthScore":    84,
+			},
+		}
+	case "vp":
+		resp = RoleResponse{
+			Role: "vp",
+			Stats: []RoleStats{
+				{Icon: "trendingUp", Label: "Sprint Velocity", Value: "42 pts", Trend: "+5%", TrendDir: "up", Color: "cyan", Spark: makeSeries(3, 10, 40, 5)},
+			},
+			Payload: map[string]interface{}{
+				"sprintVelocity": 42,
+				"prCycleTime":    makeSeries(4, 14, 4, 2),
+				"heatmap":       [][]int{{2,4,3,5,2,3,4}, {3,5,4,6,3,4,5}, {1,3,2,4,2,3,4}},
+				"deliveryRisk":  "low",
+			},
+		}
+	case "tl":
+		resp = RoleResponse{
+			Role: "tl",
+			Stats: []RoleStats{
+				{Icon: "checkCircle", Label: "CI Pass Rate", Value: "94%", Trend: "+2%", TrendDir: "up", Color: "success", Spark: makeSeries(5, 10, 92, 3)},
+			},
+			Payload: map[string]interface{}{
+				"ciPassRate":     94,
+				"prQueue":       5,
+				"burndown":      makeSeries(6, 14, 50, 10),
+				"failingBuilds": 2,
+			},
+		}
+	case "devops":
+		resp = RoleResponse{
+			Role: "devops",
+			Stats: []RoleStats{
+				{Icon: "zap", Label: "Deploy Frequency", Value: "4.2/day", Trend: "+0.8", TrendDir: "up", Color: "cyan", Spark: makeSeries(7, 10, 4, 1)},
+			},
+			Payload: map[string]interface{}{
+				"deployFreq":    4.2,
+				"mttrTrend":     makeSeries(8, 14, 12, 5),
+				"deployHeatData": [][]int{{1,2,3,4,5,4,3}, {2,3,5,6,5,4,3}},
+				"incidents":     2,
+			},
+		}
+	default:
+		resp = RoleResponse{
+			Role: "ic",
+			Stats: []RoleStats{
+				{Icon: "code", Label: "My PRs", Value: "8", Trend: "+2", TrendDir: "up", Color: "purple", Spark: makeSeries(9, 10, 6, 3)},
+			},
+			Payload: map[string]interface{}{
+				"myPRs":          8,
+				"ciRuns":         24,
+				"reviewQueue":   3,
+				"sprintProgress": 65,
+			},
+		}
+	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{
-		"role": "cto",
-		"stats": map[string]any{
-			"total_teams":          8,
-			"total_engineers":      45,
-			"velocity_trend":       "+12%",
-			"on_call_load":         "2.1 hrs/wk",
-			"ci_reliability":       "94%",
-			"deployment_frequency": "daily",
-		},
-		"payload": map[string]any{
-			"org_health":      85,
-			"budget_util":    78,
-			"roadmap_progress": 65,
-			"risk_items":      []string{"vendor expiration", "key retention"},
-		},
-	})
-}
-
-func (h *RoleHandler) VP(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{
-		"role": "vp",
-		"stats": map[string]any{
-			"team_count":          5,
-			"engineer_count":      28,
-			"sprint_velocity":      42,
-			"cycle_time":           "3.2 days",
-			"bug_escape_rate":     "2%",
-			"code_review_time":     "4 hrs",
-		},
-		"payload": map[string]any{
-			"team_health":    []int{90, 85, 78, 92, 88},
-			"blockers":       3,
-			"upcoming_milestones": []string{"Q2 GA", "Security audit"},
-		},
-	})
-}
-
-func (h *RoleHandler) TL(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{
-		"role": "tl",
-		"stats": map[string]any{
-			"team_size":           6,
-			"sprint_commit":       "85%",
-			"tech_debt_ratio":     "15%",
-			"PR_review_burden":    "8 PRs/day",
-			"on_call_incidents":   2,
-			"knowledge_share":     "3 sessions/wk",
-		},
-		"payload": map[string]any{
-			"sprint_burndown": []int{20, 18, 15, 12, 8, 5},
-			"risks":          []string{"API deadline", "QA bandwidth"},
-			"resources":      map[string]any{"allocated": 6, "needed": 1},
-		},
-	})
-}
-
-func (h *RoleHandler) DevOps(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{
-		"role": "devops",
-		"stats": map[string]any{
-			"uptime":               "99.9%",
-			"deploy_success":       "97%",
-			"incident_mttr":        "25 min",
-			"pipeline_duration":    "12 min",
-			"infra_cost":           "$12.5K/mo",
-			"auto_scaling":         "enabled",
-		},
-		"payload": map[string]any{
-			"services":      map[string]any{"total": 24, "healthy": 23},
-			"alerts":       map[string]any{"critical": 0, "warning": 2},
-			"cost_breakdown": map[string]any{"compute": 8500, "storage": 2000, "network": 2000},
-		},
-	})
-}
-
-func (h *RoleHandler) IC(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{
-		"role": "ic",
-		"stats": map[string]any{
-			"tasks_completed":      28,
-			"PRs_contributed":     15,
-			"code_lines":          2500,
-			"reviews_given":       12,
-			"on_call_hours":       6,
-			"learning_hours":      8,
-		},
-		"payload": map[string]any{
-			"activity": map[string]any{"commits": 45, "reviews": 12, "bugs_filed": 3},
-			"skills":   []string{"Go", "React", "PostgreSQL"},
-		},
-	})
+	json.NewEncoder(w).Encode(resp)
 }

@@ -1,38 +1,31 @@
 package handlers
-
 import (
 	"encoding/json"
 	"net/http"
 )
-
-type MetricsHandler struct{}
-
-func NewMetricsHandler() *MetricsHandler {
-	return &MetricsHandler{}
+type MetricResponse struct {
+	ID      string    `json:"id"`
+	Label  string    `json:"label"`
+	Unit   string    `json:"unit"`
+	Color  string    `json:"color"`
+	Current float64  `json:"current"`
+	Delta  float64  `json:"delta"`
+	Series []float64 `json:"series"`
+	Compare []float64 `json:"compare"`
 }
-
-func (h *MetricsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	series := []map[string]any{
-		{"date": "2026-01-01", "value": 100},
-		{"date": "2026-02-01", "value": 120},
-		{"date": "2026-03-01", "value": 115},
-		{"date": "2026-04-01", "value": 130},
+func MetricsHandler(w http.ResponseWriter, r *http.Request) {
+	metric := r.URL.Query().Get("metric")
+	_ = metric
+	resp := MetricResponse{
+		ID:      "deploy-freq",
+		Label:   "Deployment Frequency",
+		Unit:    "deploys/day",
+		Color:   "#00E5FF",
+		Current: 4.2,
+		Delta:   0.8,
+		Series:  makeSeries(100, 30, 4, 1),
+		Compare: makeSeries(200, 30, 3.8, 1),
 	}
-
-	compare := []map[string]any{
-		{"period": "prev", "value": 95},
-		{"period": "curr", "value": 130},
-		{"change": "+36.8%"},
-	}
-
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{
-		"metric": map[string]any{
-			"name":    "PRs Merged",
-			"value":   130,
-			"unit":    "count",
-			"series":  series,
-			"compare": compare,
-		},
-	})
+	json.NewEncoder(w).Encode(resp)
 }
