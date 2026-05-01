@@ -213,21 +213,19 @@ export const Sidebar: React.FC<SidebarProps> = ({ active, onNavigate }) => {
                   }}/>}
                   <Icon name={item.icon as any} size={15} color={isActive ? 'var(--cyan)' : 'currentColor'}/>
                   {item.label}
-                  {sec.label === 'Dashboards' && item.id !== 'dash-wizard' && hoveredPin === item.id && (
+                  {sec.label === 'Dashboards' && item.id !== 'wizard' && hoveredPin === item.id && (
                     <button onClick={e => togglePin(item.id, e)} title={pinned.includes(item.id) ? 'Unpin' : 'Pin to top'}
                       style={{
                         marginLeft: 'auto',
                         background: 'none',
                         border: 'none',
                         cursor: 'pointer',
-                        color: pinned.includes(item.id) ? 'var(--cyan)' : 'var(--muted)',
-                        fontSize: 12,
                         padding: '0 2px',
                         display: 'flex',
                         alignItems: 'center',
                         transition: 'color 0.15s',
                       }}>
-                      📌
+                      <Icon name={pinned.includes(item.id) ? 'star' : 'star'} size={12} color={pinned.includes(item.id) ? 'var(--cyan)' : 'var(--muted)'} />
                     </button>
                   )}
                   {item.badge && (
