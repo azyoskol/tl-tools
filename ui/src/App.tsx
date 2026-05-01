@@ -30,7 +30,7 @@ export const App: React.FC = () => {
   const Screen = screens[active] || DashboardScreen;
 
   return (
-    <div style={{ display: 'flex', height: '100vh', background: 'var(--bg)' }}>
+    <div className="fade-up" style={{ display: 'flex', height: '100vh', background: 'var(--bg)' }}>
       <Sidebar active={active} onNavigate={setActive} />
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <Topbar />

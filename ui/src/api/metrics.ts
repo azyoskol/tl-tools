@@ -51,7 +51,18 @@ export const getRole = async (role: string) => {
         { label: 'PR Cycle Time', value: '4.2h', trend: '-0.5h', trendDir: 'up' },
         { label: 'At-Risk Items', value: '3', trend: '+1', trendDir: 'down' },
       ],
-      payload: {},
+      payload: {
+        prCycleTime: [
+          { date: '2026-04-25', value: 5 },
+          { date: '2026-04-26', value: 4 },
+          { date: '2026-04-27', value: 3 },
+          { date: '2026-04-28', value: 4 },
+          { date: '2026-04-29', value: 2 },
+          { date: '2026-04-30', value: 3 },
+          { date: '2026-05-01', value: 2 },
+        ],
+        heatmap: [],
+      },
     },
     tl: {
       stats: [
@@ -59,7 +70,9 @@ export const getRole = async (role: string) => {
         { label: 'PR Queue', value: '12', trend: '+3', trendDir: 'neutral' },
         { label: 'Burndown', value: 'On track', trend: '', trendDir: 'neutral' },
       ],
-      payload: {},
+      payload: {
+        burndown: [100, 85, 70, 55, 40, 30, 20, 10, 0],
+      },
     },
     devops: {
       stats: [
@@ -67,7 +80,18 @@ export const getRole = async (role: string) => {
         { label: 'MTTR', value: '18min', trend: '-5min', trendDir: 'up' },
         { label: 'Active Incidents', value: '0', trend: 'No change', trendDir: 'neutral' },
       ],
-      payload: {},
+      payload: {
+        mttrTrend: [
+          { date: '2026-04-25', value: 25 },
+          { date: '2026-04-26', value: 20 },
+          { date: '2026-04-27', value: 18 },
+          { date: '2026-04-28', value: 22 },
+          { date: '2026-04-29', value: 15 },
+          { date: '2026-04-30', value: 18 },
+          { date: '2026-05-01', value: 18 },
+        ],
+        deployHeatData: [],
+      },
     },
     ic: {
       stats: [
@@ -75,7 +99,10 @@ export const getRole = async (role: string) => {
         { label: 'CI Runs', value: '23', trend: '+5', trendDir: 'up' },
         { label: 'Review Queue', value: '8', trend: '+3', trendDir: 'neutral' },
       ],
-      payload: {},
+      payload: {
+        myPRs: 5,
+        reviewQueue: 8,
+      },
     },
   };
   return roleData[role] || roleData.cto;
