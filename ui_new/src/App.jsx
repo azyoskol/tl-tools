@@ -9,8 +9,10 @@ import { AIScreen } from './features/aiAssistant/AIScreen';
 import { PluginScreen } from './features/marketplace/PluginScreen';
 import { WizardScreen } from './features/onboarding/WizardScreen';
 import { PlaceholderScreen } from './components/ui/PlaceholderScreen';
-import { TweaksPanel } from './components/layout/TweaksPanel';
 import { TweaksProvider } from './context/TweaksContext';
+import { DraggableTweaksPanel } from './components/layout/DraggableTweaksPanel';
+
+
 
 const titles = {
   dashboard: ['Overview', 'Last updated 2 min ago'],
@@ -89,7 +91,7 @@ const App = () => {
           <Topbar title={title} subtitle={subtitle} />
           {renderScreen()}
         </div>
-        <TweaksPanel />
+        <DraggableTweaksPanel />
       </div>
     </TweaksProvider>
   );

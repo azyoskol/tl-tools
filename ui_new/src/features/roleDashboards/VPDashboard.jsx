@@ -4,6 +4,7 @@ import { StatCard, Widget, InlineInsight, Badge, SH } from '../../components/ui'
 import { AreaChart, BarChart, Heatmap } from '../../components/charts';
 import { makeTimeSeries, makeHeatData } from '../../utils/seeds';
 import { DataTable } from '../../components/ui/DataTable';
+import { useTweaks } from '../../context/TweaksContext';
 
 export const VPDashboard = () => {
   const sprintVelocity = makeTimeSeries(12, 72, 12, 0.5, 55);
@@ -11,7 +12,7 @@ export const VPDashboard = () => {
   const heatData = makeHeatData(5, 14, 0.5, 33);
   const teamLabels = ['Platform', 'Mobile', 'Backend', 'Frontend', 'Data'];
   const weekdayLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S', 'M', 'T', 'W', 'T', 'F', 'S', 'S'];
-
+  const { tweaks } = useTweaks();
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 14 }}>
       <StatCard icon="zap" label="Sprint Velocity" value="76 pts" trend="+4" trendDir="up" color="cyan" spark={makeTimeSeries(12, 70, 8, 0.3, 5)} delay={0} />
@@ -22,7 +23,7 @@ export const VPDashboard = () => {
       <div className="fade-up-2" style={{ gridColumn: 'span 2' }}>
         <Widget>
           <SH title="Sprint Velocity Trend" right="Last 12 sprints" />
-          <AreaChart data={sprintVelocity} compare={makeTimeSeries(12, 65, 10, 0.2, 200)} color="#00E5FF" height={150}
+          <AreaChart data={sprintVelocity} compare={makeTimeSeries(12, 65, 10, 0.2, 200)} color={tweaks.accentColor} height={150}
             labels={Array.from({ length: 12 }, (_, i) => `S${i + 1}`)} />
         </Widget>
       </div>
@@ -30,14 +31,14 @@ export const VPDashboard = () => {
       <div className="fade-up-3" style={{ gridColumn: 'span 2' }}>
         <Widget>
           <SH title="PR Cycle Time by Team" right="Hours" />
-          <BarChart labels={prCycleByTeam.labels} values={prCycleByTeam.values} height={150} color="#B44CFF" horizontal={true} />
+          <BarChart labels={prCycleByTeam.labels} values={prCycleByTeam.values} height={150} color={tweaks.accentColor} horizontal={true} />
         </Widget>
       </div>
 
       <div className="fade-up-4" style={{ gridColumn: 'span 3' }}>
         <Widget>
           <SH title="Team Commit Activity" right="Last 2 weeks · by day" />
-          <Heatmap data={heatData} rows={5} cols={14} labelRows={teamLabels} labelCols={weekdayLabels} color="#00E5FF" cellSize={18} gap={4} />
+          <Heatmap data={heatData} rows={5} cols={14} labelRows={teamLabels} labelCols={weekdayLabels} color={tweaks.accentColor} cellSize={18} gap={4} />
         </Widget>
       </div>
 

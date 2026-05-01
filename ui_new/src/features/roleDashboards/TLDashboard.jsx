@@ -3,12 +3,14 @@ import { StatCard, Widget, InlineInsight, Badge, SH } from '../../components/ui'
 import { AreaChart, BarChart, Heatmap } from '../../components/charts';
 import { DataTable } from '../../components/ui/DataTable';
 import { makeTimeSeries } from '../../utils/seeds';
+import { useTweaks } from '../../context/TweaksContext';
 
 export const TLDashboard = () => {
   const ciPassRate = makeTimeSeries(21, 88, 8, 0.3, 13);
   const burndown = makeTimeSeries(14, 58, 6, -3.8, 14);
   const dayLabels = Array.from({ length: 14 }, (_, i) => `D${i + 1}`);
-
+  const { tweaks } = useTweaks();
+  
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 14 }}>
       <StatCard icon="activity" label="CI Pass Rate (7d)" value="92.4%" trend="+2.1%" trendDir="up" color="success" spark={makeTimeSeries(12, 88, 5, 0.2, 8)} delay={0} />
@@ -27,7 +29,7 @@ export const TLDashboard = () => {
       <div className="fade-up-3" style={{ gridColumn: 'span 2' }}>
         <Widget>
           <SH title="Sprint Burndown" right="14 days remaining" />
-          <AreaChart data={burndown} compare={makeTimeSeries(14, 58, 0, -58 / 14, 999)} color="#00E5FF" compareColor="#6B7A9A" height={150} labels={dayLabels} />
+          <AreaChart data={burndown} compare={makeTimeSeries(14, 58, 0, -58 / 14, 999)} color={tweaks.accentColor} compareColor="#6B7A9A" height={150} labels={dayLabels} />
         </Widget>
       </div>
 

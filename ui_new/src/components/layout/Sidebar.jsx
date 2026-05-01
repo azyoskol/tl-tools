@@ -1,9 +1,22 @@
 // src/components/layout/Sidebar.jsx
 import React, { useState, useEffect } from 'react';
 import { Icon } from '../shared/Icon';
+import { useTweaks } from '../../context/TweaksContext';
 
 export const Sidebar = ({ active, onNav }) => {
-  // Загружаем pinned из localStorage
+  const { tweaks } = useTweaks();
+  const collapsed = tweaks.sidebarCollapsed;
+  const density = tweaks.density;
+
+  // Density padding mapping
+  const densityPadding = {
+    compact: { section: '4px 8px', item: '6px 8px' },
+    comfortable: { section: '12px 10px', item: '8px 10px' },
+    spacious: { section: '16px 12px', item: '10px 12px' },
+  };
+  const pad = densityPadding[density] || densityPadding.comfortable;
+
+  // Load pinned from localStorage (same as before)
   const [pinned, setPinned] = useState(() => {
     try {
       const saved = localStorage.getItem('metraly-pinned');
@@ -12,22 +25,17 @@ export const Sidebar = ({ active, onNav }) => {
       return ['dash-cto', 'dash-devops'];
     }
   });
-
   const [hoveredPin, setHoveredPin] = useState(null);
 
-  // Сохраняем изменения
   useEffect(() => {
     localStorage.setItem('metraly-pinned', JSON.stringify(pinned));
   }, [pinned]);
 
   const togglePin = (id, e) => {
     e.stopPropagation();
-    setPinned(prev => 
-      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
-    );
+    setPinned(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   };
 
-  // Конфигурация пунктов меню
   const sections = [
     { label: 'Dashboards', items: [
       { id: 'dashboard', icon: 'home', label: 'Overview' },
@@ -61,9 +69,12 @@ export const Sidebar = ({ active, onNav }) => {
 
   const unpinnedItems = allDashboardItems.filter(item => !pinned.includes(item.id));
 
+  // Sidebar width changes based on collapsed state
+  const sidebarWidth = collapsed ? '64px' : 'var(--sidebar-w)';
+
   return (
     <aside style={{
-      width: 'var(--sidebar-w)',
+      width: sidebarWidth,
       flexShrink: 0,
       height: '100%',
       background: 'rgba(11,15,25,0.95)',
@@ -71,243 +82,110 @@ export const Sidebar = ({ active, onNav }) => {
       display: 'flex',
       flexDirection: 'column',
       backdropFilter: 'blur(20px)',
+      transition: 'width 0.2s ease',
+      overflowX: 'hidden',
     }}>
-      {/* Logo */}
-      <div style={{ padding: '20px 18px 16px', borderBottom: '1px solid var(--border)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+      {/* Logo area – reduced padding when collapsed */}
+      <div style={{ padding: collapsed ? '16px 0' : '20px 18px 16px', borderBottom: '1px solid var(--border)', textAlign: collapsed ? 'center' : 'left' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: collapsed ? 0 : 10, justifyContent: collapsed ? 'center' : 'flex-start' }}>
           <div style={{
             width: 32, height: 32, borderRadius: 8,
             background: 'var(--grad)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
+            flexShrink: 0,
           }}>
             <Icon name="activity" size={16} color="#fff"/>
           </div>
-          <span style={{
-            fontFamily: 'var(--font-head)',
-            fontWeight: 700,
-            fontSize: 17,
-            background: 'var(--grad)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-          }}>Metraly</span>
+          {!collapsed && (
+            <span style={{
+              fontFamily: 'var(--font-head)',
+              fontWeight: 700,
+              fontSize: 17,
+              background: 'var(--grad)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+            }}>Metraly</span>
+          )}
         </div>
-        <div style={{
-          marginTop: 12,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 6,
-          background: 'rgba(0,200,83,0.1)',
-          border: '1px solid rgba(0,200,83,0.2)',
-          borderRadius: 20,
-          padding: '4px 10px',
-          width: 'fit-content',
-        }}>
+        {!collapsed && (
           <div style={{
-            width: 6, height: 6, borderRadius: '50%',
-            background: 'var(--success)',
-            animation: 'pulse-dot 2s ease infinite',
-          }}/>
-          <span style={{ fontSize: 11, color: 'var(--success)', fontFamily: 'var(--font-mono)' }}>All systems nominal</span>
-        </div>
+            marginTop: 12,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            background: 'rgba(0,200,83,0.1)',
+            border: '1px solid rgba(0,200,83,0.2)',
+            borderRadius: 20,
+            padding: '4px 10px',
+            width: 'fit-content',
+          }}>
+            <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--success)', animation: 'pulse-dot 2s ease infinite' }}/>
+            <span style={{ fontSize: 11, color: 'var(--success)', fontFamily: 'var(--font-mono)' }}>All systems nominal</span>
+          </div>
+        )}
       </div>
 
-      <nav style={{ flex: 1, overflow: 'auto', padding: '12px 10px' }}>
-        {/* Pinned dashboards section */}
-        {pinnedItems.length > 0 && (
+      <nav style={{ flex: 1, overflow: 'auto', padding: collapsed ? '8px 4px' : '12px 10px' }}>
+        {/* Pinned section – simplified when collapsed */}
+        {pinnedItems.length > 0 && !collapsed && (
           <div style={{ marginBottom: 16 }}>
-            <div style={{
-              fontSize: 10,
-              fontWeight: 600,
-              letterSpacing: '0.08em',
-              color: 'var(--muted)',
-              textTransform: 'uppercase',
-              padding: '0 8px',
-              marginBottom: 4,
-            }}>Pinned</div>
+            <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.08em', color: 'var(--muted)', textTransform: 'uppercase', padding: '0 8px', marginBottom: 4 }}>Pinned</div>
             {pinnedItems.map(item => (
-              <button
-                key={item.id}
-                onClick={() => onNav(item.id)}
-                style={{
-                  width: '100%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 9,
-                  padding: '7px 10px',
-                  borderRadius: 8,
-                  border: 'none',
-                  cursor: 'pointer',
-                  marginBottom: 2,
-                  background: active === item.id ? 'rgba(0,229,255,0.1)' : 'transparent',
-                  color: active === item.id ? 'var(--cyan)' : 'var(--muted2)',
-                  fontFamily: 'var(--font-body)',
-                  fontSize: 13,
-                  fontWeight: active === item.id ? 500 : 400,
-                  transition: 'all 0.15s',
-                  textAlign: 'left',
-                  position: 'relative',
-                }}
-                onMouseEnter={e => {
-                  if (active !== item.id) {
-                    e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
-                    e.currentTarget.style.color = 'var(--text)';
-                  }
-                }}
-                onMouseLeave={e => {
-                  if (active !== item.id) {
-                    e.currentTarget.style.background = 'transparent';
-                    e.currentTarget.style.color = 'var(--muted2)';
-                  }
-                }}
-              >
-                {active === item.id && (
-                  <div style={{
-                    position: 'absolute',
-                    left: 0,
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    width: 3,
-                    height: 14,
-                    borderRadius: 2,
-                    background: 'var(--cyan)',
-                  }}/>
-                )}
+              <button key={item.id} onClick={() => onNav(item.id)} style={{
+                width: '100%', display: 'flex', alignItems: 'center', gap: 9, padding: pad.item,
+                borderRadius: 8, border: 'none', cursor: 'pointer', marginBottom: 2,
+                background: active === item.id ? 'rgba(0,229,255,0.1)' : 'transparent',
+                color: active === item.id ? 'var(--cyan)' : 'var(--muted2)',
+                fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: active === item.id ? 500 : 400,
+                transition: 'all 0.15s', textAlign: 'left', position: 'relative',
+              }}>
+                {active === item.id && <div style={{ position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)', width: 3, height: 14, borderRadius: 2, background: 'var(--cyan)' }}/>}
                 <span style={{ fontSize: 12 }}>📌</span>
-                {item.label}
-                <button
-                  onClick={e => togglePin(item.id, e)}
-                  title="Unpin"
-                  style={{
-                    marginLeft: 'auto',
-                    background: 'none',
-                    border: 'none',
-                    cursor: 'pointer',
-                    color: 'rgba(0,229,255,0.5)',
-                    fontSize: 12,
-                    padding: '0 2px',
-                    display: 'flex',
-                    alignItems: 'center',
-                  }}
-                >
-                  ×
-                </button>
+                {!collapsed && item.label}
+                {!collapsed && (
+                  <button onClick={e => togglePin(item.id, e)} title="Unpin" style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(0,229,255,0.5)', fontSize: 12, padding: '0 2px' }}>×</button>
+                )}
               </button>
             ))}
             <div style={{ height: 1, background: 'var(--border)', margin: '8px 8px 0' }}/>
           </div>
         )}
 
-        {/* Остальные секции меню */}
         {sections.map(sec => {
           if (sec.label === 'Dashboards') {
             const newDashboardItem = sec.items.find(i => i.id === 'dash-wizard');
             return (
               <div key={sec.label} style={{ marginBottom: 16 }}>
-                <div style={{
-                  fontSize: 10,
-                  fontWeight: 600,
-                  letterSpacing: '0.08em',
-                  color: 'var(--muted)',
-                  textTransform: 'uppercase',
-                  padding: '0 8px',
-                  marginBottom: 4,
-                }}>{sec.label}</div>
+                {!collapsed && <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.08em', color: 'var(--muted)', textTransform: 'uppercase', padding: '0 8px', marginBottom: 4 }}>{sec.label}</div>}
                 {unpinnedItems.map(item => {
                   const isActive = active === item.id;
                   return (
-                    <button
-                      key={item.id}
-                      onClick={() => onNav(item.id)}
-                      style={{
-                        width: '100%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 9,
-                        padding: '8px 10px',
-                        borderRadius: 8,
-                        border: 'none',
-                        cursor: 'pointer',
-                        marginBottom: 2,
-                        background: isActive ? 'rgba(0,229,255,0.1)' : 'transparent',
-                        color: isActive ? 'var(--cyan)' : 'var(--muted2)',
-                        fontFamily: 'var(--font-body)',
-                        fontSize: 13.5,
-                        fontWeight: isActive ? 500 : 400,
-                        transition: 'all 0.18s ease',
-                        textAlign: 'left',
-                        position: 'relative',
-                      }}
-                      onMouseEnter={e => {
-                        setHoveredPin(item.id);
-                        if (!isActive) {
-                          e.currentTarget.style.background = 'rgba(0,229,255,0.1)';
-                          e.currentTarget.style.color = 'var(--cyan)';
-                        }
-                      }}
-                      onMouseLeave={e => {
-                        setHoveredPin(null);
-                        if (!isActive) {
-                          e.currentTarget.style.background = 'transparent';
-                          e.currentTarget.style.color = 'var(--muted2)';
-                        }
-                      }}
-                    >
-                      {isActive && (
-                        <div style={{
-                          position: 'absolute',
-                          left: 0,
-                          top: '50%',
-                          transform: 'translateY(-50%)',
-                          width: 3,
-                          height: 16,
-                          borderRadius: 2,
-                          background: 'var(--cyan)',
-                        }}/>
-                      )}
+                    <button key={item.id} onClick={() => onNav(item.id)} style={{
+                      width: '100%', display: 'flex', alignItems: 'center', gap: collapsed ? 0 : 9,
+                      justifyContent: collapsed ? 'center' : 'flex-start',
+                      padding: collapsed ? '10px 0' : pad.item,
+                      borderRadius: 8, border: 'none', cursor: 'pointer', marginBottom: 2,
+                      background: isActive ? 'rgba(0,229,255,0.1)' : 'transparent',
+                      color: isActive ? 'var(--cyan)' : 'var(--muted2)',
+                      fontFamily: 'var(--font-body)', fontSize: 13.5, fontWeight: isActive ? 500 : 400,
+                      transition: 'all 0.18s ease', textAlign: 'left', position: 'relative',
+                    }}>
+                      {isActive && !collapsed && <div style={{ position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)', width: 3, height: 16, borderRadius: 2, background: 'var(--cyan)' }}/>}
                       <Icon name={item.icon} size={15} color={isActive ? 'var(--cyan)' : 'currentColor'}/>
-                      {item.label}
-                      {hoveredPin === item.id && (
-                        <button
-                          onClick={e => togglePin(item.id, e)}
-                          title={pinned.includes(item.id) ? 'Unpin' : 'Pin to top'}
-                          style={{
-                            marginLeft: 'auto',
-                            background: 'none',
-                            border: 'none',
-                            cursor: 'pointer',
-                            color: pinned.includes(item.id) ? 'var(--cyan)' : 'var(--muted)',
-                            fontSize: 12,
-                            padding: '0 2px',
-                            display: 'flex',
-                            alignItems: 'center',
-                          }}
-                        >
-                          📌
-                        </button>
+                      {!collapsed && <span style={{ marginLeft: collapsed ? 0 : 9 }}>{item.label}</span>}
+                      {!collapsed && hoveredPin === item.id && (
+                        <button onClick={e => togglePin(item.id, e)} title={pinned.includes(item.id) ? 'Unpin' : 'Pin to top'} style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: pinned.includes(item.id) ? 'var(--cyan)' : 'var(--muted)', fontSize: 12 }}>📌</button>
                       )}
                     </button>
                   );
                 })}
-                {newDashboardItem && (
-                  <button
-                    onClick={() => onNav(newDashboardItem.id)}
-                    style={{
-                      width: '100%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 9,
-                      padding: '8px 10px',
-                      borderRadius: 8,
-                      border: '1px dashed rgba(0,229,255,0.2)',
-                      cursor: 'pointer',
-                      marginTop: 4,
-                      background: active === newDashboardItem.id ? 'rgba(0,229,255,0.1)' : 'rgba(0,229,255,0.06)',
-                      color: 'var(--cyan)',
-                      fontFamily: 'var(--font-body)',
-                      fontSize: 13.5,
-                      fontWeight: 500,
-                    }}
-                  >
+                {newDashboardItem && !collapsed && (
+                  <button onClick={() => onNav(newDashboardItem.id)} style={{
+                    width: '100%', display: 'flex', alignItems: 'center', gap: 9, padding: pad.item,
+                    borderRadius: 8, border: '1px dashed rgba(0,229,255,0.2)', cursor: 'pointer', marginTop: 4,
+                    background: active === newDashboardItem.id ? 'rgba(0,229,255,0.1)' : 'rgba(0,229,255,0.06)',
+                    color: 'var(--cyan)', fontSize: 13.5, fontWeight: 500,
+                  }}>
                     <Icon name={newDashboardItem.icon} size={15} color="var(--cyan)"/>
                     {newDashboardItem.label}
                   </button>
@@ -316,69 +194,28 @@ export const Sidebar = ({ active, onNav }) => {
             );
           }
 
-          // Остальные секции без изменений
+          // Other sections
           return (
             <div key={sec.label} style={{ marginBottom: 16 }}>
-              <div style={{
-                fontSize: 10,
-                fontWeight: 600,
-                letterSpacing: '0.08em',
-                color: 'var(--muted)',
-                textTransform: 'uppercase',
-                padding: '0 8px',
-                marginBottom: 4,
-              }}>{sec.label}</div>
+              {!collapsed && <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.08em', color: 'var(--muted)', textTransform: 'uppercase', padding: '0 8px', marginBottom: 4 }}>{sec.label}</div>}
               {sec.items.map(item => {
                 const isActive = active === item.id;
                 return (
-                  <button
-                    key={item.id}
-                    onClick={() => onNav(item.id)}
-                    style={{
-                      width: '100%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 9,
-                      padding: '8px 10px',
-                      borderRadius: 8,
-                      border: 'none',
-                      cursor: 'pointer',
-                      marginBottom: 2,
-                      background: isActive ? 'rgba(0,229,255,0.1)' : 'transparent',
-                      color: isActive ? 'var(--cyan)' : 'var(--muted2)',
-                      fontFamily: 'var(--font-body)',
-                      fontSize: 13.5,
-                      fontWeight: isActive ? 500 : 400,
-                      transition: 'all 0.18s ease',
-                      textAlign: 'left',
-                      position: 'relative',
-                    }}
-                  >
-                    {isActive && (
-                      <div style={{
-                        position: 'absolute',
-                        left: 0,
-                        top: '50%',
-                        transform: 'translateY(-50%)',
-                        width: 3,
-                        height: 16,
-                        borderRadius: 2,
-                        background: 'var(--cyan)',
-                      }}/>
-                    )}
+                  <button key={item.id} onClick={() => onNav(item.id)} style={{
+                    width: '100%', display: 'flex', alignItems: 'center', gap: collapsed ? 0 : 9,
+                    justifyContent: collapsed ? 'center' : 'flex-start',
+                    padding: collapsed ? '10px 0' : pad.item,
+                    borderRadius: 8, border: 'none', cursor: 'pointer', marginBottom: 2,
+                    background: isActive ? 'rgba(0,229,255,0.1)' : 'transparent',
+                    color: isActive ? 'var(--cyan)' : 'var(--muted2)',
+                    fontSize: 13.5, fontWeight: isActive ? 500 : 400,
+                    position: 'relative',
+                  }}>
+                    {isActive && !collapsed && <div style={{ position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)', width: 3, height: 16, borderRadius: 2, background: 'var(--cyan)' }}/>}
                     <Icon name={item.icon} size={15} color={isActive ? 'var(--cyan)' : 'currentColor'}/>
-                    {item.label}
-                    {item.id === 'ai' && (
-                      <div style={{
-                        marginLeft: 'auto',
-                        fontSize: 10,
-                        fontFamily: 'var(--font-mono)',
-                        background: 'rgba(180,76,255,0.15)',
-                        color: 'var(--purple)',
-                        border: '1px solid rgba(180,76,255,0.25)',
-                        borderRadius: 4,
-                        padding: '1px 5px',
-                      }}>NEW</div>
+                    {!collapsed && <span style={{ marginLeft: collapsed ? 0 : 9 }}>{item.label}</span>}
+                    {item.id === 'ai' && !collapsed && (
+                      <div style={{ marginLeft: 'auto', fontSize: 10, fontFamily: 'var(--font-mono)', background: 'rgba(180,76,255,0.15)', color: 'var(--purple)', border: '1px solid rgba(180,76,255,0.25)', borderRadius: 4, padding: '1px 5px' }}>NEW</div>
                     )}
                   </button>
                 );
@@ -388,33 +225,14 @@ export const Sidebar = ({ active, onNav }) => {
         })}
       </nav>
 
-      {/* Footer пользователя */}
-      <div style={{
-        padding: '12px 10px',
-        borderTop: '1px solid var(--border)',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 10,
-      }}>
-        <div style={{
-          width: 30, height: 30, borderRadius: '50%',
-          background: 'linear-gradient(135deg, #00E5FF22, #B44CFF22)',
-          border: '1px solid var(--border2)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: 12,
-          fontWeight: 600,
-          color: 'var(--muted2)',
-        }}>JD</div>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 12.5, fontWeight: 500, color: 'var(--text)', whiteSpace: 'nowrap' }}>Jamie Dev</div>
-          <div style={{ fontSize: 11, color: 'var(--muted)', fontFamily: 'var(--font-mono)' }}>Admin</div>
+      {/* User footer – hidden when collapsed for simplicity */}
+      {!collapsed && (
+        <div style={{ padding: '12px 10px', borderTop: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ width: 30, height: 30, borderRadius: '50%', background: 'linear-gradient(135deg, #00E5FF22, #B44CFF22)', border: '1px solid var(--border2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 600, color: 'var(--muted2)' }}>JD</div>
+          <div style={{ flex: 1 }}><div style={{ fontSize: 12.5, fontWeight: 500, color: 'var(--text)' }}>Jamie Dev</div><div style={{ fontSize: 11, color: 'var(--muted)', fontFamily: 'var(--font-mono)' }}>Admin</div></div>
+          <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', padding: 4 }}><Icon name="settings" size={14}/></button>
         </div>
-        <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', padding: 4 }}>
-          <Icon name="settings" size={14}/>
-        </button>
-      </div>
+      )}
     </aside>
   );
 };

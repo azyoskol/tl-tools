@@ -86,7 +86,7 @@ export const PreviewPanel = ({ template, widgets, widgetSizes = {}, name }) => {
             {hasWidget('team-heatmap') && (
               <div style={{ gridColumn: widgetSizes['team-heatmap'] !== 'sm' ? 'span 2' : 'span 1', background: 'var(--glass)', border: '1px solid var(--border)', borderRadius: 10, padding: '12px 14px' }}>
                 <div style={{ fontSize: 11, color: 'var(--muted)', marginBottom: 8 }}>Team Activity Heatmap</div>
-                <Heatmap data={heatData} rows={3} cols={16} labelRows={['Platform','Backend','Mobile']} color="#00E5FF" cellSize={14} gap={3} />
+                <Heatmap data={heatData} rows={3} cols={16} labelRows={['Platform','Backend','Mobile']} color="var(--cyan)" cellSize={14} gap={3} />
               </div>
             )}
 
@@ -101,7 +101,7 @@ export const PreviewPanel = ({ template, widgets, widgetSizes = {}, name }) => {
                     { name: 'Morgan Lee', value: 24 },
                   ]}
                   unit="pts"
-                  color="#00E5FF"
+                  color="var(--cyan)"
                 />
               </div>
             )}
@@ -138,7 +138,7 @@ export const PreviewPanel = ({ template, widgets, widgetSizes = {}, name }) => {
             {/* AI Summary */}
             {hasWidget('ai-summary') && (
               <div style={{ gridColumn: widgetSizes['ai-summary'] !== 'sm' ? 'span 2' : 'span 1', background: 'rgba(180,76,255,0.06)', border: '1px solid rgba(180,76,255,0.2)', borderRadius: 10, padding: '12px 14px', display: 'flex', gap: 10 }}>
-                <Icon name="sparkles" size={14} color="#B44CFF" />
+                <Icon name="sparkles" size={14} color="var(--purple)" />
                 <div style={{ fontSize: 12, color: 'var(--muted2)', lineHeight: 1.5 }}>
                   AI insights will appear here based on your selected metrics and time range.
                 </div>
