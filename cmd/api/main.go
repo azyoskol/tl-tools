@@ -4,7 +4,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/metraly/cmd/api/handlers"
+	"github.com/getmetraly/metraly/cmd/api/handlers"
 )
 func main() {
 	r := chi.NewRouter()
