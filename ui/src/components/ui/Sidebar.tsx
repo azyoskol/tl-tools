@@ -47,6 +47,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ active, onNavigate }) => {
     try { return JSON.parse(localStorage.getItem('metraly-pinned') || '["cto","devops"]'); } catch { return ['cto','devops']; }
   });
   const [hoveredPin, setHoveredPin] = React.useState<string | null>(null);
+  const [hoveredBadge, setHoveredBadge] = React.useState(false);
 
   const togglePin = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -229,16 +230,21 @@ export const Sidebar: React.FC<SidebarProps> = ({ active, onNavigate }) => {
                     </button>
                   )}
                   {item.badge && (
-                    <div style={{
-                      marginLeft: 'auto',
-                      fontSize: 10,
-                      fontFamily: 'var(--font-mono)',
-                      background: 'rgba(180,76,255,0.15)',
-                      color: 'var(--purple)',
-                      border: '1px solid rgba(180,76,255,0.25)',
-                      borderRadius: 4,
-                      padding: '1px 5px',
-                    }}>{item.badge}</div>
+                    <div 
+                      onMouseEnter={() => setHoveredBadge(true)}
+                      onMouseLeave={() => setHoveredBadge(false)}
+                      style={{
+                        marginLeft: 'auto',
+                        fontSize: 10,
+                        fontFamily: 'var(--font-mono)',
+                        background: hoveredBadge ? 'rgba(180,76,255,0.25)' : 'rgba(180,76,255,0.15)',
+                        color: hoveredBadge ? 'var(--cyan)' : 'var(--purple)',
+                        border: hoveredBadge ? '1px solid var(--cyan)' : '1px solid rgba(180,76,255,0.25)',
+                        borderRadius: 4,
+                        padding: '1px 5px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                      }}>{item.badge}</div>
                   )}
                 </button>
               );
