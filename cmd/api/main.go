@@ -28,6 +28,7 @@ import (
 	"github.com/getmetraly/metraly/internal/pkg/database"
 	grpcpb "github.com/getmetraly/metraly/internal/pkg/grpc/proto"
 	"github.com/getmetraly/metraly/internal/pkg/handlers"
+	apiHandlers "github.com/getmetraly/metraly/cmd/api/handlers"
 	"github.com/getmetraly/metraly/internal/pkg/logger"
 	"github.com/getmetraly/metraly/internal/pkg/middleware"
 	"github.com/getmetraly/metraly/internal/pkg/repo"
@@ -73,6 +74,13 @@ func main() {
 	comparisonH := handlers.NewComparisonHandler(comparisonSvc)
 	webhookH := handlers.NewWebhookHandler(webhookSvc)
 
+	doraH := apiHandlers.NewDORAHandler()
+	metricsH := apiHandlers.NewMetricsHandler()
+	roleH := apiHandlers.NewRoleHandler()
+	insightsH := apiHandlers.NewInsightsHandler()
+	getDashboardsH := apiHandlers.NewGetDashboardsHandler()
+	postDashboardH := apiHandlers.NewPostDashboardHandler()
+
 	r := chi.NewRouter()
 	r.Use(middleware.CORS)
 	r.Use(middleware.CacheMiddleware(cacheStore))
@@ -82,10 +90,17 @@ func main() {
 	r.Get("/health/clickhouse", healthH.ClickHouse)
 
 	r.Get("/api/v1/dashboard", dashboardH.ServeHTTP)
+	r.Get("/api/v1/dashboards", getDashboardsH.ServeHTTP)
+	r.Mount("/api/v1/dashboards", postDashboardH.Routes())
+	r.Mount("/api/v1/roles", roleH.Routes())
 	r.Mount("/api/v1/teams", teamsH.Routes())
 	r.Get("/api/v1/teams/{team_id}/velocity", velocityH.ServeHTTP)
 	r.Get("/api/v1/teams/comparison", comparisonH.ServeHTTP)
 	r.Post("/api/v1/collectors", webhookH.Receive)
+
+	r.Get("/api/v1/metrics/dora", doraH.ServeHTTP)
+	r.Get("/api/v1/metrics", metricsH.ServeHTTP)
+	r.Get("/api/v1/insights", insightsH.ServeHTTP)
 
 	r.Get("/docs", httpSwagger.WrapHandler)
 
