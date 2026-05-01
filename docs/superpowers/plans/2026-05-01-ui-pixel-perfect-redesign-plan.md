@@ -55,6 +55,266 @@ ui/src/
 
 ---
 
+## Task 0: Visual Regression Tests Setup
+
+**Goal:** Create tests to verify pixel-perfect implementation matches design exactly.
+
+**Files:**
+- Create: `ui/src/__tests__/visual/design-tokens.test.ts`
+- Create: `ui/src/__tests__/visual/sidebar.test.tsx`
+- Create: `ui/src/__tests__/visual/topbar.test.tsx`
+- Create: `ui/src/__tests__/visual/metric-card.test.tsx`
+- Create: `ui/src/__tests__/visual/dashboard-screen.test.tsx`
+
+- [ ] **Step 1: Install testing dependencies**
+
+```bash
+cd /home/zubarev/sources/metraly/ui
+npm install --save-dev @testing-library/react @testing-library/jest-dom jest @types/jest ts-jest
+```
+
+- [ ] **Step 2: Setup Jest configuration**
+
+Create `ui/jest.config.js`:
+```javascript
+module.exports = {
+  preset: 'ts-jest',
+  testEnvironment: 'jsdom',
+  setupFilesAfterEnv: ['<rootDir>/src/setupTests.ts'],
+  moduleNameMapper: {
+    '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
+  },
+  testPathIgnorePatterns: ['/node_modules/', '/dist/'],
+};
+```
+
+Create `ui/src/setupTests.ts`:
+```typescript
+import '@testing-library/jest-dom';
+```
+
+- [ ] **Step 3: Create design tokens test**
+
+Create `ui/src/__tests__/visual/design-tokens.test.ts`:
+```typescript
+describe('CSS Design Tokens', () => {
+  it('matches design tokens from prototype', () => {
+    const styles = getComputedStyle(document.documentElement);
+    
+    expect(styles.getPropertyValue('--bg').trim()).toBe('#0B0F19');
+    expect(styles.getPropertyValue('--glass').trim()).toBe('#131825');
+    expect(styles.getPropertyValue('--glass2').trim()).toBe('#1a2235');
+    expect(styles.getPropertyValue('--border').trim()).toBe('rgba(255, 255, 255, 0.07)');
+    expect(styles.getPropertyValue('--border2').trim()).toBe('rgba(255, 255, 255, 0.12)');
+    expect(styles.getPropertyValue('--cyan').trim()).toBe('#00E5FF');
+    expect(styles.getPropertyValue('--purple').trim()).toBe('#B44CFF');
+    expect(styles.getPropertyValue('--sidebar-w').trim()).toBe('228px');
+  });
+
+  it('has correct scrollbar dimensions (6px)', () => {
+    const style = document.createElement('style');
+    style.textContent = `
+      ::-webkit-scrollbar { width: 6px; height: 6px; }
+    `;
+    document.head.appendChild(style);
+    
+    const scrollbar = document.querySelector('::-webkit-scrollbar');
+    expect(scrollbar).toBeTruthy();
+  });
+
+  it('has all animation classes with correct delays', () => {
+    const style = document.querySelector('style');
+    const css = style?.textContent || '';
+    
+    expect(css).toContain('fade-up-1');
+    expect(css).toContain('fade-up-2');
+    expect(css).toContain('fade-up-3');
+    expect(css).toContain('fade-up-4');
+    expect(css).toContain('fade-up-5');
+    expect(css).toContain('fade-up-6');
+    
+    expect(css).toContain('0.06s'); // 60ms intervals
+    expect(css).toContain('pulse-dot');
+    expect(css).toContain('backdrop-filter: blur(16px)');
+  });
+});
+```
+
+- [ ] **Step 4: Create sidebar test**
+
+Create `ui/src/__tests__/visual/sidebar.test.tsx`:
+```tsx
+import { render, screen } from '@testing-library/react';
+import { Sidebar } from '../../components/ui/Sidebar';
+
+describe('Sidebar Visual', () => {
+  it('renders with correct width (228px)', () => {
+    const { container } = render(<Sidebar active="dashboard" onNavigate={() => {}}/>);
+    const aside = container.querySelector('aside');
+    const width = aside?.style.width;
+    expect(width).toBe('228px');
+  });
+
+  it('renders logo with gradient', () => {
+    render(<Sidebar active="dashboard" onNavigate={() => {}}/>);
+    const logo = screen.getByText('Metraly');
+    expect(logo).toHaveStyle({ background: expect.stringContaining('gradient') });
+  });
+
+  it('renders status pill with pulse animation', () => {
+    render(<Sidebar active="dashboard" onNavigate={() => {}}/>);
+    const pill = screen.getByText('All systems nominal');
+    expect(pill).toBeTruthy();
+  });
+
+  it('renders all sections', () => {
+    render(<Sidebar active="dashboard" onNavigate={() => {}}/>);
+    expect(screen.getByText('Dashboards')).toBeTruthy();
+    expect(screen.getByText('Analytics')).toBeTruthy();
+    expect(screen.getByText('Configure')).toBeTruthy();
+    expect(screen.getByText('System')).toBeTruthy();
+  });
+
+  it('renders user footer with correct data', () => {
+    render(<Sidebar active="dashboard" onNavigate={() => {}}/>);
+    expect(screen.getByText('Jamie Dev')).toBeTruthy();
+    expect(screen.getByText('Admin')).toBeTruthy();
+  });
+
+  it('renders NEW badge on AI Assistant', () => {
+    render(<Sidebar active="dashboard" onNavigate={() => {}}/>);
+    expect(screen.getByText('NEW')).toBeTruthy();
+  });
+});
+```
+
+- [ ] **Step 5: Create topbar test**
+
+Create `ui/src/__tests__/visual/topbar.test.tsx`:
+```tsx
+import { render, screen } from '@testing-library/react';
+import { Topbar } from '../../components/ui/Topbar';
+
+describe('Topbar Visual', () => {
+  it('renders with correct height (56px)', () => {
+    const { container } = render(<Topbar/>);
+    const header = container.querySelector('header');
+    expect(header?.style.height).toBe('56px');
+  });
+
+  it('renders search with placeholder', () => {
+    render(<Topbar/>);
+    expect(screen.getByText('Quick search…')).toBeTruthy();
+    expect(screen.getByText('⌘K')).toBeTruthy();
+  });
+
+  it('renders bell with notification dot', () => {
+    const { container } = render(<Topbar/>);
+    const bellButton = container.querySelector('button');
+    expect(bellButton).toBeTruthy();
+  });
+});
+```
+
+- [ ] **Step 6: Create MetricCard test**
+
+Create `ui/src/__tests__/visual/metric-card.test.tsx`:
+```tsx
+import { render, screen } from '@testing-library/react';
+import { MetricCard } from '../../components/ui/MetricCard';
+
+describe('MetricCard Visual', () => {
+  it('renders with icon container (36x36)', () => {
+    render(<MetricCard 
+      icon="gitPR" 
+      label="PRs awaiting review" 
+      value="14" 
+      trend="+3 today" 
+      trendDir="down"
+      accentColor="var(--cyan)"
+    />);
+    const iconContainer = screen.getByText('14').parentElement?.previousSibling;
+    expect(iconContainer).toHaveStyle({ width: '36px', height: '36px' });
+  });
+
+  it('renders trend badge with correct styling', () => {
+    render(<MetricCard 
+      icon="gitPR" 
+      label="Test" 
+      value="14" 
+      trend="+3 today" 
+      trendDir="down"
+      accentColor="var(--cyan)"
+    />);
+    const trend = screen.getByText('+3 today');
+    expect(trend).toHaveStyle({ 
+      background: expect.stringContaining('rgba(255,23,68'),
+      borderRadius: '6px'
+    });
+  });
+
+  it('renders sparkline container', () => {
+    render(<MetricCard 
+      icon="gitPR" 
+      label="Test" 
+      value="14" 
+      trend="+3 today" 
+      trendDir="up"
+      accentColor="var(--cyan)"
+      sparkData={[1,2,3,4]}
+    />);
+    const svg = document.querySelector('svg');
+    expect(svg).toBeTruthy();
+  });
+});
+```
+
+- [ ] **Step 7: Create DashboardScreen test**
+
+Create `ui/src/__tests__/visual/dashboard-screen.test.tsx`:
+```tsx
+import { render, screen } from '@testing-library/react';
+import { DashboardScreen } from '../../screens/DashboardScreen';
+
+describe('DashboardScreen Visual', () => {
+  it('renders 4 metric cards', () => {
+    render(<DashboardScreen/>);
+    expect(screen.getByText('PRs awaiting review')).toBeTruthy();
+    expect(screen.getByText('Failed builds (24h)')).toBeTruthy();
+    expect(screen.getByText('Blocked tasks')).toBeTruthy();
+    expect(screen.getByText('Median CI time')).toBeTruthy();
+  });
+
+  it('renders 3-column AI insights grid', () => {
+    render(<DashboardScreen/>);
+    const grid = screen.getByText('AI Insights').parentElement?.parentElement;
+    const style = grid?.getAttribute('style') || '';
+    expect(style).toContain('grid-template-columns');
+  });
+
+  it('renders Recent Activity section with status dots', () => {
+    render(<DashboardScreen/>);
+    expect(screen.getByText('Recent Activity')).toBeTruthy();
+  });
+});
+```
+
+- [ ] **Step 8: Run tests to verify they exist**
+
+```bash
+cd /home/zubarev/sources/metraly/ui
+npm test -- --testPathPattern=visual/ --passWithNoTests
+```
+
+- [ ] **Step 9: Commit**
+
+```bash
+git add ui/src/__tests__/visual/ ui/jest.config.js ui/src/setupTests.ts
+git commit -m "test: add visual regression tests for pixel-perfect verification"
+```
+
+---
+
 ## Task 1: CSS Design Tokens
 
 **Files:**
@@ -910,21 +1170,36 @@ git commit -m "feat: update App.tsx routing and remaining screens"
 
 ## Task 9: Verification
 
+> **Important:** After each task implementation, run relevant tests to verify implementation matches design:
+> ```bash
+> npm test -- --testPathPattern=visual/
+> ```
+
 - [ ] **Step 1: Build the UI**
 
 ```bash
 cd /home/zubarev/sources/metraly/ui && npm run build
 ```
 
-- [ ] **Step 2: Start dev server and verify visually**
+- [ ] **Step 2: Run all visual tests**
+
+```bash
+cd /home/zubarev/sources/metraly/ui && npm test -- --testPathPattern=visual/ --coverage
+```
+
+- [ ] **Step 3: Start dev server and verify visually**
 
 ```bash
 npm run dev
 ```
 
-- [ ] **Step 3: Compare with design at http://localhost:8765/Metraly.html**
+- [ ] **Step 4: Compare with design at http://localhost:8765/Metraly.html**
 
-- [ ] **Step 4: Final commit**
+- [ ] **Step 5: Fix any failing tests**
+
+If tests fail, fix the implementation to match design spec, not the tests.
+
+- [ ] **Step 6: Final commit**
 
 ```bash
 git add -A && git commit -m "feat: complete UI pixel-perfect redesign"
