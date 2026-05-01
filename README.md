@@ -1,183 +1,127 @@
-# Metraly — Team Engineering Metrics API
+# Metraly — Team Engineering Metrics API (Alpha)
 
-Developer productivity dashboard for multiple teams. Track your team's performance in real-time.
+**⚠️ Current status: Prototype / Early version. Many features are under active development.**
 
-## Features
+Metraly is a multi-team engineering productivity dashboard. It helps track development efficiency in real time by collecting data from Git, CI/CD, and PM tools.
 
-### Metrics & Charts
+## ✨ Planned Features (Roadmap)
 
-| Chart | Source | Purpose |
-|-------|--------|---------|
-| **PRs opened/merged** | Git | Code review speed, bottlenecks |
-| **Cycle time** | PM tools | Time from start to task completion |
-| **Velocity** | PM tools | Team speed per sprint |
-| **CI/CD success rate** | CI/CD | Build stability |
-| **Blocked tasks** | PM tools | Blocked work items |
+- **Metrics & Charts**: PRs (open/merged), Cycle Time, Velocity, CI/CD Success Rate, Blocked Tasks.
+- **Dashboards**: Executive Overview, Activity Drill-down, Team Comparison.
+- **Role-Based Views**: Tailored perspectives for engineers, team leads, and executives.
+- **Integrations**: Built-in data collection from GitHub, GitLab, Jenkins, Jira.
+- **Enterprise**: SSO, RBAC, audit trails (future versions).
 
-### Dashboard Pages
+## 🚀 Quick Start (Docker Compose)
 
-1. **Overview** — main page with key metrics
-   - Cards: PRs opened, Blocked tasks, CI failures, PRs merged
-   - 7-day activity chart by source type
-   - Top teams and authors
+The easiest way to get a local instance running for demonstration.
 
-2. **Activity** — detailed activity with filters
-   - Stacked bar chart by source (Git, PM, CI/CD)
-   - Hourly distribution
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/getmetraly/metraly.git
+   cd metraly
+   ```
 
-3. **Team Comparison** — team comparison view
-   - PRs, Tasks, CI Runs per team
+1. **Launch all services**:
 
-## Quick Start
+   ```bash
+   make docker-up
+   ```
 
-### Docker Compose (recommended)
+   This builds and starts the API, ClickHouse, Redis, and the UI.
 
-```bash
-# Clone and run
-docker compose up -d
+2. **Open in your browser**:
+   - **User Interface**: [http://localhost:3000](http://localhost:3000)
+   - **API (Health Check)**: [http://localhost:8000/health](http://localhost:8000/health)
+   - **ClickHouse (HTTP Interface)**: [http://localhost:8123](http://localhost:8123)
 
-# Access
-# UI:         http://localhost:3000
-# API:        http://localhost:8000
-# ClickHouse: http://localhost:8123
-```
+3. **Insert demo data (optional)**:
 
-### Makefile Commands
+   ```bash
+   make docker-test-data
+   ```
 
-```bash
-make help              # Show all commands
-make build             # Build Go API
-make test              # Run tests (19 tests)
-make docker-up         # Start services
-make docker-down       # Stop services
-make health            # Check API health
-make dashboard         # Check dashboard data
-make docker-test-data  # Insert test data
-```
+   This populates the database with sample events so the UI isn’t empty.
 
-## Architecture
-
-```
-HTTP Request
-    ↓
-Handler (validation, marshaling)
-    ↓
-Biz (business logic)
-    ↓
-Repo (data access)
-    ↓
-Database (ClickHouse HTTP)
-```
-
-### Technology Stack
-
-- **Backend**: Go 1.26+, Chi router
-- **Database**: ClickHouse 23.8 (HTTP port 8123)
-- **Cache**: Redis 7 (port 6379)
-- **UI**: React 20 + Vite + Recharts
-
-### Directory Structure
-
-```
-internal/pkg/
-├── biz/          # Business logic (DashboardService)
-├── cache/        # Redis cache with in-memory fallback
-├── config/       # Environment config
-├── database/     # ClickHouse HTTP client
-├── handlers/     # HTTP endpoints
-├── middleware/   # CORS, caching
-├── logger/       # Structured logging
-├── models/        # Shared types
-└── repo/          # Data access layer
-
-cmd/api/main.go   # Entry point with graceful shutdown
-ui/              # React frontend
-```
-
-## API Endpoints
-
-| Endpoint | Description |
-|----------|-------------|
-| `GET /` | Welcome message |
-| `GET /health` | API health check |
-| `GET /health/clickhouse` | ClickHouse connectivity |
-| `GET /api/v1/dashboard` | All teams overview metrics |
-| `GET /api/v1/teams` | List all teams |
-| `GET /api/v1/teams/{id}` | Team details |
-| `GET /api/v1/teams/{id}/overview` | Team overview metrics |
-| `GET /api/v1/teams/{id}/activity` | Team activity |
-| `GET /api/v1/teams/{id}/velocity` | Velocity metrics |
-| `GET /api/v1/teams/{id}/insights` | Team insights |
-| `GET /api/v1/teams/comparison` | Compare all teams |
-
-## Configuration
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `CLICKHOUSE_HOST` | localhost | ClickHouse host |
-| `CLICKHOUSE_PORT` | 8123 | ClickHouse HTTP port |
-| `REDIS_HOST` | redis | Redis host |
-| `REDIS_PORT` | 6379 | Redis port |
-| `PORT` | 8000 | API server port |
-
-## Testing
-
-```bash
-# Run all tests
-make test
-
-# Output: 19 tests pass
-```
-
-### Test Coverage
-
-- **biz/** — DashboardService with mock EventRepo
-- **cache/** — Redis fallback to in-memory
-- **config/** — Env variable handling
-- **handlers/** — HTTP handlers with mock DB
-- **middleware/** — CORS and caching
-
-## Development
+## 💻 Development
 
 ### Prerequisites
 
 - Go 1.26+
 - Node.js 20+
-- Docker & Docker Compose
+- Docker and Docker Compose
 
-### Run Locally
+### Makefile Commands
 
 ```bash
-# Build
-make build
-
-# Run
-make run
-
-# With Docker
-make docker-up
+make help            # Show all available commands
+make build           # Build the Go API binary
+make test            # Run tests (currently 19 tests)
+make lint            # Run the linter
+make run             # Build and run the API locally (without Docker)
+make docker-up       # Start all services in Docker
+make docker-down     # Stop and remove all Docker services
+make docker-logs     # Tail logs from all services
 ```
 
-### Graceful Shutdown
+## 🏗️ Architecture
 
-API server supports graceful shutdown with 30s timeout:
+The project follows a layered architecture, separating request handling, business logic, and data access.
 
-```go
-srv := &http.Server{Addr: addr, Handler: r}
-go srv.ListenAndServe()
-
-// On SIGINT/SIGTERM:
-srv.Shutdown(ctx)
+```
+HTTP Request ↓
+Handler (validation, marshaling) ↓
+Biz (business logic) ↓
+Repo (data access) ↓
+Database (ClickHouse HTTP)
 ```
 
-## Roadmap
+### Project Structure
 
-- [x] MVP - Basic metrics and dashboard
-- [x] Go API migration
-- [ ] Advanced filtering
-- [ ] Query optimization
-- [ ] Enterprise features (SSO, RBAC)
+```
+.
+├── cmd/api/main.go         # API server entry point
+├── internal/pkg/           # Business logic and infrastructure
+│   ├── biz/                # Business logic services (DashboardService, etc.)
+│   ├── cache/              # Redis-backed cache with in-memory fallback
+│   ├── config/             # Environment and file-based configuration
+│   ├── database/           # HTTP client for ClickHouse
+│   ├── handlers/           # HTTP request handlers (API endpoints)
+│   ├── middleware/          # CORS, logging, and other middleware
+│   ├── logger/             # Structured logging
+│   ├── models/             # Shared data types
+│   ├── repo/               # Data access layer (ClickHouse implementation)
+│   └── telemetry/          # OpenTelemetry tracing and metrics
+├── ui/                     # React frontend (Vite, Recharts)
+├── clickhouse/             # ClickHouse schemas and initialization scripts
+├── collectors/             # (In Development) Data collection services
+├── helm/                   # (In Development) Helm chart for Kubernetes
+└── config.yaml             # Application configuration file
+```
 
-## License
+## 📡 API (Endpoints)
 
-This project is licensed under GNU AGPLv3. See [LICENSE](LICENSE) for details.
+| Endpoint | Description | Status |
+| :--- | :--- | :--- |
+| `GET /health` | API health check | ✅ Working |
+| `GET /api/v1/teams` | List of teams | ⚠️ Demo data |
+| `GET /api/v1/dashboard` | Metrics overview | ⚠️ Demo data |
+| `GET /api/v1/teams/{id}/overview` | Team metrics overview | ⚠️ Demo data |
+| `GET /api/v1/teams/{id}/velocity` | Team velocity | ⚠️ Demo data |
+| `GET /api/v1/teams/comparison` | Team comparison | ⚠️ Demo data |
+| `GET /api/v1/dora` | DORA metrics | ⚠️ Demo data |
+| `GET /api/v1/insights` | AI-powered insights | ⚠️ Demo data |
+
+> **Note on "⚠️ Demo data"**: These endpoints currently return static sample values to exercise the UI, not real data from ClickHouse. They will be upgraded to fully functional soon.
+
+## 🛠️ Technology Stack
+
+- **Backend**: Go 1.26+, Chi Router, gRPC (in development), OpenTelemetry
+- **Database**: ClickHouse 23.8
+- **Cache**: Redis 7
+- **UI**: React 20, TypeScript, Vite, Recharts
+- **Infrastructure**: Docker, Docker Compose, Helm (in development)
+
+## 📄 License
+
+This project is licensed under the GNU AGPLv3. See the [LICENSE](LICENSE) file for details.
