@@ -2,6 +2,14 @@
 
 This file documents agent-specific information for this project.
 
+## Worktrees
+
+Worktrees should be created inside project directory (`.worktrees/`), not in global location.
+
+```bash
+# Preferred location: .worktrees/ (hidden, project-local)
+```
+
 ## Project Context
 
 - **Name**: Metraly — Team Engineering Metrics API
