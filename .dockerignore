@@ -1,0 +1,14 @@
+node_modules
+dist
+.git
+.gitignore
+docker-compose.yaml
+docker-compose.yml
+compose/
+data/
+.ui/
+ui/node_modules
+ui/dist
+**/*.md
+**/*.log
+**/*.tmp

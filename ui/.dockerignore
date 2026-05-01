@@ -1,0 +1,10 @@
+node_modules
+dist
+.git
+.gitignore
+.npmrc
+Dockerfile
+.dockerignore
+README.md
+**/*.spec.*
+**/*.test.*

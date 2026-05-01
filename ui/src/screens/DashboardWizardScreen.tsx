@@ -6,7 +6,12 @@ import { makeTimeSeries } from '../components/charts/utils';
 
 const steps = ['Choose Widgets', 'Configure Layout', 'Save Dashboard'];
 
-export const DashboardWizardScreen: React.FC = () => {
+interface DashboardWizardScreenProps {
+  onSave?: () => void;
+  onCancel?: () => void;
+}
+
+export const DashboardWizardScreen: React.FC<DashboardWizardScreenProps> = () => {
   const [step, setStep] = useState(0);
   const [widgets, setWidgets] = useState<string[]>([]);
   const [name, setName] = useState('');

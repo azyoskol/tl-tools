@@ -5,6 +5,8 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
+    networks:
+      - metraly
 
   clickhouse:
     image: clickhouse/clickhouse-server:23.8
@@ -21,15 +23,15 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - metraly
 
   api:
     build:
       context: .
       dockerfile: Dockerfile
-      cache_from:
-        - metraly-api:build-cache
     ports:
-      - "8000:8000"
+      - "${API_PORT:-8000}:8000"
     environment:
       CLICKHOUSE_HOST: clickhouse
       CLICKHOUSE_PORT: 8123
@@ -40,17 +42,24 @@ services:
         condition: service_healthy
       redis:
         condition: service_started
+    networks:
+      - metraly
 
   ui:
     build:
       context: ./ui
-      cache_from:
-        - metraly-ui:build-cache
+      dockerfile: Dockerfile
     ports:
-      - "3000:80"
+      - "${UI_PORT:-3000}:80"
     depends_on:
       - api
+    networks:
+      - metraly
 
 volumes:
   clickhouse_data:
   redis_data:
+
+networks:
+  metraly:
+    driver: bridge

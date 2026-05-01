@@ -1,4 +1,5 @@
 import React from 'react';
+import { Icon } from './Icon';
 import { MiniSparkline } from '../charts/MiniSparkline';
 
 interface MetricCardProps {
@@ -8,53 +9,67 @@ interface MetricCardProps {
   trendDir?: 'up' | 'down' | 'neutral';
   accentColor?: string;
   sparkData?: number[];
-  icon?: 'gitPR' | 'xCircle' | 'alertTri' | 'clock';
+  icon?: string;
+  delay?: number;
 }
 
-const iconMap: Record<string, React.ReactNode> = {
-  gitPR: (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M6 21V9a9 9 0 0 0 9 9"/>
-    </svg>
-  ),
-  xCircle: (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6M9 9l6 6"/>
-    </svg>
-  ),
-  alertTri: (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-    </svg>
-  ),
-  clock: (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-    </svg>
-  ),
-};
+export const MetricCard: React.FC<MetricCardProps> = ({
+  label, value, trend, trendDir = 'neutral',
+  accentColor = 'var(--cyan)', sparkData, icon, delay = 0,
+}) => {
+  const [hovered, setHovered] = React.useState(false);
+  const cls = ['fade-up-1', 'fade-up-2', 'fade-up-3', 'fade-up-4'][delay] || 'fade-up';
 
-export const MetricCard: React.FC<MetricCardProps> = ({ label, value, trend, trendDir = 'neutral', accentColor = 'var(--cyan)', sparkData, icon }) => {
-  const trendColor = trendDir === 'up' ? '#00C853' : trendDir === 'down' ? '#FF1744' : 'var(--muted)';
-  const trendIcon = trendDir === 'up' ? '↑' : trendDir === 'down' ? '↓' : '→';
-  const IconComponent = icon ? iconMap[icon] : null;
+  const trendColor = trendDir === 'up' ? 'var(--success)' : trendDir === 'down' ? 'var(--error)' : 'var(--muted)';
+  const trendBg = trendDir === 'up' ? 'rgba(0,200,83,0.1)' : trendDir === 'down' ? 'rgba(255,23,68,0.1)' : 'rgba(107,122,154,0.15)';
+  const trendBorder = trendDir === 'up' ? 'rgba(0,200,83,0.2)' : trendDir === 'down' ? 'rgba(255,23,68,0.2)' : 'rgba(107,122,154,0.2)';
 
   return (
-    <div style={{
-      background: 'var(--glass)', border: '1px solid var(--border)',
-      borderRadius: '16px', padding: '24px', display: 'flex', flexDirection: 'column', gap: '12px'
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: accentColor }}>
-        {IconComponent && <span>{IconComponent}</span>}
-        <span style={{ color: 'var(--muted)', fontSize: '14px' }}>{label}</span>
+    <div
+      className={cls}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        background: hovered ? 'var(--glass2)' : 'var(--glass)',
+        border: `1px solid ${hovered ? 'rgba(255,255,255,0.12)' : 'var(--border)'}`,
+        borderRadius: 14,
+        padding: '20px 20px 16px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 14,
+        cursor: 'default',
+        transition: 'all 0.2s ease',
+        boxShadow: hovered ? '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06)' : 'none',
+        transform: hovered ? 'translateY(-2px)' : 'none',
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+        <div style={{
+          width: 36, height: 36, borderRadius: 10,
+          background: `${accentColor}18`,
+          border: `1px solid ${accentColor}30`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          {icon && <Icon name={icon as any} size={16} color={accentColor} />}
+        </div>
+        <div style={{
+          fontSize: 11, fontFamily: 'var(--font-mono)',
+          color: trendColor,
+          background: trendBg,
+          border: `1px solid ${trendBorder}`,
+          borderRadius: 6,
+          padding: '2px 7px',
+        }}>{trend}</div>
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <span style={{ fontSize: '32px', fontWeight: 700, fontFamily: 'var(--font-head)' }}>{value}</span>
-        {sparkData && <MiniSparkline data={sparkData} width={80} height={32} color={accentColor} />}
+      <div>
+        <div style={{ fontFamily: 'var(--font-head)', fontSize: 32, fontWeight: 700, color: 'var(--text)', lineHeight: 1 }}>{value}</div>
+        <div style={{ fontSize: 12.5, color: 'var(--muted)', marginTop: 5 }}>{label}</div>
       </div>
-      <span style={{ color: trendColor, fontSize: '13px', fontWeight: 500 }}>
-        {trendIcon} {trend}
-      </span>
+      {sparkData && (
+        <div style={{ marginTop: 'auto' }}>
+          <MiniSparkline data={sparkData} color={accentColor} height={36} />
+        </div>
+      )}
     </div>
   );
 };

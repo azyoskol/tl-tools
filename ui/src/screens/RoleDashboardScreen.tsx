@@ -15,6 +15,7 @@ const tabs = [
 
 interface RoleDashboardScreenProps {
   initialRole?: string;
+  onNewDashboard?: () => void;
 }
 
 export const RoleDashboardScreen: React.FC<RoleDashboardScreenProps> = ({ initialRole }) => {

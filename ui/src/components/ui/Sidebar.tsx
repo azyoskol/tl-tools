@@ -111,7 +111,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ active, onNavigate }) => {
             height: 6,
             borderRadius: '50%',
             background: 'var(--success)',
-            animation: 'pulseDot 2s ease infinite',
+            animation: 'pulse-dot 2s ease infinite',
           }}/>
           <span style={{ fontSize: 11, color: 'var(--success)', fontFamily: 'var(--font-mono)' }}>All systems nominal</span>
         </div>
