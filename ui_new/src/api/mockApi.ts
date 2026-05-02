@@ -340,7 +340,7 @@ function generateLayout(widgets: DashboardWidgetInstance[]): WidgetLayout[] {
     'data-table': 4,
     'dora-overview': 2,
     'sprint-burndown': 3,
-    'heatmap': 2,
+    'heatmap': 3,
     'metric-chart': 3,
     'stat-card': 3,
     'ai-insight': 1,
