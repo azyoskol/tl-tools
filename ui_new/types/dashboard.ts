@@ -1,4 +1,4 @@
-import { MetricId, WidgetConfig, WidgetType } from './widgets';
+import { WidgetConfig, WidgetType } from './widgets';
 import { TimeRange, TeamName, RepoName } from './common';
 
 export interface DashboardFilters {

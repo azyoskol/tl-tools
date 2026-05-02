@@ -13,6 +13,6 @@
     "isolatedModules": true,
     "resolveJsonModule": true
   },
-  "include": ["src/**/*.tsx", "src/**/*.ts"],
+  "include": ["src/**/*.tsx", "src/**/*.ts", "components/**/*.tsx", "components/**/*.ts", "types/**/*.ts", "types/**/*.tsx"],
   "exclude": ["node_modules", "dist"]
 }
