@@ -83,14 +83,49 @@ const LeaderboardWidget = ({ config, data }: { config: WidgetConfig; data?: any 
   const cfg = config as LeaderboardConfig;
   if (!data || !Array.isArray(data)) return <div style={widgetStyle}><div style={{padding: 20}}>Loading...</div></div>;
 
+  const labelMap: Record<string, string> = {
+    'deploy-freq': 'Deploy Frequency',
+    'lead-time': 'Lead Time',
+    'cfr': 'Change Failure Rate',
+    'mttr': 'MTTR',
+    'ci-pass': 'CI Pass Rate',
+    'ci-duration': 'CI Duration',
+    'pr-cycle': 'PR Cycle Time',
+    'pr-review': 'PR Review Time',
+    'pr-merge': 'PR Merge Time',
+    'velocity': 'Velocity',
+    'throughput': 'Throughput',
+    'health-score': 'Health Score',
+    'sprint-burndown': 'Sprint Burndown',
+  };
+
+  const unitMap: Record<string, string> = {
+    'deploy-freq': '/week',
+    'lead-time': 'h',
+    'cfr': '%',
+    'mttr': 'min',
+    'ci-pass': '%',
+    'ci-duration': 'min',
+    'pr-cycle': 'h',
+    'pr-review': 'h',
+    'pr-merge': 'min',
+    'velocity': 'pts',
+    'throughput': ' items',
+    'health-score': '%',
+    'sprint-burndown': ' pts',
+  };
+
   const items = data.map((item: any, i: number) => ({
     name: item.team || item.name || `Item ${i}`,
     value: Number(item.valueRaw || item.value || 0),
   }));
 
+  const title = labelMap[cfg.metricId] || cfg.metricId;
+  const unit = unitMap[cfg.metricId] || '';
+
   return (
-    <div style={widgetStyle}>
-      <Leaderboard items={items} color="#00E5FF" title={cfg.metricId} />
+    <div style={{...widgetStyle, padding: 16, background: 'var(--glass)', border: '1px solid var(--border)', borderRadius: 12}}>
+      <Leaderboard items={items} color="#00E5FF" unit={unit} title={title} />
     </div>
   );
 };
