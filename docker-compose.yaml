@@ -8,6 +8,19 @@ services:
     networks:
       - metraly
 
+  postgres:
+    image: timescale/timescaledb:latest-pg16
+    environment:
+      POSTGRES_USER: metraly
+      POSTGRES_PASSWORD: metraly
+      POSTGRES_DB: metraly
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - metraly
+
   clickhouse:
     image: clickhouse/clickhouse-server:23.8
     ports:
@@ -37,10 +50,15 @@ services:
       CLICKHOUSE_PORT: 8123
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DSN: postgres://metraly:metraly@postgres:5432/metraly
     depends_on:
       clickhouse:
         condition: service_healthy
       redis:
+        condition: service_started
+      postgres:
         condition: service_started
     networks:
       - metraly
@@ -59,6 +77,7 @@ services:
 volumes:
   clickhouse_data:
   redis_data:
+  postgres_data:
 
 networks:
   metraly:
