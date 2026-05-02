@@ -10,7 +10,7 @@ interface DashboardRendererProps {
 }
 
 export const DashboardRenderer: React.FC<DashboardRendererProps> = ({ dashboard, widgetData = {} }) => {
-  const rowHeight = 60;
+  const rowHeight = 45;
 
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gridAutoRows: `${rowHeight}px`, gridAutoFlow: 'dense', gap: '16px' }}>
