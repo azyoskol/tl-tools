@@ -36,6 +36,8 @@ export interface MetricDataResponse {
   current: MetricTimeSeries;
   /** Previous period data for compare mode */
   previous: MetricTimeSeries;
+  /** Labels for chart axis */
+  labels?: string[];
 }
 
 import { DORALevel } from './common';

@@ -6,6 +6,8 @@ import { Leaderboard } from '../ui/Leaderboard';
 import { DataTable } from '../ui/DataTable';
 import { DORABadge } from '../ui/DORABadge';
 import type { StatCardConfig, LeaderboardConfig, DataTableConfig, MetricChartConfig } from '../../types/widgets';
+import { AreaChart } from '../charts/AreaChart';
+import { BarChart } from '../charts/BarChart';
 
 const iconMap: Record<string, string> = {
   'deploy-freq': 'rocket',
@@ -68,13 +70,68 @@ const MetricChartWidget = ({ config, data }: { config: WidgetConfig; data?: any 
   const cfg = config as MetricChartConfig;
   if (!data) return <div style={widgetStyle}><div style={{padding: 20}}>Loading...</div></div>;
 
+  const chartVariant = cfg.chartVariant || 'area';
+  const showCompare = cfg.showCompare ?? false;
+  const currentValues = data.current?.values || [];
+  const compareValues = showCompare && data.previous?.values ? data.previous.values : null;
+  const labels = data.labels || [];
+
+  const labelMap: Record<string, string> = {
+    'lead-time': 'Lead Time',
+    'velocity': 'Velocity',
+    'cfr': 'Change Failure Rate',
+    'deploy-freq': 'Deploy Frequency',
+    'mttr': 'MTTR',
+  };
+
+  const colorMap: Record<string, string> = {
+    'lead-time': 'var(--cyan)',
+    'velocity': 'var(--green)',
+    'cfr': 'var(--orange)',
+    'deploy-freq': 'var(--purple)',
+    'mttr': 'var(--yellow)',
+  };
+
+  const displayLabel = labelMap[cfg.metricId] || data.label || cfg.metricId;
+  const chartColor = cfg.colorOverride || colorMap[cfg.metricId] || 'var(--cyan)';
+  const currentValue = currentValues[currentValues.length - 1] || 0;
+  const displayValue = currentValue >= 1000 ? `${(currentValue/1000).toFixed(1)}k` : currentValue.toFixed(1);
+
+  const isBar = chartVariant === 'bar' || chartVariant === 'bar-horizontal';
+
   return (
-    <div style={{...widgetStyle, background: 'var(--glass)', border: '1px solid var(--border)', borderRadius: 12, padding: 16}}>
-      <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 8 }}>{data.label || cfg.metricId}</div>
-      <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--text)' }}>
-        {data.current?.values?.[data.current.values.length - 1]?.toFixed(1) || '0'}
+    <div style={{...widgetStyle, background: 'var(--glass)', border: '1px solid var(--border)', borderRadius: 12, padding: 16, display: 'flex', flexDirection: 'column', gap: 8}}>
+      <div style={{ fontSize: 12, color: 'var(--muted)' }}>{displayLabel}</div>
+      <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--text)' }}>
+        {displayValue}
         <span style={{ fontSize: 12, color: 'var(--muted)', marginLeft: 4 }}>{data.unit}</span>
       </div>
+      {isBar ? (
+        <div style={{ flex: 1, minHeight: 80 }}>
+          <BarChart
+            labels={labels}
+            values={currentValues}
+            compare={compareValues}
+            color={chartColor}
+            compareColor="var(--purple)"
+            height={90}
+            horizontal={chartVariant === 'bar-horizontal'}
+          />
+        </div>
+      ) : (
+        <div style={{ flex: 1, minHeight: 60 }}>
+          <AreaChart
+            data={currentValues}
+            compare={compareValues}
+            labels={labels}
+            color={chartColor}
+            compareColor="var(--purple)"
+            height={70}
+            showGrid={false}
+            showAxis={false}
+          />
+        </div>
+      )}
     </div>
   );
 };

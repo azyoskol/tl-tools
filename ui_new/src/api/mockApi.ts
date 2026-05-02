@@ -577,12 +577,20 @@ function generateMetricData(metricId: MetricId): MetricDataResponse {
     "health-score": "%",
     "sprint-burndown": "pts",
   };
+  const days = 14;
+  const labels = Array.from({ length: days }, (_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() - (days - 1 - i));
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  });
+
   return {
     metricId,
     label: labelMap[metricId],
     unit: unitMap[metricId],
     current: fakeTimeSeries(14, 0, 100, unitMap[metricId]),
     previous: fakeTimeSeries(14, 0, 100, unitMap[metricId]),
+    labels,
   };
 }
 
