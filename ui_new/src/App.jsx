@@ -35,7 +35,7 @@ const App = () => {
       case 'overview':
         return (
           <DashboardScreen
-            dashboard="overview"
+            initialDashboard="overview"
             onNewDashboard={() => setActive('dash-wizard')}
             onNavigate={setActive}
           />
@@ -43,7 +43,7 @@ const App = () => {
       case 'dash-cto':
         return (
           <DashboardScreen
-            dashboard="cto"
+            initialDashboard="cto"
             onNewDashboard={() => setActive('dash-wizard')}
             onNavigate={setActive}
           />
@@ -51,7 +51,7 @@ const App = () => {
       case 'dash-vp':
         return (
           <DashboardScreen
-            dashboard="vp"
+            initialDashboard="vp"
             onNewDashboard={() => setActive('dash-wizard')}
             onNavigate={setActive}
           />
@@ -59,7 +59,7 @@ const App = () => {
       case 'dash-tl':
         return (
           <DashboardScreen
-            dashboard="tl"
+            initialDashboard="tl"
             onNewDashboard={() => setActive('dash-wizard')}
             onNavigate={setActive}
           />
@@ -67,7 +67,7 @@ const App = () => {
       case 'dash-devops':
         return (
           <DashboardScreen
-            dashboard="devops"
+            initialDashboard="devops"
             onNewDashboard={() => setActive('dash-wizard')}
             onNavigate={setActive}
           />
@@ -75,7 +75,7 @@ const App = () => {
       case 'dash-ic':
         return (
           <DashboardScreen
-            dashboard="ic"
+            initialDashboard="ic"
             onNewDashboard={() => setActive('dash-wizard')}
             onNavigate={setActive}
           />

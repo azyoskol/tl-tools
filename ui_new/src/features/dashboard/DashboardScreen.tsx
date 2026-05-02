@@ -13,21 +13,21 @@ const DASHBOARDS = [
 ];
 
 interface DashboardScreenProps {
-  dashboard?: string;
+  initialDashboard?: string;
   onNewDashboard?: () => void;
   onNavigate?: (navId: string) => void;
 }
 
 export const DashboardScreen: React.FC<DashboardScreenProps> = ({
-  dashboard = "overview",
+  initialDashboard = "overview",
   onNewDashboard,
   onNavigate,
 }) => {
-  const [dashboardId, setDashboardId] = useState(dashboard);
+  const [dashboardId, setDashboardId] = useState(initialDashboard);
   const { dashboard, widgetData, isLoading } = useDashboard(dashboardId);
 
   useEffect(() => {
-    setDashboardId(dashboard);
+    setDashboardId(initialDashboard);
   }, [dashboard]);
 
   const handleDashboardChange = (newDashboard: string) => {
@@ -40,7 +40,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
 
   const renderDashboard = () => {
     if (isLoading) {
-      return (
+    return (
         <div
           style={{
             display: "flex",
@@ -50,9 +50,9 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           }}
         >
           <span style={{ color: "var(--muted)" }}>Loading dashboard...</span>
-        </div>
-      );
-    }
+      </div>
+    );
+  }
     if (!dashboard) return null;
     return <DashboardRenderer dashboard={dashboard} widgetData={widgetData} />;
   };
@@ -68,11 +68,11 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         flexShrink: 0,
       }}
     >
-      {DASHBOARDS.map((r) => (
-        <button
-          key={r.id}
+        {DASHBOARDS.map((r) => (
+          <button
+            key={r.id}
           onClick={() => handleDashboardChange(r.id)}
-          style={{
+            style={{
             display: "flex",
             alignItems: "center",
             gap: 6,
@@ -95,13 +95,13 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           }}
           onMouseLeave={(e) => {
             if (dashboardId !== r.id) e.currentTarget.style.color = "var(--muted2)";
-          }}
-        >
-          <Icon name={r.icon} size={13} color="currentColor" />
-          {r.label}
-        </button>
-      ))}
-      <div style={{ flex: 1 }} />
+            }}
+          >
+            <Icon name={r.icon} size={13} color="currentColor" />
+            {r.label}
+          </button>
+        ))}
+        <div style={{ flex: 1 }} />
       {onNewDashboard && (
         <button
           onClick={onNewDashboard}
@@ -123,7 +123,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           <Icon name="plus" size={13} /> New Dashboard
         </button>
       )}
-    </div>
+      </div>
   );
 
   return (
