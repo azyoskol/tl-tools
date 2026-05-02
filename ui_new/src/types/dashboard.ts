@@ -1,5 +1,6 @@
 import { WidgetConfig, WidgetType } from './widgets';
 import { TimeRange, TeamName, RepoName } from './common';
+import { ActivityEvent } from './user';
 
 export interface DashboardFilters {
   timeRange: TimeRange;
@@ -50,6 +51,7 @@ export interface Dashboard {
   createdAt: string;
   updatedAt: string;
   version: number;
+  recentActivity?: ActivityEvent[];
 }
 
 export interface DashboardDraft {
