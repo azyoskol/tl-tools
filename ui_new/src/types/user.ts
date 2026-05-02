@@ -1,4 +1,4 @@
-import { ActivityEvent } from './api';
+import type { DashboardIndexEntry } from './dashboard';
 
 export interface CurrentUser {
   id: string;

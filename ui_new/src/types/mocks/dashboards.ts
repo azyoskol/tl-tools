@@ -1,4 +1,5 @@
-import type { Dashboard, DashboardWidgetInstance } from '../dashboard';
+import type { Dashboard } from '../dashboard';
+import { createMockStatCardWidget, createMockMetricChartWidget } from './widgets';
 
 export const createMockCTODashboard = (): Dashboard => ({
   id: 'cto-1',

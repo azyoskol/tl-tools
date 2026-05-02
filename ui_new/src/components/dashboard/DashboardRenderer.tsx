@@ -17,11 +17,12 @@ export const DashboardRenderer: React.FC<DashboardRendererProps> = ({ dashboard,
         const layoutItem = dashboard.layout.find((l) => l.i === widget.instanceId);
         const w = layoutItem?.w || 12;
         const h = layoutItem?.h || 1;
+        const x = layoutItem?.x || 1;
         return (
           <div
             key={widget.instanceId}
             style={{
-              gridColumn: `span ${w}`,
+              gridColumn: `${x} / span ${w}`,
               gridRow: `span ${h}`,
             }}
           >

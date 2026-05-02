@@ -1,3 +1,6 @@
+import type { MetricId } from './metrics';
+import type { DashboardFilters } from './dashboard';
+
 export interface AIInsight {
   id: string;
   title: string;
