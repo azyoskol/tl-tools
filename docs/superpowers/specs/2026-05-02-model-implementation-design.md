@@ -140,18 +140,19 @@ const StatCard: React.FC<StatCardProps> = ({ config, data }) => ...
 
 ## Files to Create
 
+All new files live under `ui_new/src/` — the Vite entry point and tsconfig both resolve from there.
+
 ```
-ui_new/
-├── tsconfig.json
+ui_new/src/
 ├── types/
-│   ├── common.ts
-│   ├── metrics.ts
-│   ├── widgets.ts
-│   ├── dashboard.ts
-│   ├── api.ts
-│   ├── user.ts
-│   ├── plugins.ts
-│   ├── ai.ts
+│   ├── common.ts         — primitives (TrendDir, DORALevel, TimeRange…)
+│   ├── metrics.ts        — MetricId, MetricTimeSeries, DORAResponse…
+│   ├── widgets.ts        — WidgetConfig discriminated union, WidgetType
+│   ├── dashboard.ts      — Dashboard entity, filters, layout, system templates
+│   ├── api.ts            — request/response DTOs only; imports domain types from dashboard.ts
+│   ├── user.ts           — CurrentUser, SystemStatus, MeResponse, ActivityEvent
+│   ├── plugins.ts        — Plugin, IntegrationStatus, SourceSyncConfig…
+│   ├── ai.ts             — AIInsight, ChatMessage, AIChatRequest/Response
 │   └── mocks/
 │       ├── metrics.ts
 │       ├── dashboards.ts
@@ -161,9 +162,11 @@ ui_new/
 ├── components/
 │   └── dashboard/
 │       ├── DashboardRenderer.tsx
-│       └── widgetRegistry.ts
+│       └── widgetRegistry.tsx  ← .tsx (contains JSX placeholder components)
 └── (all .jsx files → .tsx with type annotations)
 ```
+
+> **Note on api.ts scope:** `api.ts` contains only HTTP request/response DTOs. All domain entities (`Dashboard`, `DashboardFilters`, etc.) are defined in `dashboard.ts` and imported by `api.ts`. This avoids duplication and keeps the source of truth in one place.
 
 ## Dependencies
 
