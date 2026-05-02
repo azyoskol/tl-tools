@@ -452,7 +452,7 @@ function initDashboards() {
     { id: "dash-cto", name: "CTO Dashboard", sourceTemplateId: "cto" as const, widgetCount: 4 },
     { id: "dash-vp", name: "VP Engineering Dashboard", sourceTemplateId: "vp" as const, widgetCount: 4 },
     { id: "dash-tl", name: "Tech Lead Dashboard", sourceTemplateId: "tl" as const, widgetCount: 4 },
-    { id: "dash-devops", name: "DevOps Dashboard", sourceTemplateId: "devops" as const, widgetCount: 4 },
+    { id: "dash-devops", name: "DevOps Dashboard", sourceTemplateId: "devops" as const, widgetCount: 5 },
     { id: "dash-ic", name: "My Dashboard", sourceTemplateId: "ic" as const, widgetCount: 4 },
   ];
 
@@ -810,7 +810,7 @@ export const mockApi = {
         break;
       case "heatmap":
         data = {
-          cells: Array.from({ length: 5 }, () => ({
+          cells: Array.from({ length: 8 }, () => ({
             label: pickRandom(teamNames),
             value: pseudoRandom() * 100,
           })),
