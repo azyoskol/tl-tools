@@ -459,13 +459,13 @@ function initDashboards() {
   };
   dashboards.set(userDash.id, userDash);
 
-  // Role dashboards
+  // Role dashboards - custom widgets based on prototype
   const roleDashboards = [
-    { id: "dash-cto", name: "CTO Dashboard", sourceTemplateId: "cto" as const, widgetCount: 4 },
-    { id: "dash-vp", name: "VP Engineering Dashboard", sourceTemplateId: "vp" as const, widgetCount: 4 },
-    { id: "dash-tl", name: "Tech Lead Dashboard", sourceTemplateId: "tl" as const, widgetCount: 4 },
-    { id: "dash-devops", name: "DevOps Dashboard", sourceTemplateId: "devops" as const, widgetCount: 4 },
-    { id: "dash-ic", name: "My Dashboard", sourceTemplateId: "ic" as const, widgetCount: 4 },
+    { id: "dash-cto", name: "CTO Dashboard", sourceTemplateId: "cto" as const },
+    { id: "dash-vp", name: "VP Engineering Dashboard", sourceTemplateId: "vp" as const },
+    { id: "dash-tl", name: "Tech Lead Dashboard", sourceTemplateId: "tl" as const },
+    { id: "dash-devops", name: "DevOps Dashboard", sourceTemplateId: "devops" as const },
+    { id: "dash-ic", name: "My Dashboard", sourceTemplateId: "ic" as const },
   ];
 
   for (const role of roleDashboards) {
@@ -473,24 +473,99 @@ function initDashboards() {
     let layout: WidgetLayout[];
 
     if (role.id === "dash-cto") {
-      // Custom widgets for CTO: Velocity, Lead Time, Failure Rate
+      // CTO Dashboard - based on prototype dashboard-roles.jsx CTODashboard
       widgets = [
-        { instanceId: "widget-cto-1", widgetType: "metric-chart", config: { type: "metric-chart", metricId: "velocity", chartVariant: "area", showCompare: false, colorOverride: "#00E5FF" } as MetricChartConfig },
-        { instanceId: "widget-cto-2", widgetType: "metric-chart", config: { type: "metric-chart", metricId: "lead-time", chartVariant: "area", showCompare: false, colorOverride: "#B44CFF" } as MetricChartConfig },
-        { instanceId: "widget-cto-3", widgetType: "metric-chart", config: { type: "metric-chart", metricId: "cfr", chartVariant: "area", showCompare: false, colorOverride: "#FF9100" } as MetricChartConfig },
+        // Row 1: StatCards
+        { instanceId: "cto-stat-1", widgetType: "stat-card", config: { type: "stat-card", metricId: "health-score", showSparkline: true, colorKey: "cyan" } as StatCardConfig },
+        { instanceId: "cto-stat-2", widgetType: "stat-card", config: { type: "stat-card", metricId: "deploy-freq", showSparkline: true, colorKey: "success" } as StatCardConfig },
+        { instanceId: "cto-stat-3", widgetType: "stat-card", config: { type: "stat-card", metricId: "lead-time", showSparkline: true, colorKey: "purple" } as StatCardConfig },
+        { instanceId: "cto-stat-4", widgetType: "stat-card", config: { type: "stat-card", metricId: "cfr", showSparkline: true, colorKey: "warning" } as StatCardConfig },
+        // Row 2: Health Gauge + DORA Overview
+        { instanceId: "cto-gauge-1", widgetType: "health-gauge", config: { type: "health-gauge", showDimensions: true } as GaugeConfig },
+        { instanceId: "cto-dora-1", widgetType: "dora-overview", config: { type: "dora-overview" } as DORAOverviewConfig },
+        // Row 3: Deployment Frequency + Team Velocity
+        { instanceId: "cto-chart-1", widgetType: "metric-chart", config: { type: "metric-chart", metricId: "deploy-freq", chartVariant: "area", showCompare: false, colorOverride: "#00E5FF" } as MetricChartConfig },
+        { instanceId: "cto-bar-1", widgetType: "metric-chart", config: { type: "metric-chart", metricId: "velocity", chartVariant: "bar", showCompare: true, colorOverride: "#00E5FF" } as MetricChartConfig },
+        // Row 4: Lead Time
+        { instanceId: "cto-chart-2", widgetType: "metric-chart", config: { type: "metric-chart", metricId: "lead-time", chartVariant: "area", showCompare: true, colorOverride: "#B44CFF" } as MetricChartConfig },
+        // AI Insight
+        { instanceId: "cto-ai-1", widgetType: "ai-insight", config: { type: "ai-insight", variant: "inline", topicHint: "security" } as AIInsightConfig },
+      ];
+      layout = generateLayout(widgets);
+    } else if (role.id === "dash-vp") {
+      // VP Engineering Dashboard - based on prototype VPDashboard
+      widgets = [
+        // Row 1: StatCards
+        { instanceId: "vp-stat-1", widgetType: "stat-card", config: { type: "stat-card", metricId: "velocity", showSparkline: true, colorKey: "cyan" } as StatCardConfig },
+        { instanceId: "vp-stat-2", widgetType: "stat-card", config: { type: "stat-card", metricId: "pr-cycle", showSparkline: true, colorKey: "warning" } as StatCardConfig },
+        { instanceId: "vp-stat-3", widgetType: "stat-card", config: { type: "stat-card", metricId: "throughput", showSparkline: true, colorKey: "warning" } as StatCardConfig },
+        { instanceId: "vp-stat-4", widgetType: "stat-card", config: { type: "stat-card", metricId: "pr-merge", showSparkline: true, colorKey: "purple" } as StatCardConfig },
+        // Row 2: Sprint Velocity + PR Cycle Time by Team
+        { instanceId: "vp-chart-1", widgetType: "metric-chart", config: { type: "metric-chart", metricId: "velocity", chartVariant: "area", showCompare: true, colorOverride: "#00E5FF" } as MetricChartConfig },
+        { instanceId: "vp-bar-1", widgetType: "metric-chart", config: { type: "metric-chart", metricId: "pr-cycle", chartVariant: "bar-horizontal", showCompare: false, colorOverride: "#B44CFF" } as MetricChartConfig },
+        // Row 3: Team Activity Heatmap + Delivery Risk
+        { instanceId: "vp-heat-1", widgetType: "heatmap", config: { type: "heatmap", rowGroupBy: "team", columns: 14 } as HeatmapConfig },
+        { instanceId: "vp-table-1", widgetType: "data-table", config: { type: "data-table", tableType: "delivery-risk", maxRows: 5 } as DataTableConfig },
+        // AI Insight
+        { instanceId: "vp-ai-1", widgetType: "ai-insight", config: { type: "ai-insight", variant: "inline", topicHint: "pr cycle time" } as AIInsightConfig },
+      ];
+      layout = generateLayout(widgets);
+    } else if (role.id === "dash-tl") {
+      // Tech Lead Dashboard - based on prototype TLDashboard
+      widgets = [
+        // Row 1: StatCards
+        { instanceId: "tl-stat-1", widgetType: "stat-card", config: { type: "stat-card", metricId: "ci-pass", showSparkline: true, colorKey: "success" } as StatCardConfig },
+        { instanceId: "tl-stat-2", widgetType: "stat-card", config: { type: "stat-card", metricId: "pr-review", showSparkline: true, colorKey: "warning" } as StatCardConfig },
+        { instanceId: "tl-stat-3", widgetType: "stat-card", config: { type: "stat-card", metricId: "ci-duration", showSparkline: true, colorKey: "cyan" } as StatCardConfig },
+        { instanceId: "tl-stat-4", widgetType: "stat-card", config: { type: "stat-card", metricId: "ci-queue", showSparkline: true, colorKey: "error" } as StatCardConfig },
+        // Row 2: CI Pass Rate + Sprint Burndown
+        { instanceId: "tl-chart-1", widgetType: "metric-chart", config: { type: "metric-chart", metricId: "ci-pass", chartVariant: "area", showCompare: false, colorOverride: "#00C853" } as MetricChartConfig },
+        { instanceId: "tl-burndown-1", widgetType: "sprint-burndown", config: { type: "sprint-burndown", showTaskList: true } as SprintBurndownConfig },
+        // Row 3: PR Review Queue + Recent Failures
+        { instanceId: "tl-table-1", widgetType: "data-table", config: { type: "data-table", tableType: "pr-queue", maxRows: 5 } as DataTableConfig },
+        { instanceId: "tl-table-2", widgetType: "data-table", config: { type: "data-table", tableType: "ci-failures", maxRows: 5 } as DataTableConfig },
+        // AI Insight
+        { instanceId: "tl-ai-1", widgetType: "ai-insight", config: { type: "ai-insight", variant: "inline", topicHint: "flaky tests" } as AIInsightConfig },
+      ];
+      layout = generateLayout(widgets);
+    } else if (role.id === "dash-devops") {
+      // DevOps Dashboard - based on prototype DevOpsDashboard
+      widgets = [
+        // Row 1: StatCards
+        { instanceId: "devops-stat-1", widgetType: "stat-card", config: { type: "stat-card", metricId: "deploy-freq", showSparkline: true, colorKey: "success" } as StatCardConfig },
+        { instanceId: "devops-stat-2", widgetType: "stat-card", config: { type: "stat-card", metricId: "mttr", showSparkline: true, colorKey: "cyan" } as StatCardConfig },
+        { instanceId: "devops-stat-3", widgetType: "stat-card", config: { type: "stat-card", metricId: "cfr", showSparkline: true, colorKey: "warning" } as StatCardConfig },
+        { instanceId: "devops-stat-4", widgetType: "stat-card", config: { type: "stat-card", metricId: "health-score", showSparkline: false, colorKey: "success" } as StatCardConfig },
+        // Row 2: Deploy Frequency + MTTR Trend
+        { instanceId: "devops-chart-1", widgetType: "metric-chart", config: { type: "metric-chart", metricId: "deploy-freq", chartVariant: "area", showCompare: false, colorOverride: "#00C853" } as MetricChartConfig },
+        { instanceId: "devops-chart-2", widgetType: "metric-chart", config: { type: "metric-chart", metricId: "mttr", chartVariant: "area", showCompare: false, colorOverride: "#FF9100" } as MetricChartConfig },
+        // Row 3: Deploy Activity Heatmap + Recent Incidents
+        { instanceId: "devops-heat-1", widgetType: "heatmap", config: { type: "heatmap", rowGroupBy: "weekday", columns: 16 } as HeatmapConfig },
+        { instanceId: "devops-table-1", widgetType: "data-table", config: { type: "data-table", tableType: "incidents", maxRows: 5 } as DataTableConfig },
+        // AI Insight
+        { instanceId: "devops-ai-1", widgetType: "ai-insight", config: { type: "ai-insight", variant: "inline", topicHint: "incident response" } as AIInsightConfig },
       ];
       layout = generateLayout(widgets);
     } else if (role.id === "dash-ic") {
-      // Custom widgets for IC (My View): vertical charts
+      // IC (My View) Dashboard - based on prototype ICDashboard
       widgets = [
-        { instanceId: "widget-ic-1", widgetType: "stat-card", config: { type: "stat-card", metricId: "ci-pass", showSparkline: true, colorKey: "cyan" } as StatCardConfig },
-        { instanceId: "widget-ic-2", widgetType: "metric-chart", config: { type: "metric-chart", metricId: "velocity", chartVariant: "area", showCompare: false, colorOverride: "#00E5FF" } as MetricChartConfig },
-        { instanceId: "widget-ic-3", widgetType: "metric-chart", config: { type: "metric-chart", metricId: "pr-cycle", chartVariant: "area", showCompare: false, colorOverride: "#B44CFF" } as MetricChartConfig },
-        { instanceId: "widget-ic-4", widgetType: "stat-card", config: { type: "stat-card", metricId: "pr-merge", showSparkline: true, colorKey: "success" } as StatCardConfig },
+        // Row 1: StatCards
+        { instanceId: "ic-stat-1", widgetType: "stat-card", config: { type: "stat-card", metricId: "pr-merge", showSparkline: false, colorKey: "cyan" } as StatCardConfig },
+        { instanceId: "ic-stat-2", widgetType: "stat-card", config: { type: "stat-card", metricId: "ci-pass", showSparkline: true, colorKey: "success" } as StatCardConfig },
+        { instanceId: "ic-stat-3", widgetType: "stat-card", config: { type: "stat-card", metricId: "pr-review", showSparkline: true, colorKey: "warning" } as StatCardConfig },
+        { instanceId: "ic-stat-4", widgetType: "stat-card", config: { type: "stat-card", metricId: "velocity", showSparkline: false, colorKey: "purple" } as StatCardConfig },
+        // Row 2: My PRs + My CI Pass Rate
+        { instanceId: "ic-table-1", widgetType: "data-table", config: { type: "data-table", tableType: "my-prs", maxRows: 5 } as DataTableConfig },
+        { instanceId: "ic-chart-1", widgetType: "metric-chart", config: { type: "metric-chart", metricId: "ci-pass", chartVariant: "area", showCompare: false, colorOverride: "#00C853" } as MetricChartConfig },
+        // Row 3: My Review Queue + Sprint Progress
+        { instanceId: "ic-table-2", widgetType: "data-table", config: { type: "data-table", tableType: "review-queue", maxRows: 5 } as DataTableConfig },
+        { instanceId: "ic-burndown-1", widgetType: "sprint-burndown", config: { type: "sprint-burndown", showTaskList: true } as SprintBurndownConfig },
+        // AI Insight
+        { instanceId: "ic-ai-1", widgetType: "ai-insight", config: { type: "ai-insight", variant: "inline", topicHint: "CI failure" } as AIInsightConfig },
       ];
       layout = generateLayout(widgets);
     } else {
-      widgets = generateWidgets(role.widgetCount, role.sourceTemplateId);
+      widgets = generateWidgets(4, role.sourceTemplateId);
       layout = generateLayout(widgets);
     }
 
@@ -886,6 +961,61 @@ export const mockApi = {
             status: "Blocked",
             time: pickRandom(timeAgo),
             blockedBy: "Awaiting review",
+          }));
+        } else if (tableType === "delivery-risk") {
+          const tasks = [
+            { name: 'Auth refactor', team: 'Backend', status: 'At risk' },
+            { name: 'iOS release v4.2', team: 'Mobile', status: 'Blocked' },
+            { name: 'Data pipeline v2', team: 'Data', status: 'At risk' },
+            { name: 'API gateway', team: 'Platform', status: 'On track' },
+            { name: 'Design system', team: 'Frontend', status: 'On track' },
+          ];
+          rows = tasks.slice(0, (config as DataTableConfig).maxRows).map((t, i) => ({
+            id: i,
+            name: t.name,
+            team: t.team,
+            status: t.status,
+          }));
+        } else if (tableType === "incidents") {
+          const incidents = [
+            { service: 'api-gateway', severity: 'P1', mttr: '12 min', status: 'Done' },
+            { service: 'auth-service', severity: 'P2', mttr: '31 min', status: 'Done' },
+            { service: 'data-pipeline', severity: 'P2', mttr: '—', status: 'Open' },
+            { service: 'cdn-proxy', severity: 'P3', mttr: '8 min', status: 'Done' },
+            { service: 'notification-svc', severity: 'P3', mttr: '—', status: 'Open' },
+          ];
+          rows = incidents.slice(0, (config as DataTableConfig).maxRows).map((inc, i) => ({
+            id: i,
+            service: inc.service,
+            severity: inc.severity,
+            mttr: inc.mttr,
+            status: inc.status,
+          }));
+        } else if (tableType === "my-prs") {
+          const prs = [
+            { title: 'feat/auth-tokens', branch: 'feat/auth-tokens', age: '3h', reviews: '1/2' },
+            { title: 'fix/rate-limiting', branch: 'fix/rate-limit', age: '8h', reviews: '0/2' },
+            { title: 'chore/upgrade-ts', branch: 'chore/ts-5', age: '2d', reviews: '2/2' },
+          ];
+          rows = prs.slice(0, (config as DataTableConfig).maxRows).map((pr, i) => ({
+            id: i,
+            title: pr.title,
+            branch: pr.branch,
+            age: pr.age,
+            reviews: pr.reviews,
+          }));
+        } else if (tableType === "review-queue") {
+          const reviews = [
+            { pr: 'refactor/api-layer', author: '@s.chen', size: '+342 −89', waiting: '6h' },
+            { pr: 'feat/webhooks-v2', author: '@a.garcia', size: '+218 −44', waiting: '14h' },
+            { pr: 'fix/memory-leak', author: '@m.patel', size: '+31 −12', waiting: '2h' },
+          ];
+          rows = reviews.slice(0, (config as DataTableConfig).maxRows).map((r, i) => ({
+            id: i,
+            pr: r.pr,
+            author: r.author,
+            size: r.size,
+            waiting: r.waiting,
           }));
         } else {
           rows = Array.from({ length: (config as DataTableConfig).maxRows }, (_, i) => ({
