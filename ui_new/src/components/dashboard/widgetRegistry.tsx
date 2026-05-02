@@ -99,21 +99,56 @@ const DataTableWidget = ({ config, data }: { config: WidgetConfig; data?: any })
   const cfg = config as DataTableConfig;
   if (!data || !data.rows || data.rows.length === 0) return <div style={widgetStyle}><div style={{padding: 20, color: 'var(--muted)'}}>No data</div></div>;
 
-  const columns = ['Title', 'Status'];
-  const rows = (data.rows?.slice(0, cfg.maxRows || 5) || []).map((r: any) => [
-    r.title || `Item ${r.id}`,
-    r.status || 'Unknown',
-  ]);
-
   const titleMap: Record<string, string> = {
-    'pr-queue': 'PR Queue',
-    'ci-failures': 'CI Failures',
+    'pr-queue': 'PR Review Queue',
+    'ci-failures': 'Failing Builds',
     'incidents': 'Incidents',
     'delivery-risk': 'Delivery Risk',
     'my-prs': 'My PRs',
     'review-queue': 'Review Queue',
     'blocked-tasks': 'Blocked Tasks',
   };
+
+  const hasExtraFields = cfg.tableType === 'pr-queue' || cfg.tableType === 'blocked-tasks' || cfg.tableType === 'ci-failures';
+
+  if (hasExtraFields) {
+    // Render custom rows with time and extra info
+    const rows = data.rows.slice(0, cfg.maxRows || 5);
+    return (
+      <div style={{...widgetStyle, padding: 16, background: 'var(--glass)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'auto'}}>
+        <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 12, color: 'var(--text)' }}>{titleMap[cfg.tableType] || cfg.tableType}</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {rows.map((r: any, i: number) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', background: 'rgba(255,255,255,0.02)', borderRadius: 8, border: '1px solid var(--border)' }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 12.5, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.title}</div>
+                <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>
+                  {r.author && <span style={{ marginRight: 8 }}>{r.author}</span>}
+                  {r.blockedBy && <span style={{ color: 'var(--warning)', marginRight: 8 }}>{r.blockedBy}</span>}
+                  <span style={{ fontFamily: 'var(--font-mono)' }}>{r.time}</span>
+                </div>
+              </div>
+              <div style={{
+                fontSize: 10,
+                fontWeight: 600,
+                padding: '3px 8px',
+                borderRadius: 4,
+                background: r.status === 'Review' ? 'rgba(180,76,255,0.15)' : r.status === 'Failed' ? 'rgba(255,23,68,0.15)' : 'rgba(255,145,0,0.15)',
+                color: r.status === 'Review' ? '#B44CFF' : r.status === 'Failed' ? '#FF1744' : '#FF9100',
+              }}>{r.status}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // Fallback to simple table
+  const columns = ['Title', 'Status'];
+  const rows = (data.rows?.slice(0, cfg.maxRows || 5) || []).map((r: any) => [
+    r.title || `Item ${r.id}`,
+    r.status || 'Unknown',
+  ]);
 
   return (
     <div style={{...widgetStyle, padding: 16, background: 'var(--glass)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'auto'}}>

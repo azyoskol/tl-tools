@@ -769,18 +769,48 @@ export const mockApi = {
           })),
         };
         break;
-      case "data-table":
-        data = {
-          rows: Array.from(
-            { length: (config as DataTableConfig).maxRows },
-            (_, i) => ({
-              id: i,
-              title: `Item ${i}`,
-              status: pickRandom(["Open", "Done", "Blocked"]),
-            }),
-          ),
-        };
+      case "data-table": {
+        const tableType = (config as DataTableConfig).tableType;
+        const timeAgo = ["2 min ago", "14 min ago", "1 hr ago", "3 hrs ago", "Yesterday", "2 days ago"];
+        let rows: any[];
+
+        if (tableType === "pr-queue") {
+          const prTitles = ["Add rate limiting middleware", "Refactor API layer", "Fix auth token expiry", "Update dependencies", "Add unit tests", "Optimize DB queries", "Fix memory leak", "Update docs"];
+          rows = Array.from({ length: (config as DataTableConfig).maxRows }, (_, i) => ({
+            id: i,
+            title: prTitles[i % prTitles.length],
+            status: "Review",
+            time: pickRandom(timeAgo),
+            author: pickRandom(["alex.kim", "sara.chen", "jake.wu", "maria.g"]),
+          }));
+        } else if (tableType === "ci-failures") {
+          const buildNames = ["test-suite", "lint-check", "build-prod", "e2e-tests", "security-scan"];
+          rows = Array.from({ length: (config as DataTableConfig).maxRows }, (_, i) => ({
+            id: i,
+            title: `${pickRandom(buildNames)} #${4200 + i}`,
+            status: "Failed",
+            time: pickRandom(timeAgo),
+          }));
+        } else if (tableType === "blocked-tasks") {
+          const taskNames = ["Update API schema", "Fix flaky test", "Migrate to new auth", "Refactor payment module", "Add monitoring"];
+          rows = Array.from({ length: (config as DataTableConfig).maxRows }, (_, i) => ({
+            id: i,
+            title: taskNames[i % taskNames.length],
+            status: "Blocked",
+            time: pickRandom(timeAgo),
+            blockedBy: "Awaiting review",
+          }));
+        } else {
+          rows = Array.from({ length: (config as DataTableConfig).maxRows }, (_, i) => ({
+            id: i,
+            title: `Item ${i}`,
+            status: pickRandom(["Open", "Done", "Blocked"]),
+            time: pickRandom(timeAgo),
+          }));
+        }
+        data = { rows };
         break;
+      }
       case "leaderboard":
         data = generateBreakdown((config as LeaderboardConfig).metricId).slice(
           0,
