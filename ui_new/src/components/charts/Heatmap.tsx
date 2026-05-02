@@ -17,8 +17,8 @@ export const Heatmap: React.FC<HeatmapProps> = ({ data, rows = 7, cols = 16, col
       {title && <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)', marginBottom: 8 }}>{title}</div>}
       <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
         {labelRows && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap, paddingTop: labelCols ? 20 : 0 }}>
-            {labelRows?.map((l: string, i: number) => <div key={i} style={{ height: cellSize, display: 'flex', alignItems: 'center', fontSize: 9.5, color: 'var(--muted)', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap', paddingRight: 4 }}>{l}</div>)}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: gap, paddingTop: 0 }}>
+            {labelRows?.map((l: string, i: number) => <div key={i} style={{ height: cellSize, display: 'flex', alignItems: 'center', fontSize: 9.5, color: 'var(--muted)', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap', paddingRight: 4, marginTop: i === 0 ? 0 : 0 }}>{l}</div>)}
           </div>
         )}
         <div>
