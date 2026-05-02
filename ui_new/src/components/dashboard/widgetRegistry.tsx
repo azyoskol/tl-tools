@@ -1,6 +1,7 @@
 // @ts-nocheck
 import type { WidgetType, WidgetConfig } from '../../types/widgets';
 import React from 'react';
+import { Icon } from '../shared/Icon';
 import { StatCard } from '../ui/StatCard';
 import { Leaderboard } from '../ui/Leaderboard';
 import { DataTable } from '../ui/DataTable';
@@ -371,22 +372,53 @@ const SprintBurndownWidget = ({ data }: { config: WidgetConfig; data?: any }) =>
 };
 
 const AIInsightWidget = ({ config, data }: { config: WidgetConfig; data?: any }) => {
+  const [seen, setSeen] = React.useState(() => {
+    if (typeof window !== 'undefined' && data?.insightId) {
+      return localStorage.getItem(`insight-seen-${data.insightId}`) === 'true';
+    }
+    return data?.seen || false;
+  });
+
   if (!data) return <div style={widgetStyle}><div style={{padding: 20}}>Loading...</div></div>;
 
   const cfg = config as any;
 
+  const handleMarkSeen = () => {
+    if (!seen && data?.insightId) {
+      localStorage.setItem(`insight-seen-${data.insightId}`, 'true');
+      setSeen(true);
+    }
+  };
+
   return (
-    <div style={{
-      background: 'rgba(180,76,255,0.06)', border: '1px solid rgba(180,76,255,0.18)',
-      borderRadius: 10, padding: '12px 14px',
-      display: 'flex', gap: 10, alignItems: 'flex-start',
-      width: '100%', height: '100%', boxSizing: 'border-box',
-    }}>
-      <div style={{ width: 22, height: 22, borderRadius: 6, background: 'rgba(180,76,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
-        <Icon name="sparkles" size={12} color="#B44CFF" />
+    <div
+      style={{
+        background: seen ? 'rgba(180,76,255,0.03)' : 'rgba(180,76,255,0.06)',
+        border: `1px solid ${seen ? 'rgba(180,76,255,0.1)' : 'rgba(180,76,255,0.18)'}`,
+        borderRadius: 10, padding: '12px 14px',
+        display: 'flex', gap: 10, alignItems: 'flex-start',
+        width: '100%', height: '100%', boxSizing: 'border-box',
+        cursor: 'pointer',
+        transition: 'all 0.2s',
+      }}
+      onClick={handleMarkSeen}
+      onMouseEnter={handleMarkSeen}
+    >
+      <div style={{ position: 'relative' }}>
+        <div style={{ width: 22, height: 22, borderRadius: 6, background: 'rgba(180,76,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
+          <Icon name="sparkles" size={12} color="#B44CFF" />
+        </div>
+        {!seen && (
+          <div style={{
+            position: 'absolute', top: -2, right: -2,
+            width: 8, height: 8, borderRadius: '50%',
+            background: '#B44CFF',
+            boxShadow: '0 0 6px rgba(180,76,255,0.6)',
+          }} />
+        )}
       </div>
       <div style={{ flex: 1 }}>
-        <p style={{ fontSize: 12.5, color: 'var(--muted2)', lineHeight: 1.55, margin: 0 }}>{data.text || 'No insight available'}</p>
+        <p style={{ fontSize: 12.5, color: seen ? 'var(--muted)' : 'var(--muted2)', lineHeight: 1.55, margin: 0 }}>{data.text || 'No insight available'}</p>
         {cfg.variant !== 'inline' && data.action && (
           <button style={{ marginTop: 8, fontSize: 11.5, color: 'var(--cyan)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'var(--font-body)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
             {data.action} <Icon name="arrowRight" size={11} color="var(--cyan)" />
