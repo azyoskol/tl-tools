@@ -1079,11 +1079,26 @@ export const mockApi = {
           actual: fakeTimeSeries(10, 0, 50, "pts"),
         };
         break;
-      case "ai-insight":
+      case "ai-insight": {
+        const topic = (config as AIInsightConfig).topicHint || "general";
+        const insightTexts: Record<string, string> = {
+          "deployment frequency": "Deployment frequency has increased 23% over the last 30 days. Consider reviewing the CI pipeline for bottlenecks.",
+          "PR review time": "Average PR review time is 18% faster this sprint. The new review SLA is working well.",
+          "PR review time improving": "PR review time improving across all teams. Frontend team leads with 42% improvement.",
+          "security": "3 new security vulnerabilities detected in the last week. 2 are high priority.",
+        };
+        const actions: Record<string, string> = {
+          "deployment frequency": "View CI pipeline",
+          "PR review time": "See review metrics",
+          "PR review time improving": "View team breakdown",
+          "security": "Review security report",
+        };
         data = {
-          insight: `Insight for ${(config as AIInsightConfig).topicHint || "general"}`,
+          text: insightTexts[topic] || `AI insight related to ${topic}.`,
+          action: actions[topic] || "View details",
         };
         break;
+      }
       case "anomaly-detector":
         data = {
           anomalies: [
