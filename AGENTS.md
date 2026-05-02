@@ -45,6 +45,15 @@ make docker-logs         # View logs
 
 # Data
 make docker-test-data   # Insert test data
+
+## Setup & Environment
+
+- Required env vars for `cmd/api`: `PORT`, `POSTGRES_DSN`, `REDIS_HOST`, `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD` (used by seed runner).
+- After adding Go dependencies run `go mod tidy` to keep `go.mod`/`go.sum` clean.
+- Worktree directory `.worktrees/` must be listed in `.gitignore`. If missing, add `/.worktrees/` and commit before creating worktrees.
+- Baseline verification: after creating a worktree run `go test ./...` to ensure all existing tests pass before starting implementation.
+- To run a single test: `go test ./cmd/api/... -run TestName`.
+
 ```
 
 ## Architecture Notes
