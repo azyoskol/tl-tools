@@ -141,12 +141,22 @@ function fakeTimeSeries(
   return { values, labels, unit };
 }
 
-function generateWidgetConfig(type: WidgetType): WidgetConfig {
+function generateWidgetConfig(type: WidgetType, role?: string): WidgetConfig {
+  const roleMetrics: Record<string, string[]> = {
+    cto: ["deploy-freq", "lead-time", "cfr", "mttr", "velocity", "throughput"],
+    vp: ["velocity", "throughput", "pr-cycle", "lead-time"],
+    tl: ["ci-pass", "ci-duration", "pr-review", "pr-merge", "sprint-burndown"],
+    devops: ["deploy-freq", "mttr", "ci-duration", "ci-pass"],
+    ic: ["ci-pass", "pr-cycle", "pr-merge", "velocity"],
+  };
+  const metrics = role ? roleMetrics[role] || allMetricIds : allMetricIds;
+  const pickMetric = () => pickRandom(metrics);
+
   switch (type) {
     case "metric-chart":
       return {
         type: "metric-chart",
-        metricId: pickRandom(allMetricIds),
+        metricId: pickMetric(),
         chartVariant: pickRandom(["area", "bar", "bar-horizontal"]),
         showCompare: pseudoRandom() > 0.5,
         colorOverride:
@@ -160,7 +170,7 @@ function generateWidgetConfig(type: WidgetType): WidgetConfig {
     case "compare-bar-chart":
       return {
         type: "compare-bar-chart",
-        metricId: pickRandom(allMetricIds),
+        metricId: pickMetric(),
         groupBy: pickRandom(["team", "repo"]),
         primaryLabel: "Current Sprint",
         compareLabel: "Previous Sprint",
@@ -168,7 +178,7 @@ function generateWidgetConfig(type: WidgetType): WidgetConfig {
     case "stat-card":
       return {
         type: "stat-card",
-        metricId: pickRandom(allMetricIds),
+        metricId: pickMetric(),
         showSparkline: pseudoRandom() > 0.3,
         colorKey: pickRandom(["cyan", "purple", "success", "warning", "error"]),
       } as StatCardConfig;
@@ -234,26 +244,25 @@ function generateWidgetConfig(type: WidgetType): WidgetConfig {
   }
 }
 
-function generateWidgets(count: number): DashboardWidgetInstance[] {
-  const types: WidgetType[] = [
-    "metric-chart",
-    "compare-bar-chart",
-    "stat-card",
-    "dora-overview",
-    "health-gauge",
-    "heatmap",
-    "data-table",
-    "leaderboard",
-    "sprint-burndown",
-    "ai-insight",
-    "anomaly-detector",
+function generateWidgets(count: number, role?: string): DashboardWidgetInstance[] {
+  const roleTypes: Record<string, WidgetType[]> = {
+    cto: ["dora-overview", "stat-card", "metric-chart", "metric-chart", "heatmap"],
+    vp: ["stat-card", "metric-chart", "leaderboard", "heatmap", "data-table"],
+    tl: ["stat-card", "metric-chart", "data-table", "sprint-burndown", "leaderboard"],
+    devops: ["metric-chart", "stat-card", "heatmap", "anomaly-detector", "data-table"],
+    ic: ["stat-card", "metric-chart", "stat-card", "leaderboard", "data-table"],
+  };
+  const types = role ? roleTypes[role] : [
+    "metric-chart", "compare-bar-chart", "stat-card", "dora-overview",
+    "health-gauge", "heatmap", "data-table", "leaderboard",
+    "sprint-burndown", "ai-insight", "anomaly-detector",
   ];
   return Array.from({ length: count }, (_, i) => {
     const type = pickRandom(types);
     return {
       instanceId: `widget-${i}-${randomInt(1000, 9999)}`,
       widgetType: type,
-      config: generateWidgetConfig(type),
+      config: generateWidgetConfig(type, role),
     };
   });
 }
@@ -353,7 +362,7 @@ function initDashboards() {
   ];
 
   for (const role of roleDashboards) {
-    const widgets = generateWidgets(role.widgetCount);
+    const widgets = generateWidgets(role.widgetCount, role.sourceTemplateId);
     const layout = generateLayout(widgets);
     dashboards.set(role.id, {
       id: role.id,
