@@ -122,9 +122,10 @@ const LeaderboardWidget = ({ config, data }: { config: WidgetConfig; data?: any 
 
   const title = labelMap[cfg.metricId] || cfg.metricId;
   const unit = unitMap[cfg.metricId] || '';
+  const height = 60 + items.length * 30; // Dynamic height: title + items
 
   return (
-    <div style={{...widgetStyle, padding: 16, background: 'var(--glass)', border: '1px solid var(--border)', borderRadius: 12}}>
+    <div style={{...widgetStyle, height, padding: 16, background: 'var(--glass)', border: '1px solid var(--border)', borderRadius: 12}}>
       <Leaderboard items={items} color="#00E5FF" unit={unit} title={title} />
     </div>
   );
