@@ -10,10 +10,8 @@ interface DashboardRendererProps {
 }
 
 export const DashboardRenderer: React.FC<DashboardRendererProps> = ({ dashboard, widgetData = {} }) => {
-  const rowHeight = 35;
-
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gridAutoRows: `${rowHeight}px`, gridAutoFlow: 'dense', gap: '16px' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gridAutoRows: 'min-content', gridAutoFlow: 'dense', gap: '16px' }}>
       {dashboard.widgets.map((widget) => {
         const WidgetComponent = widgetRegistry[widget.widgetType];
         const layoutItem = dashboard.layout.find((l) => l.i === widget.instanceId);
@@ -25,7 +23,7 @@ export const DashboardRenderer: React.FC<DashboardRendererProps> = ({ dashboard,
             style={{
               gridColumn: `span ${w}`,
               gridRow: `span ${h}`,
-              minHeight: `${h * rowHeight}px`,
+              overflow: 'hidden',
             }}
           >
             <WidgetComponent config={widget.config} data={widgetData[widget.instanceId]} />

@@ -60,9 +60,9 @@ export const AreaChart: React.FC<AreaChartProps> = ({
   const cw = VW - pl - pr, ch = VH - pt - pb;
   const uid = color.replace('#', '');
 
-  const pts = scalePoints(data, cw, ch, 0, 0, 0, 0).map(([x, y]) => [x + pl, y + pt]);
+  const pts = scalePoints(data, cw, ch,0,0,0,0).map(([x, y]) => [x + pl, y + pt]);
   const cpts = compare
-    ? scalePoints(compare, cw, ch, 0, 0, 0, 0).map(([x, y]) => [x + pl, y + pt])
+    ? scalePoints(compare, cw, ch,0,0,0,0).map(([x, y]) => [x + pl, y + pt])
     : null;
 
   const linePath = (ps: number[][]) => bezierPath(ps);

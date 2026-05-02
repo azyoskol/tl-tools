@@ -110,6 +110,23 @@ const allMetricIds: MetricId[] = [
 ];
 const doraLevels: DORALevel[] = ["Elite", "High", "Med", "Low"];
 
+const metricColorMap: Record<string, string> = {
+  "deploy-freq": "#00E5FF",
+  "lead-time": "#B44CFF",
+  "cfr": "#FF9100",
+  "mttr": "#00C853",
+  "ci-pass": "#00E5FF",
+  "ci-duration": "#B44CFF",
+  "ci-queue": "#FF9100",
+  "pr-cycle": "#00E5FF",
+  "pr-review": "#B44CFF",
+  "pr-merge": "#00C853",
+  "velocity": "#00E5FF",
+  "throughput": "#B44CFF",
+  "health-score": "#FF9100",
+  "sprint-burndown": "#00C853",
+};
+
 function pickRandom<T>(arr: T[]): T {
   return arr[Math.floor(pseudoRandom() * arr.length)];
 }
@@ -202,18 +219,13 @@ function generateWidgetConfig(type: WidgetType, role?: string, wizardId?: string
 
   switch (type) {
     case "metric-chart":
+      const mcMetricId = pickMetric();
       return {
         type: "metric-chart",
-        metricId: pickMetric(),
+        metricId: mcMetricId,
         chartVariant: pickRandom(["area", "bar", "bar-horizontal"]),
         showCompare: pseudoRandom() > 0.5,
-        colorOverride:
-          pseudoRandom() > 0.5
-            ? "#" +
-              Math.floor(pseudoRandom() * 0xffffff)
-                .toString(16)
-                .padStart(6, "0")
-            : undefined,
+        colorOverride: metricColorMap[mcMetricId] || "#00E5FF",
       } as MetricChartConfig;
     case "compare-bar-chart":
       return {
@@ -457,8 +469,31 @@ function initDashboards() {
   ];
 
   for (const role of roleDashboards) {
-    const widgets = generateWidgets(role.widgetCount, role.sourceTemplateId);
-    const layout = generateLayout(widgets);
+    let widgets: DashboardWidgetInstance[];
+    let layout: WidgetLayout[];
+
+    if (role.id === "dash-cto") {
+      // Custom widgets for CTO: Velocity, Lead Time, Failure Rate
+      widgets = [
+        { instanceId: "widget-cto-1", widgetType: "metric-chart", config: { type: "metric-chart", metricId: "velocity", chartVariant: "area", showCompare: false, colorOverride: "#00E5FF" } as MetricChartConfig },
+        { instanceId: "widget-cto-2", widgetType: "metric-chart", config: { type: "metric-chart", metricId: "lead-time", chartVariant: "area", showCompare: false, colorOverride: "#B44CFF" } as MetricChartConfig },
+        { instanceId: "widget-cto-3", widgetType: "metric-chart", config: { type: "metric-chart", metricId: "cfr", chartVariant: "area", showCompare: false, colorOverride: "#FF9100" } as MetricChartConfig },
+      ];
+      layout = generateLayout(widgets);
+    } else if (role.id === "dash-ic") {
+      // Custom widgets for IC (My View): vertical charts
+      widgets = [
+        { instanceId: "widget-ic-1", widgetType: "stat-card", config: { type: "stat-card", metricId: "ci-pass", showSparkline: true, colorKey: "cyan" } as StatCardConfig },
+        { instanceId: "widget-ic-2", widgetType: "metric-chart", config: { type: "metric-chart", metricId: "velocity", chartVariant: "area", showCompare: false, colorOverride: "#00E5FF" } as MetricChartConfig },
+        { instanceId: "widget-ic-3", widgetType: "metric-chart", config: { type: "metric-chart", metricId: "pr-cycle", chartVariant: "area", showCompare: false, colorOverride: "#B44CFF" } as MetricChartConfig },
+        { instanceId: "widget-ic-4", widgetType: "stat-card", config: { type: "stat-card", metricId: "pr-merge", showSparkline: true, colorKey: "success" } as StatCardConfig },
+      ];
+      layout = generateLayout(widgets);
+    } else {
+      widgets = generateWidgets(role.widgetCount, role.sourceTemplateId);
+      layout = generateLayout(widgets);
+    }
+
     dashboards.set(role.id, {
       id: role.id,
       name: role.name,
