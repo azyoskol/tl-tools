@@ -234,39 +234,34 @@ const GaugeWidget = ({ data }: { config: WidgetConfig; data?: any }) => {
   );
 };
 
-const HeatmapWidget = ({ config, data }: { config: WidgetConfig; data?: any }) => {
-  if (!data || !data.cells) return <div style={widgetStyle}><div style={{padding: 20}}>Loading...</div></div>;
+import { Heatmap } from '../charts/Heatmap';
 
-  const cells = data.cells || [];
-  const cols = cells.length <= 4 ? cells.length : cells.length <= 6 ? 3 : 4;
-  const rows = Math.ceil(cells.length / cols);
-  const minCellHeight = 55;
-  const headerHeight = 40;
-  const totalHeight = headerHeight + rows * minCellHeight + (rows - 1) * 6;
+const HeatmapWidget = ({ config, data }: { config: WidgetConfig; data?: any }) => {
+  if (!data) return <div style={widgetStyle}><div style={{padding: 20}}>Loading...</div></div>;
+
+  const cfg = config as HeatmapConfig;
+  const rows = cfg.rowGroupBy === 'team' ? 3 : 7;
+  const cols = 16;
+  const teams = ['Platform', 'Backend', 'Frontend'];
+  
+  // Generate fake heatmap data
+  const heatData = Array.from({ length: rows }, () => 
+    Array.from({ length: cols }, () => Math.floor(Math.random() * 6))
+  );
 
   return (
-    <div style={{...widgetStyle, height: totalHeight, background: 'var(--glass)', border: '1px solid var(--border)', borderRadius: 12, padding: 16, boxSizing: 'border-box'}}>
-      <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)', marginBottom: 10 }}>Team Activity</div>
-      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: 6, flex: 1 }}>
-        {cells.map((cell: any, i: number) => {
-          const intensity = cell.value / 100;
-          const bgColor = intensity > 0.7 ? 'rgba(0,200,83,0.8)' : intensity > 0.4 ? 'rgba(0,229,255,0.6)' : 'rgba(0,229,255,0.2)';
-          return (
-            <div key={i} style={{ 
-              background: bgColor, 
-              borderRadius: 8, 
-              padding: '10px 8px', 
-              display: 'flex', 
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}>
-              <div style={{ fontSize: 11, color: 'var(--text)', fontWeight: 500, textAlign: 'center' }}>{cell.label}</div>
-              <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)', marginTop: 2 }}>{cell.value?.toFixed(0)}</div>
-            </div>
-          );
-        })}
-      </div>
+    <div style={{...widgetStyle, padding: 16, background: 'var(--glass)', border: '1px solid var(--border)', borderRadius: 12, boxSizing: 'border-box'}}>
+      <Heatmap 
+        data={heatData}
+        rows={rows}
+        cols={cols}
+        color="var(--cyan)"
+        labelRows={cfg.rowGroupBy === 'team' ? teams : undefined}
+        labelCols={[]}
+        title=""
+        cellSize={16}
+        gap={2}
+      />
     </div>
   );
 };
