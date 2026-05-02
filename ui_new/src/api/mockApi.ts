@@ -1081,8 +1081,13 @@ export const mockApi = {
         break;
       case "ai-insight": {
         const topic = (config as AIInsightConfig).topicHint || "general";
-        const instanceId = req.instanceId;
-        const insightTexts: Record<string, string> = {
+        const titles: Record<string, string> = {
+          "deployment frequency": "Deployment frequency up 23%",
+          "PR review time": "PR review time improving",
+          "PR review time improving": "Team PR velocity up 42%",
+          "security": "Security vulnerabilities detected",
+        };
+        const bodies: Record<string, string> = {
           "deployment frequency": "Deployment frequency has increased 23% over the last 30 days. Consider reviewing the CI pipeline for bottlenecks.",
           "PR review time": "Average PR review time is 18% faster this sprint. The new review SLA is working well.",
           "PR review time improving": "PR review time improving across all teams. Frontend team leads with 42% improvement.",
@@ -1095,10 +1100,9 @@ export const mockApi = {
           "security": "Review security report",
         };
         data = {
-          insightId: instanceId,
-          text: insightTexts[topic] || `AI insight related to ${topic}.`,
+          title: titles[topic] || `AI Insight: ${topic}`,
+          body: bodies[topic] || `AI insight related to ${topic}.`,
           action: actions[topic] || "View details",
-          seen: false,
         };
         break;
       }

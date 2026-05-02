@@ -372,58 +372,51 @@ const SprintBurndownWidget = ({ data }: { config: WidgetConfig; data?: any }) =>
 };
 
 const AIInsightWidget = ({ config, data }: { config: WidgetConfig; data?: any }) => {
-  const [seen, setSeen] = React.useState(() => {
-    if (typeof window !== 'undefined' && data?.insightId) {
-      return localStorage.getItem(`insight-seen-${data.insightId}`) === 'true';
-    }
-    return data?.seen || false;
-  });
+  const [seen, setSeen] = React.useState(false);
+  const [hovered, setHovered] = React.useState(false);
 
   if (!data) return <div style={widgetStyle}><div style={{padding: 20}}>Loading...</div></div>;
 
   const cfg = config as any;
 
-  const handleMarkSeen = () => {
-    if (!seen && data?.insightId) {
-      localStorage.setItem(`insight-seen-${data.insightId}`, 'true');
-      setSeen(true);
-    }
-  };
-
   return (
     <div
       style={{
-        background: seen ? 'rgba(180,76,255,0.03)' : 'rgba(180,76,255,0.06)',
-        border: `1px solid ${seen ? 'rgba(180,76,255,0.1)' : 'rgba(180,76,255,0.18)'}`,
-        borderRadius: 10, padding: '12px 14px',
-        display: 'flex', gap: 10, alignItems: 'flex-start',
-        width: '100%', height: '100%', boxSizing: 'border-box',
+        background: hovered ? 'var(--glass2)' : 'var(--glass)',
+        border: '1px solid var(--border)',
+        borderRadius: 14, padding: '18px 20px',
+        borderLeft: '3px solid transparent',
+        transition: 'all 0.22s ease',
+        boxShadow: hovered ? '0 8px 32px rgba(0,0,0,0.35)' : 'none',
         cursor: 'pointer',
-        transition: 'all 0.2s',
+        width: '100%', height: '100%', boxSizing: 'border-box',
       }}
-      onClick={handleMarkSeen}
-      onMouseEnter={handleMarkSeen}
+      onMouseEnter={() => { setHovered(true); if (!seen) setSeen(true); }}
+      onMouseLeave={() => setHovered(false)}
     >
-      <div style={{ position: 'relative' }}>
-        <div style={{ width: 22, height: 22, borderRadius: 6, background: 'rgba(180,76,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
-          <Icon name="sparkles" size={12} color="#B44CFF" />
-        </div>
-        {!seen && (
+      <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+        <div style={{ position: 'relative', flexShrink: 0, marginTop: 2 }}>
+          <div style={{ width: 28, height: 28, borderRadius: 8, background: 'linear-gradient(135deg, rgba(0,229,255,0.15), rgba(180,76,255,0.15))', border: '1px solid rgba(180,76,255,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon name="sparkles" size={13} color="var(--purple)"/></div>
           <div style={{
             position: 'absolute', top: -2, right: -2,
             width: 8, height: 8, borderRadius: '50%',
-            background: '#B44CFF',
-            boxShadow: '0 0 6px rgba(180,76,255,0.6)',
-          }} />
-        )}
-      </div>
-      <div style={{ flex: 1 }}>
-        <p style={{ fontSize: 12.5, color: seen ? 'var(--muted)' : 'var(--muted2)', lineHeight: 1.55, margin: 0 }}>{data.text || 'No insight available'}</p>
-        {cfg.variant !== 'inline' && data.action && (
-          <button style={{ marginTop: 8, fontSize: 11.5, color: 'var(--cyan)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'var(--font-body)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-            {data.action} <Icon name="arrowRight" size={11} color="var(--cyan)" />
-          </button>
-        )}
+            background: 'var(--cyan)',
+            border: '1.5px solid var(--bg)',
+            animation: 'pulse-dot 2s ease infinite',
+          }}/>
+        </div>
+        <div style={{ flex: 1 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
+            <span style={{ fontSize: 12.5, fontWeight: 600, fontFamily: 'var(--font-head)', color: 'var(--text)' }}>{data.title || 'AI Insight'}</span>
+            <span style={{ fontSize: 10, fontFamily: 'var(--font-mono)', background: 'rgba(180,76,255,0.15)', color: 'var(--purple)', border: '1px solid rgba(180,76,255,0.25)', borderRadius: 4, padding: '1px 6px' }}>AI</span>
+          </div>
+          <p style={{ fontSize: 13, color: 'var(--muted2)', lineHeight: 1.55, margin: 0 }}>{data.body || data.text || 'No insight available'}</p>
+          {cfg.variant !== 'inline' && data.action && (
+            <button style={{ marginTop: 12, padding: '6px 14px', borderRadius: 8, background: 'rgba(0,229,255,0.1)', border: '1px solid rgba(0,229,255,0.25)', color: 'var(--cyan)', fontSize: 12.5, fontWeight: 500, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              {data.action} <Icon name="arrowRight" size={12} color="var(--cyan)"/>
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
