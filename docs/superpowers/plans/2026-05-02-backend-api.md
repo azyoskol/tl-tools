@@ -4,10 +4,9 @@
 
 **Goal:** Build a complete Go backend in `cmd/api/` that replaces all mock data from `ui_new/src/api/mockApi.ts`, preserving 100% API contract compatibility so the frontend requires zero changes.
 
-**Architecture:** 3-layer: Handler (HTTP shell only) → Biz (business logic + cache + errgroup) → Repo (pgx SQL, no ORM). Auth in its own package (JWT RS256 + optional OIDC). Seed system replicates all mockApi data using Park-Miller PRNG with seed=42.
+**Architecture:** 3‑layer clean architecture – Handler (HTTP shell) → Biz (business logic, per‑operation Redis cache, errgroup) → Repo (pgx SQL, no ORM). Auth lives in its own package, now supporting both local JWT and optional OIDC. Seed system reproduces all mock data deterministically using a Park‑Miller PRNG with seed = 42.
 
-**Tech Stack:** Go 1.26, chi/v5, pgx/v5 (PostgreSQL 16 + TimescaleDB), go-redis/v9, golang-jwt/jwt/v5, go-oidc/v3, json-iterator/go, zerolog, validator/v10, bcrypt.
-
+**Tech Stack:** Go 1.26, chi/v5, pgx/v5 (PostgreSQL 16 + TimescaleDB), go‑redis/v9, golang‑jwt/jwt/v5, coreos/go‑oidc/v3, json‑iterator/go, zerolog, validator/v10, bcrypt, testify, testcontainers‑go, Docker.
 ---
 
 ## Task 1: Add Missing Go Dependencies
