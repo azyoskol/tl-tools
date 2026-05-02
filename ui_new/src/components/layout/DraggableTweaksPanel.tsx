@@ -31,8 +31,8 @@ export const DraggableTweaksPanel = () => {
     }
   });
 
-  const panelRef = useRef(null);
-  const dragRef = useRef(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const dragRef = useRef<HTMLDivElement>(null);
   const isDragging = useRef(false);
   const dragStart = useRef({ x: 0, y: 0 });
   const startPos = useRef({ x: 0, y: 0 });
@@ -54,12 +54,13 @@ export const DraggableTweaksPanel = () => {
 
   // Clamp position to viewport
   const clampPosition = () => {
-    if (!panelRef.current) return;
-    const w = panelRef.current.offsetWidth;
-    const h = panelRef.current.offsetHeight;
+    const el = panelRef.current;
+    if (!el) return;
+    const w = el.offsetWidth;
+    const h = el.offsetHeight;
     const maxRight = Math.max(PAD, window.innerWidth - w - PAD);
     const maxBottom = Math.max(PAD, window.innerHeight - h - PAD);
-    setPosition(prev => ({
+    setPosition((prev: { x: number; y: number }) => ({
       x: Math.min(maxRight, Math.max(PAD, prev.x)),
       y: Math.min(maxBottom, Math.max(PAD, prev.y)),
     }));
@@ -73,8 +74,8 @@ export const DraggableTweaksPanel = () => {
     }
   }, [isOpen]);
 
-  const handleDragStart = (e) => {
-    if (e.target.closest('.twk-no-drag')) return;
+  const handleDragStart = (e: React.MouseEvent) => {
+    if ((e.target as HTMLElement).closest('.twk-no-drag')) return;
     isDragging.current = true;
     dragStart.current = { x: e.clientX, y: e.clientY };
     startPos.current = { x: position.x, y: position.y };
@@ -83,16 +84,17 @@ export const DraggableTweaksPanel = () => {
     window.addEventListener('mouseup', handleDragEnd);
   };
 
-  const handleDragMove = (e) => {
+  const handleDragMove = (e: MouseEvent) => {
     if (!isDragging.current) return;
     const dx = dragStart.current.x - e.clientX;
     const dy = dragStart.current.y - e.clientY;
     let newX = startPos.current.x + dx;
     let newY = startPos.current.y + dy;
     // Clamp while dragging
-    if (panelRef.current) {
-      const w = panelRef.current.offsetWidth;
-      const h = panelRef.current.offsetHeight;
+    const el = panelRef.current;
+    if (el) {
+      const w = el.offsetWidth;
+      const h = el.offsetHeight;
       newX = Math.min(window.innerWidth - w - PAD, Math.max(PAD, newX));
       newY = Math.min(window.innerHeight - h - PAD, Math.max(PAD, newY));
     }
@@ -107,7 +109,7 @@ export const DraggableTweaksPanel = () => {
     clampPosition();
   };
 
-  const setTweak = (key, value) => setTweaks(prev => ({ ...prev, [key]: value }));
+  const setTweak = (key: string, value: unknown) => setTweaks((prev: Record<string, unknown>) => ({ ...prev, [key]: value }));
 
   if (!isOpen) {
     return (

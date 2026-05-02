@@ -88,14 +88,14 @@ export const MetricsScreen = () => {
   const [expandedGroups, setExpandedGroups] = useState(['dora', 'ci']);
   const [breakdownView, setBreakdownView] = useState('table'); // 'table' or 'leaderboard'
 
-  const toggleGroup = (id) =>
+  const toggleGroup = (id: string) =>
     setExpandedGroups((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
     );
 
   const allMetrics = METRIC_TREE.flatMap((g) => g.children || []);
   const currentMetric = allMetrics.find((m) => m.id === selected) || allMetrics[0];
-  const data = METRIC_DATA[selected] || [];
+  const data = METRIC_DATA[selected as keyof typeof METRIC_DATA] || [];
   const compareData = METRIC_COMPARE[selected] || [];
 
   // slice data based on timeRange
@@ -290,7 +290,7 @@ export const MetricsScreen = () => {
           Click a metric to drill in
         </span>
       </div>
-      <DORAPanel onSelect={setSelected} selected={selected} />
+      <DORAPanel onSelect={setSelected} selected={[selected]} />
     </>
   )}
 
@@ -495,8 +495,8 @@ export const MetricsScreen = () => {
                         ['Data', '—', '44h'],
                         ],
                     };
-                    const data = rows[selected] || rows['deploy-freq'];
-                    return data.map(r => ({ name: r[0], value: parseFloat(r[2]) }));
+                    const data = rows[selected as keyof typeof rows] || rows['deploy-freq'];
+                    return data.map((r: string[]) => ({ name: r[0], value: parseFloat(r[2]) }));
                     })()}
                     unit={currentMetric?.unit === 'deploys/day' ? '/day' : currentMetric?.unit}
                     color={currentMetric?.color || '#00E5FF'}

@@ -1,4 +1,3 @@
-// @ts-nocheck
 // src/features/dashboardWizard/components/PreviewPanel.tsx
 import React from 'react';
 import { Icon } from '../../../components/shared/Icon';
@@ -65,7 +64,7 @@ export const PreviewPanel: React.FC<PreviewPanelProps> = ({ template, widgets, w
 
             {/* Stat‑карточки (deploy-freq, ci-pass-rate, lead-time, mttr-trend, velocity, burndown) */}
             {widgets.filter(id => ['deploy-freq','ci-pass-rate','lead-time','mttr-trend','velocity','burndown'].includes(id)).map(id => {
-              const cfgs = {
+              const cfgs: Record<string, { icon: string; color: string; label: string; val: string; unit: string; spark: number[] }> = {
                 'deploy-freq':  { icon:'zap',       color:'#00E5FF', label:'Deploy Frequency', val:'4.2', unit:'/day', spark: sparkA },
                 'ci-pass-rate': { icon:'activity',  color:'#00C853', label:'CI Pass Rate',     val:'92',  unit:'%',   spark: sparkB },
                 'lead-time':    { icon:'clock',     color:'#B44CFF', label:'Lead Time',        val:'22',  unit:'hrs', spark: sparkC },
@@ -94,7 +93,7 @@ export const PreviewPanel: React.FC<PreviewPanelProps> = ({ template, widgets, w
             {hasWidget('team-heatmap') && (
               <div style={{ gridColumn: widgetSizes['team-heatmap'] !== 'sm' ? 'span 2' : 'span 1', background: 'var(--glass)', border: '1px solid var(--border)', borderRadius: 10, padding: '12px 14px' }}>
                 <div style={{ fontSize: 11, color: 'var(--muted)', marginBottom: 8 }}>Team Activity Heatmap</div>
-                <Heatmap data={heatData} rows={3} cols={16} labelRows={['Platform','Backend','Mobile']} color="var(--cyan)" cellSize={14} gap={3} />
+                <Heatmap data={heatData} rows={3} cols={16} labelRows={['Platform','Backend','Mobile']} labelCols={[]} title="" color="var(--cyan)" cellSize={14} gap={3} />
               </div>
             )}
 

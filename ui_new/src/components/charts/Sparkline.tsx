@@ -1,9 +1,14 @@
 import React from 'react';
-export const Sparkline = ({ data, color = '#00E5FF', height = 36 }) => {
+interface SparklineProps {
+  data: number[];
+  color?: string;
+  height?: number;
+}
+export const Sparkline: React.FC<SparklineProps> = ({ data, color = '#00E5FF', height = 36 }) => {
   const VW = 200, VH = height;
   const min = Math.min(...data), max = Math.max(...data);
   const range = max - min || 1;
-  const pts = data.map((v, i) => {
+  const pts = data.map((v: number, i: number) => {
     const x = (i / (data.length - 1)) * VW;
     const y = VH - ((v - min) / range) * (VH - 4) - 2;
     return `${x},${y}`;

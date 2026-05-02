@@ -1,6 +1,19 @@
 import React from 'react';
 
-const bezierPath = (pts, sm = 0.16) => {
+interface AreaChartProps {
+  data: number[];
+  compare?: number[] | null;
+  labels?: string[];
+  color?: string;
+  compareColor?: string;
+  height?: number;
+  showGrid?: boolean;
+  showAxis?: boolean;
+  title?: string;
+  subtitle?: string;
+}
+
+const bezierPath = (pts: number[][], sm = 0.16) => {
   if (pts.length < 2) return '';
   let d = `M${pts[0][0].toFixed(1)},${pts[0][1].toFixed(1)}`;
   for (let i = 1; i < pts.length; i++) {
@@ -11,17 +24,17 @@ const bezierPath = (pts, sm = 0.16) => {
   return d;
 };
 
-const scalePoints = (data, w, h, pl = 0, pr = 0, pt = 0, pb = 0) => {
+const scalePoints = (data: number[], w: number, h: number, pl = 0, pr = 0, pt = 0, pb = 0): number[][] => {
   if (!data || data.length === 0) return [];
   const min = Math.min(...data), max = Math.max(...data);
   const range = max - min || 1;
-  return data.map((v, i) => [
+  return data.map((v: number, i: number) => [
     pl + (i / (data.length - 1)) * (w - pl - pr),
     pt + (1 - (v - min) / range) * (h - pt - pb),
   ]);
 };
 
-export const AreaChart = ({
+export const AreaChart: React.FC<AreaChartProps> = ({
   data,
   compare = null,
   labels = [],
@@ -52,14 +65,14 @@ export const AreaChart = ({
     ? scalePoints(compare, cw, ch, 0, 0, 0, 0).map(([x, y]) => [x + pl, y + pt])
     : null;
 
-  const linePath = (ps) => bezierPath(ps);
-  const areaPath = (ps) => {
+  const linePath = (ps: number[][]) => bezierPath(ps);
+  const areaPath = (ps: number[][]) => {
     if (ps.length < 2) return '';
     return linePath(ps) + ` L${ps[ps.length-1][0].toFixed(1)},${(pt+ch).toFixed(1)} L${ps[0][0].toFixed(1)},${(pt+ch).toFixed(1)} Z`;
   };
 
   const yMin = Math.min(...data), yMax = Math.max(...data);
-  const fmtY = (v) => v >= 1000 ? `${(v/1000).toFixed(1)}k` : Math.round(v);
+  const fmtY = (v: number) => v >= 1000 ? `${(v/1000).toFixed(1)}k` : Math.round(v);
   const gridCount = 4;
 
   return (

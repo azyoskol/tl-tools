@@ -1,9 +1,19 @@
-// @ts-nocheck
-// src/features/dashboardWizard/components/MiniWidget.jsx
+// src/features/dashboardWizard/components/MiniWidget.tsx
 import React from 'react';
 import { Icon } from '../../../components/shared/Icon';
 
-const widgetMeta = {
+interface WidgetMeta {
+  icon: string;
+  label: string;
+  color: string;
+}
+
+interface MiniWidgetProps {
+  id: string;
+  onRemove: (id: string) => void;
+}
+
+const widgetMeta: Record<string, WidgetMeta> = {
   'dora-overview': { icon: 'zap', label: 'DORA Overview', color: '#00E5FF' },
   'deploy-freq':   { icon: 'zap', label: 'Deploy Frequency', color: '#00E5FF' },
   'lead-time':     { icon: 'clock', label: 'Lead Time', color: '#B44CFF' },
@@ -20,7 +30,7 @@ const widgetMeta = {
   'anomaly':       { icon: 'brain', label: 'Anomaly Detector', color: '#FF9100' },
 };
 
-export const MiniWidget = ({ id, onRemove }) => {
+export const MiniWidget: React.FC<MiniWidgetProps> = ({ id, onRemove }) => {
   const meta = widgetMeta[id] || { icon: 'layers', label: id, color: '#6B7A9A' };
   return (
     <div style={{

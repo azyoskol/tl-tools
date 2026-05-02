@@ -1,4 +1,3 @@
-// @ts-nocheck
 // src/features/dashboardWizard/DashboardWizardScreen.tsx
 import React, { useState } from 'react';
 import { Icon } from '../../components/shared/Icon';
@@ -207,7 +206,7 @@ export const DashboardWizardScreen: React.FC<WizardProps> = ({ onSave, onCancel 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {filteredWidgets.map(w => {
                   const sel = widgets.includes(w.id);
-                  const catColors = { DORA: '#00E5FF', 'CI/CD': '#00C853', PR: '#B44CFF', Sprint: '#FF9100', Team: '#00E5FF', AI: '#B44CFF' };
+                  const catColors: Record<string, string> = { DORA: '#00E5FF', 'CI/CD': '#00C853', PR: '#B44CFF', Sprint: '#FF9100', Team: '#00E5FF', AI: '#B44CFF' };
                   const c = catColors[w.cat] || '#00E5FF';
                   return (
                     <div key={w.id} onClick={() => toggleWidget(w.id)} style={{
@@ -293,7 +292,7 @@ export const DashboardWizardScreen: React.FC<WizardProps> = ({ onSave, onCancel 
                     {widgets.map((id, idx) => {
                       const w = WIDGET_LIBRARY.find(x => x.id === id);
                       if (!w) return null;
-                      const catColors = { DORA: '#00E5FF', 'CI/CD': '#00C853', PR: '#B44CFF', Sprint: '#FF9100', Team: '#00E5FF', AI: '#B44CFF' };
+                      const catColors: Record<string, string> = { DORA: '#00E5FF', 'CI/CD': '#00C853', PR: '#B44CFF', Sprint: '#FF9100', Team: '#00E5FF', AI: '#B44CFF' };
                       const c = catColors[w.cat] || '#00E5FF';
                       const isLg = widgetSizes[id] === 'lg';
                       return (

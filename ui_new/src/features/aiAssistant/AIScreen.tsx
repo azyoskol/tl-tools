@@ -1,9 +1,13 @@
-// @ts-nocheck
+// src/features/aiAssistant/AIScreen.tsx
 import React, { useState, useRef, useEffect } from 'react';
 import { Icon } from '../../components/shared/Icon';
 
-// Simulate AI response (you can later replace with real API)
-const simulateAIResponse = async (userMessage) => {
+interface Message {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+const simulateAIResponse = async (userMessage: string): Promise<string> => {
   await new Promise(resolve => setTimeout(resolve, 800)); // fake latency
   const lower = userMessage.toLowerCase();
   if (lower.includes('ci') || lower.includes('build')) {
@@ -25,7 +29,7 @@ export const AIScreen = () => {
     { role: 'assistant', text: "Hi! I'm your Metraly AI assistant. Ask me anything about your engineering metrics, build trends, team health, or deployment patterns." },
   ]);
   const [isLoading, setIsLoading] = useState(false);
-  const messagesEndRef = useRef(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -51,7 +55,7 @@ export const AIScreen = () => {
     }
   };
 
-  const handleKeyPress = (e) => {
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       sendMessage();

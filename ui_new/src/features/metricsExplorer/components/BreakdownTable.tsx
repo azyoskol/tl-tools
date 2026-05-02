@@ -1,10 +1,14 @@
-// @ts-nocheck
+// src/features/metricsExplorer/components/BreakdownTable.tsx
 import React from 'react';
 import { DataTable } from '../../../components/ui/DataTable';
 import { DORABadge } from '../../../components/ui/DORABadge';
 
-export const BreakdownTable = ({ metricId }) => {
-  const rows = {
+interface BreakdownTableProps {
+  metricId?: string;
+}
+
+export const BreakdownTable: React.FC<BreakdownTableProps> = ({ metricId }) => {
+  const rows: Record<string, string[][]> = {
     'deploy-freq': [
       ['api-gateway',   'Platform', '6.2/day', 'Elite', '+1.4'],
       ['frontend-app',  'Frontend', '3.8/day', 'Elite', '+0.6'],
@@ -20,11 +24,11 @@ export const BreakdownTable = ({ metricId }) => {
       ['Data',     '—', '44h', 'High',  '−5h'],
     ],
   };
-  const data = rows[metricId] || rows['deploy-freq'];
+  const data = rows[metricId || 'deploy-freq'] || [];
   return (
     <DataTable
       columns={['Repository / Team', 'Team', 'Value', 'DORA Level', 'vs prev']}
-      rows={data.map(r => [
+      rows={data.map((r: string[]) => [
         r[0], r[1],
         <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--text)' }}>{r[2]}</span>,
         <DORABadge level={r[3]}/>,

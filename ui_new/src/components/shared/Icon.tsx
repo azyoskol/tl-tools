@@ -1,6 +1,6 @@
 import React from 'react';
 
-const iconPaths = {
+const iconPaths: Record<string, React.ReactNode> = {
   zap: <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>,
   home: <><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></>,
   bar2: <><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></>,
@@ -47,7 +47,14 @@ const iconPaths = {
   ),
 };
 
-export const Icon = ({ name, size = 16, color = 'currentColor', style = {} }) => (
+interface IconProps {
+  name: string;
+  size?: number;
+  color?: string;
+  style?: React.CSSProperties;
+}
+
+export const Icon: React.FC<IconProps> = ({ name, size = 16, color = 'currentColor', style = {} }) => (
   <svg
     width={size}
     height={size}

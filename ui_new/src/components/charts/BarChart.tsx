@@ -1,5 +1,15 @@
 import React from 'react';
-export const BarChart = ({ labels, values, compare, color = '#00E5FF', compareColor = '#B44CFF', height = 140, horizontal = false, title }) => {
+interface BarChartProps {
+  labels: string[];
+  values: number[];
+  compare?: number[] | null;
+  color?: string;
+  compareColor?: string;
+  height?: number;
+  horizontal?: boolean;
+  title?: string;
+}
+export const BarChart: React.FC<BarChartProps> = ({ labels, values, compare, color = '#00E5FF', compareColor = '#B44CFF', height = 140, horizontal = false, title }) => {
   const VW = 480, VH = height;
   const pl = horizontal ? 80 : 42, pr = 10, pt = 10, pb = horizontal ? 10 : 28;
   const cw = VW - pl - pr, ch = VH - pt - pb;
@@ -14,7 +24,7 @@ export const BarChart = ({ labels, values, compare, color = '#00E5FF', compareCo
           const y = pt + (i / 3) * ch;
           return <line key={i} x1={pl} y1={y} x2={pl+cw} y2={y} stroke="rgba(255,255,255,0.05)" strokeWidth="1" />;
         })}
-        {labels.map((label, i) => {
+        {labels.map((label: string, i: number) => {
           const v = values[i], cv = compare ? compare[i] : null;
           const ratio = v / maxVal;
           if (horizontal) {

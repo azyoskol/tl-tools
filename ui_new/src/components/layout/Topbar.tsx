@@ -2,11 +2,18 @@ import React from 'react';
 import { Icon } from '../shared/Icon';
 import { useTweaks } from '../../context/TweaksContext';
 
-export const Topbar = ({ title, subtitle }) => {
+interface TopbarProps {
+  title?: string;
+  subtitle?: string;
+}
+
+export const Topbar: React.FC<TopbarProps> = ({ title, subtitle }) => {
   const { tweaks } = useTweaks();
-  const density = tweaks.density;
-  const height = { compact: 48, comfortable: 56, spacious: 64 }[density];
-  const paddingX  = { compact: 16, comfortable: 24, spacious: 32 }[density];
+  const density = tweaks.density as 'compact' | 'comfortable' | 'spacious';
+  const heightMap = { compact: 48, comfortable: 56, spacious: 64 };
+  const paddingMap = { compact: 16, comfortable: 24, spacious: 32 };
+  const height = heightMap[density];
+  const paddingX = paddingMap[density];
 
   return (
     <header style={{

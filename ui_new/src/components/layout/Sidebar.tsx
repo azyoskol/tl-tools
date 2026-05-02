@@ -3,7 +3,12 @@ import React, { useState, useEffect } from 'react';
 import { Icon } from '../shared/Icon';
 import { useTweaks } from '../../context/TweaksContext';
 
-export const Sidebar = ({ active, onNav }) => {
+interface SidebarProps {
+  active?: string;
+  onNav?: (id: string) => void;
+}
+
+export const Sidebar: React.FC<SidebarProps> = ({ active = '', onNav }) => {
   const { tweaks } = useTweaks();
   const collapsed = tweaks.sidebarCollapsed;
   const density = tweaks.density;
@@ -14,7 +19,9 @@ export const Sidebar = ({ active, onNav }) => {
     comfortable: { section: '12px 10px', item: '8px 10px' },
     spacious: { section: '16px 12px', item: '10px 12px' },
   };
-  const pad = densityPadding[density] || densityPadding.comfortable;
+  const densityKey = density as 'compact' | 'comfortable' | 'spacious';
+  const densityPad = densityPadding[densityKey] || densityPadding.comfortable;
+  const pad = { section: densityPad.section, item: densityPad.item };
 
   // Load pinned from localStorage (same as before)
   const [pinned, setPinned] = useState(() => {
@@ -31,9 +38,9 @@ export const Sidebar = ({ active, onNav }) => {
     localStorage.setItem('metraly-pinned', JSON.stringify(pinned));
   }, [pinned]);
 
-  const togglePin = (id, e) => {
+  const togglePin = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    setPinned(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+    setPinned((prev: string[]) => prev.includes(id) ? prev.filter((x: string) => x !== id) : [...prev, id]);
   };
 
   const sections = [
@@ -59,13 +66,19 @@ export const Sidebar = ({ active, onNav }) => {
     ]},
   ];
 
-  const allDashboardItems = sections
-    .find(s => s.label === 'Dashboards')
-    .items.filter(item => item.id !== 'dash-wizard');
+  const dashboardsSection = sections.find(s => s.label === 'Dashboards');
+  const allDashboardItems = dashboardsSection?.items.filter(item => item.id !== 'dash-wizard') || [];
 
-  const pinnedItems = pinned
-    .map(id => allDashboardItems.find(it => it.id === id))
-    .filter(Boolean);
+  interface SidebarItem {
+  id: string;
+  icon: string;
+  label: string;
+  accent?: boolean;
+}
+
+const pinnedItems: SidebarItem[] = pinned
+    .map((id: string) => allDashboardItems.find((it: SidebarItem) => it.id === id))
+    .filter((item: SidebarItem | undefined): item is SidebarItem => item !== undefined);
 
   const unpinnedItems = allDashboardItems.filter(item => !pinned.includes(item.id));
 
@@ -131,7 +144,7 @@ export const Sidebar = ({ active, onNav }) => {
           <div style={{ marginBottom: 16 }}>
             <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.08em', color: 'var(--muted)', textTransform: 'uppercase', padding: '0 8px', marginBottom: 4 }}>Pinned</div>
             {pinnedItems.map(item => (
-              <button key={item.id} onClick={() => onNav(item.id)} style={{
+              <button key={item.id} onClick={() => onNav?.(item.id)} style={{
                 width: '100%', display: 'flex', alignItems: 'center', gap: 9, padding: pad.item,
                 borderRadius: 8, border: 'none', cursor: 'pointer', marginBottom: 2,
                 background: active === item.id ? 'rgba(0,229,255,0.1)' : 'transparent',
@@ -160,7 +173,7 @@ export const Sidebar = ({ active, onNav }) => {
                 {unpinnedItems.map(item => {
                   const isActive = active === item.id;
                   return (
-                    <button key={item.id} onClick={() => onNav(item.id)} style={{
+<button key={item.id} onClick={() => onNav?.(item.id)} style={{
                       width: '100%', display: 'flex', alignItems: 'center', gap: collapsed ? 0 : 9,
                       justifyContent: collapsed ? 'center' : 'flex-start',
                       padding: collapsed ? '10px 0' : pad.item,
@@ -180,7 +193,7 @@ export const Sidebar = ({ active, onNav }) => {
                   );
                 })}
                 {newDashboardItem && !collapsed && (
-                  <button onClick={() => onNav(newDashboardItem.id)} style={{
+                  <button onClick={() => onNav?.(newDashboardItem.id)} style={{
                     width: '100%', display: 'flex', alignItems: 'center', gap: 9, padding: pad.item,
                     borderRadius: 8, border: '1px dashed rgba(0,229,255,0.2)', cursor: 'pointer', marginTop: 4,
                     background: active === newDashboardItem.id ? 'rgba(0,229,255,0.1)' : 'rgba(0,229,255,0.06)',
@@ -201,7 +214,7 @@ export const Sidebar = ({ active, onNav }) => {
               {sec.items.map(item => {
                 const isActive = active === item.id;
                 return (
-                  <button key={item.id} onClick={() => onNav(item.id)} style={{
+                  <button key={item.id} onClick={() => onNav?.(item.id)} style={{
                     width: '100%', display: 'flex', alignItems: 'center', gap: collapsed ? 0 : 9,
                     justifyContent: collapsed ? 'center' : 'flex-start',
                     padding: collapsed ? '10px 0' : pad.item,

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState } from 'react';
 import { Icon } from '../../components/shared/Icon';
 
@@ -19,7 +18,7 @@ const filters = ['All', 'Sources', 'Exporters', 'AI', 'Alerts'];
 export const PluginScreen = () => {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('All');
-  const [hoveredIndex, setHoveredIndex] = useState(null);
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   const filteredPlugins = plugins.filter(p => {
     const matchesFilter = filter === 'All' || p.cat === filter;

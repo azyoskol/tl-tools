@@ -1,10 +1,27 @@
-// @ts-nocheck
+// src/features/metricsExplorer/components/DORAPanel.tsx
 import React from 'react';
 import { Icon } from '../../../components/shared/Icon';
 import { DORABadge } from '../../../components/ui/DORABadge';
 
-export const DORAPanel = ({ onSelect, selected }) => {
-  const cards = [
+interface DORACard {
+  id: string;
+  label: string;
+  value: string;
+  delta: string;
+  good: boolean;
+  level: string;
+  color: string;
+  icon: string;
+  note: string;
+}
+
+interface DORAPanelProps {
+  onSelect?: (id: string) => void;
+  selected?: string[];
+}
+
+export const DORAPanel: React.FC<DORAPanelProps> = ({ onSelect, selected }) => {
+  const cards: DORACard[] = [
     { id: 'deploy-freq', label: 'Deployment Frequency', value: '4.2/day', delta: '+0.8', good: true, level: 'Elite', color: '#00E5FF', icon: 'zap', note: 'On-demand (multiple/day)' },
     { id: 'lead-time',   label: 'Lead Time for Changes', value: '38h',    delta: '−6h',  good: true, level: 'High',  color: '#B44CFF', icon: 'clock', note: '1 day – 1 week range' },
     { id: 'cfr',         label: 'Change Failure Rate',   value: '3.2%',   delta: '−1.1%',good: true, level: 'Elite', color: '#FF9100', icon: 'alertTri', note: '0–15% is Elite' },
@@ -13,9 +30,9 @@ export const DORAPanel = ({ onSelect, selected }) => {
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 20 }}>
       {cards.map((c, i) => (
-        <div key={c.id} className={`fade-up-${i+1}`} onClick={() => onSelect(c.id)} style={{
-          background: selected === c.id ? 'var(--glass2)' : 'var(--glass)',
-          border: selected === c.id ? `1px solid ${c.color}55` : '1px solid var(--border)',
+        <div key={c.id} className={`fade-up-${i+1}`} onClick={() => onSelect?.(c.id)} style={{
+          background: selected?.includes(c.id) ? 'var(--glass2)' : 'var(--glass)',
+          border: selected?.includes(c.id) ? `1px solid ${c.color}55` : '1px solid var(--border)',
           borderRadius: 12, padding: '14px 16px', cursor: 'pointer', transition: 'all 0.18s ease',
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>

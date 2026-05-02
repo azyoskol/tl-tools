@@ -1,9 +1,17 @@
-// @ts-nocheck
-// src/features/onboarding/WizardScreen.jsx
+// src/features/onboarding/WizardScreen.tsx
 import React, { useState } from 'react';
 import { Icon } from '../../components/shared/Icon';
 
-const sources = [
+interface Source {
+  id: string;
+  icon: string;
+  name: string;
+  desc: string;
+  color: string;
+  cli: string;
+}
+
+const sources: Source[] = [
   { id: 'github', icon: 'github', name: 'GitHub', desc: 'Repos, PRs, CI workflows', color: '#E8EDF5', cli: 'github --org my-org' },
   { id: 'jira',   icon: 'jira',   name: 'Jira',   desc: 'Issues, sprints, backlogs', color: '#2684FF', cli: 'jira --url https://your-domain.atlassian.net' },
   { id: 'gitlab', icon: 'gitlab', name: 'GitLab', desc: 'Merge requests & pipelines', color: '#FC6D26', cli: 'gitlab --host https://gitlab.com' },
@@ -14,8 +22,12 @@ const sources = [
 
 const steps = ['Select Sources', 'Authenticate', 'Configure', 'Review'];
 
+interface StepIndicatorProps {
+  step: number;
+}
+
 // ---------- Step indicator with animated lines ----------
-const StepIndicator = ({ step }) => (
+const StepIndicator: React.FC<StepIndicatorProps> = ({ step }) => (
   <div style={{ width: '100%', maxWidth: 680, marginBottom: 40, display: 'flex', alignItems: 'center' }}>
     {steps.map((s, i) => (
       <React.Fragment key={i}>
@@ -57,7 +69,12 @@ const StepIndicator = ({ step }) => (
 );
 
 // ---------- Step 0: Source selection ----------
-const SourceSelectionStep = ({ selected, setSelected }) => (
+interface StepProps {
+  selected: string[];
+  setSelected: React.Dispatch<React.SetStateAction<string[]>>;
+}
+
+const SourceSelectionStep: React.FC<StepProps> = ({ selected, setSelected }) => (
   <div className="wizard-step" style={{ width: '100%', maxWidth: 680, background: 'var(--glass)', border: '1px solid var(--border)', borderRadius: 18, overflow: 'hidden' }}>
     <div style={{ padding: '24px 28px', borderBottom: '1px solid var(--border)' }}>
       <div style={{ fontFamily: 'var(--font-head)', fontWeight: 700, fontSize: 20, color: 'var(--text)', marginBottom: 4 }}>Choose your data sources</div>
@@ -100,7 +117,14 @@ const SourceSelectionStep = ({ selected, setSelected }) => (
 );
 
 // ---------- Step 1: Authentication ----------
-const AuthenticateStep = ({ selected, connected, setConnected }) => {
+interface AuthStepProps {
+  selected: string[];
+  setSelected?: React.Dispatch<React.SetStateAction<string[]>>;
+  connected: Record<string, boolean>;
+  setConnected: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
+}
+
+const AuthenticateStep: React.FC<AuthStepProps> = ({ selected, connected, setConnected }) => {
   const selectedSources = sources.filter(s => selected.includes(s.id));
   const firstSource = selectedSources[0] || sources[0];
   const allConnected = selectedSources.every(s => connected[s.id]);
@@ -171,7 +195,7 @@ const ConfigureStep = () => {
             <span style={{ fontSize: 13.5, color: 'var(--text)' }}>{row.label}</span>
             {row.type === 'toggle' ? (
               <button
-                onClick={() => row.setter(!row.value)}
+                onClick={() => row.setter(Boolean(row.value))}
                 style={{
                   width: 38, height: 21, borderRadius: 12, background: row.value ? 'var(--cyan)' : 'rgba(255,255,255,0.15)',
                   border: 'none', cursor: 'pointer', position: 'relative', transition: 'background 0.2s',
@@ -181,14 +205,20 @@ const ConfigureStep = () => {
               </button>
             ) : (
               <select
-                value={row.value}
-                onChange={e => row.setter(e.target.value)}
+                value={String(row.value)}
+                onChange={e => {
+                  if (typeof row.value === 'boolean') {
+                    row.setter(e.target.value === 'true');
+                  } else {
+                    row.setter(e.target.value);
+                  }
+                }}
                 style={{
                   background: 'var(--glass2)', border: '1px solid var(--border)', borderRadius: 7, padding: '5px 10px',
                   color: 'var(--cyan)', fontSize: 13, fontFamily: 'var(--font-mono)', cursor: 'pointer',
                 }}
               >
-                {row.options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                {row.options?.map(opt => <option key={opt} value={opt}>{opt}</option>)}
               </select>
             )}
           </div>
@@ -199,7 +229,7 @@ const ConfigureStep = () => {
 };
 
 // ---------- Step 3: Review ----------
-const ReviewStep = ({ selected }) => {
+const ReviewStep: React.FC<{ selected: string[] }> = ({ selected }) => {
   const selectedSources = sources.filter(s => selected.includes(s.id));
   return (
     <div className="wizard-step" style={{ width: '100%', maxWidth: 680, background: 'var(--glass)', border: '1px solid var(--border)', borderRadius: 18, overflow: 'hidden' }}>
@@ -233,10 +263,10 @@ const ReviewStep = ({ selected }) => {
 };
 
 // ---------- Main Wizard Screen ----------
-export const WizardScreen = () => {
-  const [step, setStep] = useState(0);
-  const [selected, setSelected] = useState(['github']);
-  const [connected, setConnected] = useState({});
+export const WizardScreen: React.FC = () => {
+  const [step, setStep] = useState<number>(0);
+  const [selected, setSelected] = useState<string[]>(['github']);
+  const [connected, setConnected] = useState<Record<string, boolean>>({});
 
   const renderStepContent = () => {
     switch (step) {

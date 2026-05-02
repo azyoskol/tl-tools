@@ -1,5 +1,16 @@
 import React from 'react';
-export const Heatmap = ({ data, rows = 7, cols = 16, color = '#00E5FF', labelRows, labelCols, title, cellSize = 14, gap = 3 }) => {
+interface HeatmapProps {
+  data?: number[][];
+  rows?: number;
+  cols?: number;
+  color?: string;
+  labelRows?: string[];
+  labelCols?: string[];
+  title?: string;
+  cellSize?: number;
+  gap?: number;
+}
+export const Heatmap: React.FC<HeatmapProps> = ({ data, rows = 7, cols = 16, color = '#00E5FF', labelRows, labelCols, title, cellSize = 14, gap = 3 }) => {
   const levels = ['rgba(255,255,255,0.04)', `${color}30`, `${color}55`, `${color}88`, `${color}bb`, color];
   return (
     <div style={{ width: '100%' }}>
@@ -7,7 +18,7 @@ export const Heatmap = ({ data, rows = 7, cols = 16, color = '#00E5FF', labelRow
       <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
         {labelRows && (
           <div style={{ display: 'flex', flexDirection: 'column', gap, paddingTop: labelCols ? 20 : 0 }}>
-            {labelRows.map((l,i) => <div key={i} style={{ height: cellSize, display: 'flex', alignItems: 'center', fontSize: 9.5, color: 'var(--muted)', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap', paddingRight: 4 }}>{l}</div>)}
+            {labelRows?.map((l: string, i: number) => <div key={i} style={{ height: cellSize, display: 'flex', alignItems: 'center', fontSize: 9.5, color: 'var(--muted)', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap', paddingRight: 4 }}>{l}</div>)}
           </div>
         )}
         <div>
