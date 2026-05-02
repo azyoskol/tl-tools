@@ -345,6 +345,8 @@ function generateLayout(widgets: DashboardWidgetInstance[]): WidgetLayout[] {
     'anomaly-detector': 4,
     'health-gauge': 3,
     'compare-bar-chart': 6,
+    'section-header': 12,
+    'recent-activity': 12,
   };
 
   const heightByType: Record<string, number> = {
@@ -359,6 +361,8 @@ function generateLayout(widgets: DashboardWidgetInstance[]): WidgetLayout[] {
     'anomaly-detector': 1,
     'health-gauge': 1,
     'compare-bar-chart': 2,
+    'section-header': 1,
+    'recent-activity': 4,
   };
 
   for (let i = 0; i < widgets.length; i++) {
@@ -475,10 +479,14 @@ function initDashboards() {
     { instanceId: "overview-stat-2", widgetType: "stat-card", config: { type: "stat-card", metricId: "deploy-freq", showSparkline: true, colorKey: "success" } as StatCardConfig },
     { instanceId: "overview-stat-3", widgetType: "stat-card", config: { type: "stat-card", metricId: "lead-time", showSparkline: true, colorKey: "purple" } as StatCardConfig },
     { instanceId: "overview-stat-4", widgetType: "stat-card", config: { type: "stat-card", metricId: "cfr", showSparkline: true, colorKey: "warning" } as StatCardConfig },
+    // Section header for AI Insights
+    { instanceId: "overview-sh-ai", widgetType: "section-header", config: { type: "section-header", title: "AI Insights", rightText: "Updated 2 min ago" } as any },
     // Row 2: AI Insights
     { instanceId: "overview-ai-1", widgetType: "ai-insight", config: { type: "ai-insight", variant: "card", topicHint: "deployment frequency" } as AIInsightConfig },
     { instanceId: "overview-ai-2", widgetType: "ai-insight", config: { type: "ai-insight", variant: "card", topicHint: "PR review time" } as AIInsightConfig },
     { instanceId: "overview-ai-3", widgetType: "ai-insight", config: { type: "ai-insight", variant: "card", topicHint: "PR review time improving" } as AIInsightConfig },
+    // Recent Activity widget
+    { instanceId: "overview-activity", widgetType: "recent-activity", config: { type: "recent-activity", maxItems: 10 } as any },
   ];
   const overviewLayout = generateLayout(overviewWidgets);
   const overviewDash: Dashboard = {
@@ -1086,6 +1094,14 @@ export const mockApi = {
             },
           ],
         };
+        break;
+      case "recent-activity":
+        data = {
+          activities: generateRecentActivity(),
+        };
+        break;
+      case "section-header":
+        data = {};
         break;
       default:
         data = {};

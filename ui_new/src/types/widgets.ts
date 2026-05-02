@@ -84,6 +84,17 @@ export interface AnomalyDetectorConfig extends BaseWidgetConfig {
   watchMetrics: MetricId[];
 }
 
+export interface SectionHeaderConfig extends BaseWidgetConfig {
+  type: 'section-header';
+  title: string;
+  rightText?: string;
+}
+
+export interface RecentActivityConfig extends BaseWidgetConfig {
+  type: 'recent-activity';
+  maxItems?: number;
+}
+
 export type WidgetConfig =
   | MetricChartConfig
   | CompareBarChartConfig
@@ -95,6 +106,8 @@ export type WidgetConfig =
   | LeaderboardConfig
   | SprintBurndownConfig
   | AIInsightConfig
-  | AnomalyDetectorConfig;
+  | AnomalyDetectorConfig
+  | SectionHeaderConfig
+  | RecentActivityConfig;
 
 export type WidgetType = WidgetConfig['type'];

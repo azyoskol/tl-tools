@@ -411,6 +411,44 @@ const CompareBarChartWidget = ({ data }: { config: WidgetConfig; data?: any }) =
   );
 };
 
+const SectionHeaderWidget = ({ config }: { config: WidgetConfig }) => {
+  const cfg = config as any;
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4, marginTop: 4, width: '100%' }}>
+      <span style={{ fontFamily: 'var(--font-head)', fontWeight: 600, fontSize: 13, color: 'var(--text)' }}>{cfg.title || 'Section'}</span>
+      <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+      {cfg.rightText && <span style={{ fontSize: 11, color: 'var(--muted)', fontFamily: 'var(--font-mono)' }}>{cfg.rightText}</span>}
+    </div>
+  );
+};
+
+const RecentActivityWidget = ({ data }: { config: WidgetConfig; data?: any }) => {
+  if (!data || !data.activities || data.activities.length === 0) {
+    return <div style={{padding: 20, color: 'var(--muted)'}}>No recent activity</div>;
+  }
+  const activities = data.activities || [];
+  return (
+    <div style={{ width: '100%', height: '100%', boxSizing: 'border-box', background: 'var(--glass)', border: '1px solid var(--border)', borderRadius: 14, padding: '18px 20px', overflow: 'auto' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+        <span style={{ fontFamily: 'var(--font-head)', fontWeight: 600, fontSize: 13.5, color: 'var(--text)' }}>Recent Activity</span>
+        <button style={{ background: 'none', border: 'none', color: 'var(--cyan)', fontSize: 12, cursor: 'pointer' }}>View all →</button>
+      </div>
+      {activities.map((ev: any, i: number) => (
+        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '9px 0', borderTop: i > 0 ? '1px solid var(--border)' : 'none' }}>
+          <div style={{ width: 6, height: 6, borderRadius: '50%', background: ev.color || 'var(--cyan)', flexShrink: 0 }} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 13, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11.5, color: 'var(--muted2)', marginRight: 6 }}>{ev.actor}</span>
+              {ev.description}
+            </div>
+          </div>
+          <span style={{ fontSize: 11, color: 'var(--muted)', fontFamily: 'var(--font-mono)', flexShrink: 0 }}>{ev.relativeTime}</span>
+        </div>
+      ))}
+    </div>
+  );
+};
+
 export const widgetRegistry: Record<WidgetType, React.FC<{ config: WidgetConfig; data?: any }>> = {
   'metric-chart': MetricChartWidget,
   'stat-card': StatCardWidget,
@@ -423,4 +461,6 @@ export const widgetRegistry: Record<WidgetType, React.FC<{ config: WidgetConfig;
   'ai-insight': AIInsightWidget,
   'anomaly-detector': AnomalyDetectorWidget,
   'compare-bar-chart': CompareBarChartWidget,
+  'section-header': SectionHeaderWidget,
+  'recent-activity': RecentActivityWidget,
 };
