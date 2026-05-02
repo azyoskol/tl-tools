@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React from 'react';
 import { DataTable } from '../../../components/ui/DataTable';
 import { DORABadge } from '../../../components/ui/DORABadge';

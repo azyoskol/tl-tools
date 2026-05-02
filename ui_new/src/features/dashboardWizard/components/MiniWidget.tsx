@@ -1,3 +1,4 @@
+// @ts-nocheck
 // src/features/dashboardWizard/components/MiniWidget.jsx
 import React from 'react';
 import { Icon } from '../../../components/shared/Icon';

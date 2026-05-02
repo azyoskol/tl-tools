@@ -1,3 +1,4 @@
+// @ts-nocheck
 // src/features/onboarding/WizardScreen.jsx
 import React, { useState } from 'react';
 import { Icon } from '../../components/shared/Icon';

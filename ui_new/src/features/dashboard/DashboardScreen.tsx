@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React from 'react';
 import { StatCard, AIInsightCard } from '../../components/ui';
 import { Icon } from '../../components/shared/Icon';

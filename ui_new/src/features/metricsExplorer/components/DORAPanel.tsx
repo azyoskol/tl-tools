@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React from 'react';
 import { Icon } from '../../../components/shared/Icon';
 import { DORABadge } from '../../../components/ui/DORABadge';

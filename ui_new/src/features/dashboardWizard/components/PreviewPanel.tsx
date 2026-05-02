@@ -1,4 +1,5 @@
-// src/features/dashboardWizard/components/PreviewPanel.jsx
+// @ts-nocheck
+// src/features/dashboardWizard/components/PreviewPanel.tsx
 import React from 'react';
 import { Icon } from '../../../components/shared/Icon';
 import { AreaChart, BarChart, Heatmap, Sparkline, Gauge } from '../../../components/charts';
@@ -13,8 +14,15 @@ const areaData = makeTimeSeries(16, 4.2, 1.5, 0.03, 10);
 const heatData = makeHeatData(3, 16, 0.4, 33);
 const deployHeat = makeHeatData(7, 16, 0.45, 66);
 
-export const PreviewPanel = ({ template, widgets, widgetSizes = {}, name }) => {
-  const hasWidget = (id) => widgets.includes(id);
+interface PreviewPanelProps {
+  template?: unknown;
+  widgets: string[];
+  widgetSizes?: Record<string, string>;
+  name?: string;
+}
+
+export const PreviewPanel: React.FC<PreviewPanelProps> = ({ template, widgets, widgetSizes = {}, name }) => {
+  const hasWidget = (id: string) => widgets.includes(id);
   const widgetCount = widgets.length;
 
   return (

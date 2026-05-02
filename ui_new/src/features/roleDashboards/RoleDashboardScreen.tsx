@@ -1,11 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Icon } from '../../components/shared/Icon';
 import { DashboardRenderer } from '../../components/dashboard/DashboardRenderer';
-import { createMockCTODashboard } from '../../types/mocks/dashboards';
-import { createMockVPDashboard } from '../../types/mocks/dashboards';
-import { createMockTLDashboard } from '../../types/mocks/dashboards';
-import { createMockDevOpsDashboard } from '../../types/mocks/dashboards';
-import { createMockICDashboard } from '../../types/mocks/dashboards';
+import { createMockCTODashboard, createMockVPDashboard, createMockTLDashboard, createMockDevOpsDashboard, createMockICDashboard } from '../../types/mocks/dashboards';
 
 const ROLES = [
   { id: 'overview', label: 'Overview', icon: 'home', navId: 'dashboard' },
