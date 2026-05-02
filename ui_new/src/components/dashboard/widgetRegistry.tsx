@@ -32,9 +32,15 @@ const colorMap: Record<string, string> = {
   error: 'error',
 };
 
+const widgetStyle: React.CSSProperties = {
+  width: '100%',
+  height: '100%',
+  boxSizing: 'border-box',
+};
+
 const StatCardWidget = ({ config, data }: { config: WidgetConfig; data?: any }) => {
   const cfg = config as StatCardConfig;
-  if (!data) return <div>Loading...</div>;
+  if (!data) return <div style={{...widgetStyle, padding: 20}}>Loading...</div>;
 
   const icon = iconMap[cfg.metricId] || 'activity';
   const color = colorMap[cfg.colorKey] || 'cyan';
@@ -43,6 +49,7 @@ const StatCardWidget = ({ config, data }: { config: WidgetConfig; data?: any }) 
   const trendDir = data.delta?.startsWith('+') ? 'up' : data.delta?.startsWith('-') ? 'down' : 'neutral';
 
   return (
+    <div style={widgetStyle}>
     <StatCard
       icon={icon}
       label={cfg.metricId || 'Metric'}
@@ -53,16 +60,16 @@ const StatCardWidget = ({ config, data }: { config: WidgetConfig; data?: any }) 
       spark={data.sparkline?.values}
       delay={0}
     />
+    </div>
   );
 };
 
 const MetricChartWidget = ({ config, data }: { config: WidgetConfig; data?: any }) => {
   const cfg = config as MetricChartConfig;
-  if (!data) return <div>Loading...</div>;
+  if (!data) return <div style={widgetStyle}><div style={{padding: 20}}>Loading...</div></div>;
 
-  // Just show basic metric info for now
   return (
-    <div style={{ background: 'var(--glass)', border: '1px solid var(--border)', borderRadius: 12, padding: 16, height: '100%' }}>
+    <div style={{...widgetStyle, background: 'var(--glass)', border: '1px solid var(--border)', borderRadius: 12, padding: 16}}>
       <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 8 }}>{data.label || cfg.metricId}</div>
       <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--text)' }}>
         {data.current?.values?.[data.current.values.length - 1]?.toFixed(1) || '0'}
@@ -74,19 +81,23 @@ const MetricChartWidget = ({ config, data }: { config: WidgetConfig; data?: any 
 
 const LeaderboardWidget = ({ config, data }: { config: WidgetConfig; data?: any }) => {
   const cfg = config as LeaderboardConfig;
-  if (!data || !Array.isArray(data)) return <div>Loading...</div>;
+  if (!data || !Array.isArray(data)) return <div style={widgetStyle}><div style={{padding: 20}}>Loading...</div></div>;
 
   const items = data.map((item: any, i: number) => ({
     name: item.team || item.name || `Item ${i}`,
     value: Number(item.valueRaw || item.value || 0),
   }));
 
-  return <Leaderboard items={items} color="#00E5FF" title={cfg.metricId} />;
+  return (
+    <div style={widgetStyle}>
+      <Leaderboard items={items} color="#00E5FF" title={cfg.metricId} />
+    </div>
+  );
 };
 
 const DataTableWidget = ({ config, data }: { config: WidgetConfig; data?: any }) => {
   const cfg = config as DataTableConfig;
-  if (!data) return <div>Loading...</div>;
+  if (!data) return <div style={widgetStyle}><div style={{padding: 20}}>Loading...</div></div>;
 
   const columns = ['Title', 'Status'];
   const rows = (data.rows?.slice(0, cfg.maxRows || 5) || []).map((r: any) => [
@@ -95,20 +106,22 @@ const DataTableWidget = ({ config, data }: { config: WidgetConfig; data?: any })
   ]);
 
   return (
-    <DataTable
-      title={cfg.tableType}
-      columns={columns}
-      rows={rows}
-      maxRows={cfg.maxRows}
-    />
+    <div style={widgetStyle}>
+      <DataTable
+        title={cfg.tableType}
+        columns={columns}
+        rows={rows}
+        maxRows={cfg.maxRows}
+      />
+    </div>
   );
 };
 
 const DORAOverviewWidget = ({ data }: { config: WidgetConfig; data?: any }) => {
-  if (!data) return <div>Loading...</div>;
+  if (!data) return <div style={widgetStyle}><div style={{padding: 20}}>Loading...</div></div>;
 
   return (
-    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+    <div style={{...widgetStyle, display: 'flex', gap: 8, flexWrap: 'wrap', padding: 16}}>
       {data.deployFrequency && (
         <DORABadge label="Deploy" value={data.deployFrequency.currentValue} level={data.deployFrequency.level} />
       )}
@@ -122,14 +135,15 @@ const DORAOverviewWidget = ({ data }: { config: WidgetConfig; data?: any }) => {
         <DORABadge label="MTTR" value={data.mttr.currentValue} level={data.mttr.level} />
       )}
     </div>
+    </div>
   );
 };
 
 const GaugeWidget = ({ data }: { config: WidgetConfig; data?: any }) => {
-  if (!data) return <div>Loading...</div>;
+  if (!data) return <div style={widgetStyle}><div style={{padding: 20}}>Loading...</div></div>;
 
   return (
-    <div style={{ background: 'var(--glass)', border: '1px solid var(--border)', borderRadius: 12, padding: 16, height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <div style={{...widgetStyle, background: 'var(--glass)', border: '1px solid var(--border)', borderRadius: 12, padding: 16, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
       <div style={{ textAlign: 'center' }}>
         <div style={{ fontSize: 36, fontWeight: 700, color: data.score > 70 ? 'var(--success)' : data.score > 40 ? 'var(--warning)' : 'var(--error)' }}>
           {data.score?.toFixed(0) || 0}
@@ -141,10 +155,10 @@ const GaugeWidget = ({ data }: { config: WidgetConfig; data?: any }) => {
 };
 
 const HeatmapWidget = ({ data }: { config: WidgetConfig; data?: any }) => {
-  if (!data) return <div>Loading...</div>;
+  if (!data) return <div style={widgetStyle}><div style={{padding: 20}}>Loading...</div></div>;
 
   return (
-    <div style={{ background: 'var(--glass)', border: '1px solid var(--border)', borderRadius: 12, padding: 16, height: '100%' }}>
+    <div style={{...widgetStyle, background: 'var(--glass)', border: '1px solid var(--border)', borderRadius: 12, padding: 16}}>
       <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 8 }}>Heatmap</div>
       <div style={{ display: 'flex', gap: 4 }}>
         {data.cells?.map((cell: any, i: number) => (
@@ -159,10 +173,10 @@ const HeatmapWidget = ({ data }: { config: WidgetConfig; data?: any }) => {
 };
 
 const SprintBurndownWidget = ({ data }: { config: WidgetConfig; data?: any }) => {
-  if (!data) return <div>Loading...</div>;
+  if (!data) return <div style={widgetStyle}><div style={{padding: 20}}>Loading...</div></div>;
 
   return (
-    <div style={{ background: 'var(--glass)', border: '1px solid var(--border)', borderRadius: 12, padding: 16, height: '100%' }}>
+    <div style={{...widgetStyle, background: 'var(--glass)', border: '1px solid var(--border)', borderRadius: 12, padding: 16}}>
       <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 8 }}>Sprint Burndown</div>
       <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end', height: 60 }}>
         {data.ideal?.values?.map((v: number, i: number) => (
@@ -174,10 +188,10 @@ const SprintBurndownWidget = ({ data }: { config: WidgetConfig; data?: any }) =>
 };
 
 const AIInsightWidget = ({ data }: { config: WidgetConfig; data?: any }) => {
-  if (!data) return <div>Loading...</div>;
+  if (!data) return <div style={widgetStyle}><div style={{padding: 20}}>Loading...</div></div>;
 
   return (
-    <div style={{ background: 'var(--glass)', border: '1px solid var(--border)', borderRadius: 12, padding: 16, height: '100%' }}>
+    <div style={{...widgetStyle, background: 'var(--glass)', border: '1px solid var(--border)', borderRadius: 12, padding: 16}}>
       <div style={{ fontSize: 12, color: 'var(--cyan)', marginBottom: 8 }}>AI Insight</div>
       <div style={{ fontSize: 13, color: 'var(--text)' }}>{data.insight}</div>
     </div>
@@ -185,10 +199,10 @@ const AIInsightWidget = ({ data }: { config: WidgetConfig; data?: any }) => {
 };
 
 const AnomalyDetectorWidget = ({ data }: { config: WidgetConfig; data?: any }) => {
-  if (!data) return <div>Loading...</div>;
+  if (!data) return <div style={widgetStyle}><div style={{padding: 20}}>Loading...</div></div>;
 
   return (
-    <div style={{ background: 'var(--glass)', border: '1px solid var(--border)', borderRadius: 12, padding: 16, height: '100%' }}>
+    <div style={{...widgetStyle, background: 'var(--glass)', border: '1px solid var(--border)', borderRadius: 12, padding: 16}}>
       <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 8 }}>Anomaly Detector</div>
       {data.anomalies?.length > 0 ? (
         <div style={{ color: 'var(--error)', fontSize: 12 }}>
@@ -202,10 +216,10 @@ const AnomalyDetectorWidget = ({ data }: { config: WidgetConfig; data?: any }) =
 };
 
 const CompareBarChartWidget = ({ data }: { config: WidgetConfig; data?: any }) => {
-  if (!data) return <div>Loading...</div>;
+  if (!data) return <div style={widgetStyle}><div style={{padding: 20}}>Loading...</div></div>;
 
   return (
-    <div style={{ background: 'var(--glass)', border: '1px solid var(--border)', borderRadius: 12, padding: 16, height: '100%' }}>
+    <div style={{...widgetStyle, background: 'var(--glass)', border: '1px solid var(--border)', borderRadius: 12, padding: 16}}>
       <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 8 }}>Compare</div>
       <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--text)' }}>
         {data.primary?.values?.[data.primary.values.length - 1]?.toFixed(1) || '0'}%

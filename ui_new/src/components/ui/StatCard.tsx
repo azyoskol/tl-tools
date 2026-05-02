@@ -32,7 +32,9 @@ export const StatCard = ({ icon, label, value, sub, trend, trendDir, color, spar
       border: `1px solid ${hov ? 'rgba(255,255,255,0.12)' : 'var(--border)'}`,
       borderRadius: 12, padding: '16px 16px 13px', display: 'flex', flexDirection: 'column', gap: 10,
       transition: 'all 0.2s ease', transform: hov ? 'translateY(-2px)' : 'none',
-      boxShadow: hov ? `0 6px 24px rgba(0,0,0,0.35)` : 'none',
+      boxShadow: hov ? `0 6px 24px rgba(0,0,0,0.35)'` : 'none',
+      height: '100%',
+      boxSizing: 'border-box',
     }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
         <div style={{ width: 32, height: 32, borderRadius: 8, background: `${c}18`, border: `1px solid ${c}28`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

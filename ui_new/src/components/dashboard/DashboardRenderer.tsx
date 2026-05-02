@@ -10,19 +10,22 @@ interface DashboardRendererProps {
 }
 
 export const DashboardRenderer: React.FC<DashboardRendererProps> = ({ dashboard, widgetData = {} }) => {
+  const rowHeight = 60; // pixels per row
+
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '16px' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gridAutoRows: `${rowHeight}px`, gap: '16px' }}>
       {dashboard.widgets.map((widget) => {
         const WidgetComponent = widgetRegistry[widget.widgetType];
         const layoutItem = dashboard.layout.find((l) => l.i === widget.instanceId);
-        const w = layoutItem?.w || 12;
-        const h = layoutItem?.h || 1;
+        const w = layoutItem?.w || 6;
+        const h = Math.max(layoutItem?.h || 2, 2);
         return (
           <div
             key={widget.instanceId}
             style={{
               gridColumn: `span ${w}`,
               gridRow: `span ${h}`,
+              minHeight: `${h * rowHeight}px`,
             }}
           >
             <WidgetComponent config={widget.config} data={widgetData[widget.instanceId]} />
