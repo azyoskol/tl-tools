@@ -141,7 +141,55 @@ function fakeTimeSeries(
   return { values, labels, unit };
 }
 
-function generateWidgetConfig(type: WidgetType, role?: string): WidgetConfig {
+const WIZARD_WIDGET_MAP: Record<string, { type: WidgetType; metricId?: string; tableType?: string }> = {
+  'dora-overview': { type: 'dora-overview' },
+  'deploy-freq': { type: 'metric-chart', metricId: 'deploy-freq' },
+  'lead-time': { type: 'metric-chart', metricId: 'lead-time' },
+  'mttr-trend': { type: 'metric-chart', metricId: 'mttr' },
+  'ci-pass-rate': { type: 'metric-chart', metricId: 'ci-pass' },
+  'failing-builds': { type: 'data-table', tableType: 'ci-failures' },
+  'pr-queue': { type: 'data-table', tableType: 'pr-queue' },
+  'pr-cycle': { type: 'metric-chart', metricId: 'pr-cycle' },
+  'burndown': { type: 'sprint-burndown' },
+  'velocity': { type: 'metric-chart', metricId: 'velocity' },
+  'blocked-tasks': { type: 'data-table', tableType: 'blocked-tasks' },
+  'team-heatmap': { type: 'heatmap' },
+  'leaderboard': { type: 'leaderboard', metricId: 'deploy-freq' },
+  'ai-summary': { type: 'ai-insight', metricId: 'deploy-freq' },
+  'anomaly': { type: 'anomaly-detector', metricId: 'deploy-freq' },
+};
+
+function generateWidgetConfig(type: WidgetType, role?: string, wizardId?: string): WidgetConfig {
+  // If wizard ID provided, use mapping
+  if (wizardId && WIZARD_WIDGET_MAP[wizardId]) {
+    const map = WIZARD_WIDGET_MAP[wizardId];
+    if (map.type === 'metric-chart') {
+      return { type: 'metric-chart', metricId: map.metricId || 'deploy-freq', chartVariant: 'area', showCompare: false } as MetricChartConfig;
+    }
+    if (map.type === 'data-table') {
+      return { type: 'data-table', tableType: map.tableType || 'pr-queue', maxRows: 5 } as DataTableConfig;
+    }
+    if (map.type === 'leaderboard') {
+      return { type: 'leaderboard', metricId: map.metricId || 'deploy-freq', groupBy: 'team', limit: 5 } as LeaderboardConfig;
+    }
+    if (map.type === 'ai-insight') {
+      return { type: 'ai-insight', variant: 'card', topicHint: map.metricId } as AIInsightConfig;
+    }
+    if (map.type === 'anomaly-detector') {
+      return { type: 'anomaly-detector', watchMetrics: [map.metricId as any] } as AnomalyDetectorConfig;
+    }
+    if (map.type === 'sprint-burndown') {
+      return { type: 'sprint-burndown', showTaskList: true } as SprintBurndownConfig;
+    }
+    if (map.type === 'heatmap') {
+      return { type: 'heatmap', rowGroupBy: 'team' } as HeatmapConfig;
+    }
+    if (map.type === 'dora-overview') {
+      return { type: 'dora-overview' } as DORAOverviewConfig;
+    }
+  }
+
+  // Fallback: role-based random config
   const roleMetrics: Record<string, string[]> = {
     cto: ["deploy-freq", "lead-time", "cfr", "mttr", "velocity", "throughput"],
     vp: ["velocity", "throughput", "pr-cycle", "lead-time"],
@@ -537,10 +585,41 @@ export const mockApi = {
   },
 
   async createDashboard(
-    req: CreateDashboardRequest,
+    req: CreateDashboardRequest & { wizardWidgetIds?: string[] },
   ): Promise<CreateDashboardResponse> {
     await delay();
     const id = `dash-${dashboards.size + 1}`;
+
+    // Convert wizard widget IDs to widget instances if provided
+    let widgets = req.widgets;
+    if (req.wizardWidgetIds && req.wizardWidgetIds.length > 0) {
+      widgets = req.wizardWidgetIds.map((wId, i) => {
+        const map = WIZARD_WIDGET_MAP[wId] || { type: 'stat-card' as WidgetType };
+        const widgetType = map.type;
+        let config: WidgetConfig;
+        if (widgetType === 'metric-chart') {
+          config = { type: 'metric-chart', metricId: map.metricId || 'deploy-freq', chartVariant: 'area', showCompare: false };
+        } else if (widgetType === 'data-table') {
+          config = { type: 'data-table', tableType: map.tableType || 'pr-queue', maxRows: 5 };
+        } else if (widgetType === 'leaderboard') {
+          config = { type: 'leaderboard', metricId: map.metricId || 'deploy-freq', groupBy: 'team', limit: 5 };
+        } else if (widgetType === 'ai-insight') {
+          config = { type: 'ai-insight', variant: 'card', topicHint: map.metricId };
+        } else if (widgetType === 'anomaly-detector') {
+          config = { type: 'anomaly-detector', watchMetrics: [map.metricId as any] };
+        } else if (widgetType === 'sprint-burndown') {
+          config = { type: 'sprint-burndown', showTaskList: true };
+        } else if (widgetType === 'heatmap') {
+          config = { type: 'heatmap', rowGroupBy: 'team' };
+        } else if (widgetType === 'dora-overview') {
+          config = { type: 'dora-overview' };
+        } else {
+          config = { type: 'stat-card', metricId: map.metricId || 'deploy-freq', showSparkline: true, colorKey: 'cyan' };
+        }
+        return { instanceId: `widget-${i}`, widgetType, config };
+      });
+    }
+
     const newDash: Dashboard = {
       id,
       name: req.name,
@@ -551,7 +630,7 @@ export const mockApi = {
       visibility: req.visibility,
       teamId: req.teamId,
       defaultFilters: req.defaultFilters,
-      widgets: req.widgets,
+      widgets,
       layout: req.layout,
       createdBy: "current-user",
       createdAt: isoDate(0),
