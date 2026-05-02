@@ -97,7 +97,7 @@ const LeaderboardWidget = ({ config, data }: { config: WidgetConfig; data?: any 
 
 const DataTableWidget = ({ config, data }: { config: WidgetConfig; data?: any }) => {
   const cfg = config as DataTableConfig;
-  if (!data) return <div style={widgetStyle}><div style={{padding: 20}}>Loading...</div></div>;
+  if (!data || !data.rows || data.rows.length === 0) return <div style={widgetStyle}><div style={{padding: 20, color: 'var(--muted)'}}>No data</div></div>;
 
   const columns = ['Title', 'Status'];
   const rows = (data.rows?.slice(0, cfg.maxRows || 5) || []).map((r: any) => [
@@ -105,10 +105,20 @@ const DataTableWidget = ({ config, data }: { config: WidgetConfig; data?: any })
     r.status || 'Unknown',
   ]);
 
+  const titleMap: Record<string, string> = {
+    'pr-queue': 'PR Queue',
+    'ci-failures': 'CI Failures',
+    'incidents': 'Incidents',
+    'delivery-risk': 'Delivery Risk',
+    'my-prs': 'My PRs',
+    'review-queue': 'Review Queue',
+    'blocked-tasks': 'Blocked Tasks',
+  };
+
   return (
-    <div style={widgetStyle}>
+    <div style={{...widgetStyle, padding: 16, background: 'var(--glass)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'auto'}}>
       <DataTable
-        title={cfg.tableType}
+        title={titleMap[cfg.tableType] || cfg.tableType}
         columns={columns}
         rows={rows}
         maxRows={cfg.maxRows}
