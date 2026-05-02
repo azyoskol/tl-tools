@@ -237,16 +237,15 @@ const GaugeWidget = ({ data }: { config: WidgetConfig; data?: any }) => {
 const HeatmapWidget = ({ config, data }: { config: WidgetConfig; data?: any }) => {
   if (!data || !data.cells) return <div style={widgetStyle}><div style={{padding: 20}}>Loading...</div></div>;
 
-  const cfg = config as HeatmapConfig;
   const cells = data.cells || [];
-  const cols = cfg.columns || 4;
+  const cols = Math.min(cells.length, 4);
   const rows = Math.ceil(cells.length / cols);
-  const height = 60 + rows * 45;
+  const height = 50 + rows * 50;
 
   return (
-    <div style={{...widgetStyle, height, background: 'var(--glass)', border: '1px solid var(--border)', borderRadius: 12, padding: 16}}>
+    <div style={{...widgetStyle, minHeight: height, background: 'var(--glass)', border: '1px solid var(--border)', borderRadius: 12, padding: 16}}>
       <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)', marginBottom: 12 }}>Team Activity</div>
-      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: 8 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: 6, height: 'calc(100% - 30px)' }}>
         {cells.map((cell: any, i: number) => {
           const intensity = cell.value / 100;
           const bgColor = intensity > 0.7 ? 'rgba(0,200,83,0.8)' : intensity > 0.4 ? 'rgba(0,229,255,0.6)' : 'rgba(0,229,255,0.2)';
