@@ -266,6 +266,22 @@ function generateLayout(widgets: DashboardWidgetInstance[]): WidgetLayout[] {
   });
 }
 
+function generateRecentActivity(): ActivityEvent[] {
+  const events = [
+    { actor: 'push → main', description: 'CI pipeline triggered for feat/auth-tokens', color: 'var(--cyan)' },
+    { actor: 'alex.kim', description: 'Merged PR #812: Add rate limiting middleware', color: 'var(--success)' },
+    { actor: 'sara.chen', description: 'PR #814 opened: Refactor API layer', color: 'var(--warning)' },
+    { actor: 'ci-bot', description: 'Deploy to staging failed — build #4221', color: 'var(--error)' },
+  ];
+  return events.map((e, i) => ({
+    id: `activity-${i}`,
+    actor: e.actor,
+    description: e.description,
+    relativeTime: ['2 min ago', '14 min ago', '31 min ago', '1 hr ago'][i],
+    color: e.color,
+  }));
+}
+
 const sampleDashboardId = "dash-1";
 const sampleTemplateDashboardId = "tmpl-cto";
 
@@ -293,6 +309,7 @@ function initDashboards() {
     defaultFilters,
     widgets: userWidgets,
     layout: userLayout,
+    recentActivity: generateRecentActivity(),
     createdBy: "user-1",
     createdAt: isoDate(-30),
     updatedAt: isoDate(-1),
@@ -441,6 +458,11 @@ export const mockApi = {
       updatedAt: d.updatedAt,
       hasDraft: false, // для простоты
     }));
+  },
+
+  async getRecentActivity(): Promise<ActivityEvent[]> {
+    await delay();
+    return generateRecentActivity();
   },
 
   async getDashboard(id: string): Promise<Dashboard> {
