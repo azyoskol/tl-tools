@@ -1,20 +1,19 @@
 import React from 'react';
 
-type BadgeType = 'success' | 'warning' | 'error' | 'neutral';
+type BadgeStatus = 'On track' | 'At risk' | 'Blocked' | 'Done' | 'Open';
 
-interface BadgeProps { type: BadgeType; children: React.ReactNode }
+interface BadgeProps {
+  status: BadgeStatus | string;
+}
 
-const colors: Record<BadgeType, string> = {
-  success: '#00C853', warning: '#FF9100', error: '#FF1744', neutral: '#6B7A9A'
+export const Badge = ({ status }: BadgeProps) => {
+  const map: Record<string, [string, string]> = {
+    'On track': ['#00C853', 'rgba(0,200,83,0.12)'],
+    'At risk': ['#FF9100', 'rgba(255,145,0,0.12)'],
+    'Blocked': ['#FF1744', 'rgba(255,23,68,0.12)'],
+    'Done': ['#00C853', 'rgba(0,200,83,0.1)'],
+    'Open': ['#00E5FF', 'rgba(0,229,255,0.1)'],
+  };
+  const [c, bg] = map[status] || ['var(--muted)', 'rgba(107,122,154,0.1)'];
+  return <span style={{ fontSize: 10.5, color: c, background: bg, border: `1px solid ${c}30`, borderRadius: 4, padding: '2px 7px', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>{status}</span>;
 };
-
-export const Badge: React.FC<BadgeProps> = ({ type, children }) => (
-  <span style={{
-    display: 'inline-flex', alignItems: 'center', gap: '4px',
-    padding: '4px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 500,
-    background: `${colors[type]}20`, color: colors[type]
-  }}>
-    {type === 'success' && <span style={{ width: 6, height: 6, borderRadius: '50%', background: colors[type] }} />}
-    {children}
-  </span>
-);

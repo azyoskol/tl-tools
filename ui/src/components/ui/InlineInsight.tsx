@@ -1,24 +1,14 @@
 import React from 'react';
+import { Icon } from '../shared/Icon';
 
-interface InlineInsightProps { 
+interface InlineInsightProps {
   text: string;
   action?: string;
 }
 
-export const InlineInsight: React.FC<InlineInsightProps> = ({ text, action }) => (
-  <div style={{
-    background: 'linear-gradient(90deg, rgba(180,76,255,0.1), rgba(0,229,255,0.1))',
-    borderRadius: '8px', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '12px'
-  }}>
-    <span style={{ width: 4, height: '100%', minHeight: 24, borderRadius: 2, background: 'var(--grad)' }} />
-    <span style={{ color: 'var(--text)', fontSize: '14px' }}>{text}</span>
-    {action && (
-      <button style={{
-        marginLeft: 'auto', padding: '6px 12px', borderRadius: '6px', border: 'none',
-        background: 'rgba(0,229,255,0.2)', color: 'var(--accent-cyan)', cursor: 'pointer', fontSize: '12px'
-      }}>
-        {action}
-      </button>
-    )}
+export const InlineInsight = ({ text, action }: InlineInsightProps) => (
+  <div style={{ background: 'rgba(180,76,255,0.06)', border: '1px solid rgba(180,76,255,0.18)', borderRadius: 10, padding: '12px 14px', display: 'flex', gap: 10 }}>
+    <div style={{ width: 22, height: 22, borderRadius: 6, background: 'rgba(180,76,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Icon name="sparkles" size={12} color="var(--purple)" /></div>
+    <div style={{ flex: 1 }}><p style={{ fontSize: 12.5, color: 'var(--muted2)', lineHeight: 1.55, margin: 0 }}>{text}</p>{action && <button style={{ marginTop: 8, fontSize: 11.5, color: 'var(--cyan)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'inline-flex', alignItems: 'center', gap: 4 }}>{action} <Icon name="arrowRight" size={11} color="var(--cyan)" /></button>}</div>
   </div>
 );

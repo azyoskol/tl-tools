@@ -1,23 +1,23 @@
-import React, { CSSProperties } from 'react';
+import React from 'react';
+import { useTweaks } from '../../context/TweaksContext';
 
 interface WidgetProps {
-  title?: string;
   children?: React.ReactNode;
-  style?: CSSProperties;
-  onClick?: () => void;
+  style?: React.CSSProperties;
+  className?: string;
 }
 
-export const Widget: React.FC<WidgetProps> = ({ title, children, style, onClick }) => {
+export const Widget = ({ children, style = {}, className = '' }: WidgetProps) => {
+  const { tweaks } = useTweaks() as { tweaks: { density: string } };
+  const density = tweaks.density;
+  const padding: Record<string, string> = {
+    compact: '8px 12px',
+    comfortable: '16px 18px',
+    spacious: '24px 28px',
+  };
+
   return (
-    <div style={{
-      padding: '20px',
-      border: '1px solid var(--border)',
-      borderRadius: '12px',
-      background: 'var(--glass)',
-      backdropFilter: 'blur(16px)',
-      ...style
-    }} onClick={onClick}>
-      {title && <h3 style={{ margin: '0 0 16px', fontSize: '16px', fontWeight: 600, color: 'var(--text)' }}>{title}</h3>}
+    <div className={className} style={{ background: 'var(--glass)', border: '1px solid var(--border)', borderRadius: 12, padding: padding[density] ?? '16px 18px', ...style }}>
       {children}
     </div>
   );

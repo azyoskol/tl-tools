@@ -39,6 +39,7 @@ PostgreSQL + TimescaleDB   /   Redis (cache + token store)
 ```
 
 **Key constraints:**
+
 - Handlers have zero business logic — thin HTTP shell only.
 - Biz layer owns cache (per-operation TTL, not blanket middleware).
 - `WidgetInstance.Config` stored/served as `json.RawMessage` — avoids Go union type explosion for 11 widget variants.
@@ -89,6 +90,7 @@ PostgreSQL + TimescaleDB   /   Redis (cache + token store)
 All endpoints under `/api/v1/`. Port `:8000`. Old endpoints removed.
 
 ### Public (no auth)
+
 ```
 POST /auth/login        → {access_token, refresh_token, expires_in, user}
 POST /auth/refresh      → {access_token, expires_in}
@@ -99,6 +101,7 @@ GET  /health            → {"status":"ok"}
 ```
 
 ### Protected (`Authorization: Bearer <access_token>`)
+
 ```
 GET  /me
 GET  /activity
@@ -123,9 +126,11 @@ POST /widgets/data
 ```
 
 ### Error Format
+
 ```json
 { "error": { "code": "DASHBOARD_NOT_FOUND", "message": "dashboard not found" } }
 ```
+
 | Biz Error | HTTP | Code |
 |-----------|------|------|
 | `ErrNotFound` | 404 | `NOT_FOUND` |
@@ -139,18 +144,21 @@ POST /widgets/data
 ## Authentication & Authorization
 
 ### Local Auth (JWT RS256)
+
 - Access token: 15 min TTL, payload `{sub, email, role}`.
 - Refresh token: 32 random bytes → base64url (wire) + SHA-256 hex (Redis store). 7-day TTL.
 - On refresh: old token revoked atomically (single-use rotation).
 - `JWT_PRIVATE_KEY` env (PEM). If empty → auto-generate RSA-2048 + log WARN ("tokens invalidated on restart").
 
 ### OIDC / Enterprise SSO
+
 - Supported providers: Keycloak, Okta, Azure AD, Google Workspace, Authentik (any OIDC-compliant).
 - Lazy init: `oidcProvider` only constructed when `OIDC_ISSUER_URL != ""`.
 - State param: Redis TTL 5min for CSRF protection.
 - On OIDC callback: find or create user by email, issue token pair.
 
 ### RBAC
+
 - Roles: `admin | editor | viewer | team-lead` stored in `users.app_role`.
 - Enforced per-route via `RequireRole(roles...)` middleware after `RequireAuth`.
 
@@ -175,16 +183,20 @@ POST /widgets/data
 ## Seed System
 
 ### PRNG
+
 Park-Miller LCG — exact translation of `mockApi.ts` lines 75–78:
+
 ```
 state = (state * 16807) % 2147483647
 return float64(state-1) / 2147483646.0
 ```
+
 Initial seed: **42**. Single `*PRNG` instance shared across all seed steps — call sequence matches `initDashboards()` exactly.
 
 **Verification:** first `Next()` from seed=42 must equal ≈ `0.000328775` (705893/2147483646).
 
 ### Data
+
 | Entity | Count | Source |
 |--------|-------|--------|
 | Users | 1 admin | `SEED_ADMIN_EMAIL` + `SEED_ADMIN_PASSWORD` env |
@@ -245,11 +257,11 @@ Initial seed: **42**. Single `*PRNG` instance shared across all seed steps — c
 ## Implementation Order
 
 1. go.mod + docker-compose (add postgres/timescaledb)
-2. `config/` + `db/` (pool + migration runner) + 7 SQL migrations
-3. `domain/` structs + `repo/` interfaces + pgx implementations
-4. `auth/` (JWT → authService → OIDC)
-5. `biz/errors.go` + `respond/` + 7 biz services
-6. `middleware/` + 10 handlers
-7. `main.go` wiring + graceful shutdown
-8. `seed/` (PRNG → runner → 6 data files)
-9. Tests
+2. Tests
+3. `config/` + `db/` (pool + migration runner) + 7 SQL migrations
+4. `domain/` structs + `repo/` interfaces + pgx implementations
+5. `auth/` (JWT → authService → OIDC)
+6. `biz/errors.go` + `respond/` + 7 biz services
+7. `middleware/` + 10 handlers
+8. `main.go` wiring + graceful shutdown
+9. `seed/` (PRNG → runner → 6 data files)
