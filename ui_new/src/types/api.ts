@@ -1,17 +1,15 @@
-import type { WidgetType, WidgetConfig } from './widgets';
-import type {
-  DashboardFilters,
-  DashboardVisibility,
-  DashboardWidgetInstance,
-  DashboardIndexEntry,
-  Dashboard,
-  SystemTemplate,
-  SystemTemplateId,
-  WidgetLayout,
-} from './dashboard';
+import type { Dashboard, DashboardIndexEntry, DashboardFilters, WidgetLayout, SystemTemplateId, DashboardVisibility, DashboardWidgetInstance } from './dashboard';
+import type { MetricId } from './metrics';
 
 export type DashboardListResponse = DashboardIndexEntry[];
-export type SystemTemplatesResponse = SystemTemplate[];
+
+export interface SystemTemplatesResponse {
+  templateId: SystemTemplateId;
+  label: string;
+  description: string;
+  dashboard: Omit<Dashboard, 'id' | 'createdBy' | 'createdAt' | 'updatedAt' | 'version'>;
+}
+
 export type DashboardResponse = Dashboard;
 
 export interface CreateDashboardRequest {
@@ -73,8 +71,8 @@ export interface ShareDashboardResponse {
 }
 
 export interface WidgetDataRequest {
-  widgetType: WidgetType;
-  config: WidgetConfig;
+  widgetType: string;
+  config: unknown;
   resolvedFilters: DashboardFilters;
 }
 
@@ -92,4 +90,12 @@ export interface WidgetDataItem {
 export interface DashboardDataResponse {
   widgets: WidgetDataItem[];
   fetchedAt: string;
+}
+
+export interface MetricDataResponse {
+  metricId: MetricId;
+  label: string;
+  unit: string;
+  current: { values: number[]; labels: string[]; unit: string };
+  previous: { values: number[]; labels: string[]; unit: string };
 }

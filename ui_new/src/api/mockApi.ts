@@ -1,0 +1,842 @@
+// @ts-nocheck
+import {
+  DashboardFilters,
+  WidgetLayout,
+  Dashboard,
+  DashboardDraft,
+  DashboardIndexEntry,
+  SystemTemplate,
+  DashboardWidgetInstance,
+  WidgetDataRequest,
+  WidgetDataItem,
+  DashboardDataResponse,
+  CreateDashboardRequest,
+  CreateDashboardResponse,
+  UpdateDashboardRequest,
+  UpdateDashboardResponse,
+  ForkDashboardRequest,
+  ForkDashboardResponse,
+  UpdateLayoutRequest,
+  ShareDashboardRequest,
+  ShareDashboardResponse,
+} from "../types/api";
+import {
+  WidgetConfig,
+  WidgetType,
+  MetricChartConfig,
+  CompareBarChartConfig,
+  StatCardConfig,
+  DORAOverviewConfig,
+  GaugeConfig,
+  HeatmapConfig,
+  DataTableConfig,
+  LeaderboardConfig,
+  SprintBurndownConfig,
+  AIInsightConfig,
+  AnomalyDetectorConfig,
+  TableDataType,
+} from "../types/widgets";
+import {
+  MetricId,
+  MetricTimeSeries,
+  MetricDataResponse,
+  MetricBreakdownItem,
+  DORAMetricDetail,
+  DORAResponse,
+} from "../types/metrics";
+import {
+  Plugin,
+  PluginsResponse,
+  SourceId,
+  SourceSyncConfig,
+  ConnectSourceRequest,
+  IntegrationStatus,
+  InstallPluginResponse,
+} from "../types/plugins";
+import { AIInsight, AIChatRequest, AIChatResponse, ChatMessage } from "../types/ai";
+import { CurrentUser, SystemStatus, MeResponse, ActivityEvent } from "../types/user";
+import { TimeRange, TeamName, RepoName, DORALevel } from "../types/common";
+
+// ──────────────────────────────────────────────
+// 1. Генераторы фейковых данных
+// ──────────────────────────────────────────────
+
+let seed = 42;
+function pseudoRandom(): number {
+  seed = (seed * 16807) % 2147483647;
+  return (seed - 1) / 2147483646;
+}
+
+const teamNames: TeamName[] = [
+  "Platform",
+  "Backend",
+  "Frontend",
+  "Mobile",
+  "Data",
+];
+const repoNames: RepoName[] = [
+  "monorepo",
+  "api-gateway",
+  "frontend-app",
+  "mobile-app",
+  "data-pipeline",
+  "auth-service",
+];
+const allMetricIds: MetricId[] = [
+  "deploy-freq",
+  "lead-time",
+  "cfr",
+  "mttr",
+  "ci-pass",
+  "ci-duration",
+  "ci-queue",
+  "pr-cycle",
+  "pr-review",
+  "pr-merge",
+  "velocity",
+  "throughput",
+  "health-score",
+  "sprint-burndown",
+];
+const doraLevels: DORALevel[] = ["Elite", "High", "Med", "Low"];
+
+function pickRandom<T>(arr: T[]): T {
+  return arr[Math.floor(pseudoRandom() * arr.length)];
+}
+
+function randomInt(min: number, max: number): number {
+  return Math.floor(pseudoRandom() * (max - min + 1)) + min;
+}
+
+function isoDate(daysOffset = 0): string {
+  const d = new Date();
+  d.setDate(d.getDate() + daysOffset);
+  return d.toISOString();
+}
+
+function fakeTimeSeries(
+  length: number,
+  minVal: number,
+  maxVal: number,
+  unit: string,
+): MetricTimeSeries {
+  const values: number[] = [];
+  const labels: string[] = [];
+  for (let i = 0; i < length; i++) {
+    values.push(
+      Math.round((minVal + pseudoRandom() * (maxVal - minVal)) * 100) / 100,
+    );
+    labels.push(`Day ${i + 1}`);
+  }
+  return { values, labels, unit };
+}
+
+function generateWidgetConfig(type: WidgetType): WidgetConfig {
+  switch (type) {
+    case "metric-chart":
+      return {
+        type: "metric-chart",
+        metricId: pickRandom(allMetricIds),
+        chartVariant: pickRandom(["area", "bar", "bar-horizontal"]),
+        showCompare: pseudoRandom() > 0.5,
+        colorOverride:
+          pseudoRandom() > 0.5
+            ? "#" +
+              Math.floor(pseudoRandom() * 0xffffff)
+                .toString(16)
+                .padStart(6, "0")
+            : undefined,
+      } as MetricChartConfig;
+    case "compare-bar-chart":
+      return {
+        type: "compare-bar-chart",
+        metricId: pickRandom(allMetricIds),
+        groupBy: pickRandom(["team", "repo"]),
+        primaryLabel: "Current Sprint",
+        compareLabel: "Previous Sprint",
+      } as CompareBarChartConfig;
+    case "stat-card":
+      return {
+        type: "stat-card",
+        metricId: pickRandom(allMetricIds),
+        showSparkline: pseudoRandom() > 0.3,
+        colorKey: pickRandom(["cyan", "purple", "success", "warning", "error"]),
+      } as StatCardConfig;
+    case "dora-overview":
+      return { type: "dora-overview" } as DORAOverviewConfig;
+    case "health-gauge":
+      return {
+        type: "health-gauge",
+        showDimensions: pseudoRandom() > 0.5,
+      } as GaugeConfig;
+    case "heatmap":
+      return {
+        type: "heatmap",
+        rowGroupBy: pickRandom(["team", "weekday"]),
+        colorOverride:
+          pseudoRandom() > 0.5
+            ? "#" +
+              Math.floor(pseudoRandom() * 0xffffff)
+                .toString(16)
+                .padStart(6, "0")
+            : undefined,
+      } as HeatmapConfig;
+    case "data-table":
+      return {
+        type: "data-table",
+        tableType: pickRandom([
+          "pr-queue",
+          "ci-failures",
+          "incidents",
+          "delivery-risk",
+          "my-prs",
+          "review-queue",
+          "blocked-tasks",
+        ]),
+        maxRows: randomInt(5, 20),
+      } as DataTableConfig;
+    case "leaderboard":
+      return {
+        type: "leaderboard",
+        metricId: pickRandom(allMetricIds),
+        groupBy: pickRandom(["team", "repo", "author"]),
+        limit: randomInt(5, 10),
+      } as LeaderboardConfig;
+    case "sprint-burndown":
+      return {
+        type: "sprint-burndown",
+        showTaskList: pseudoRandom() > 0.5,
+        userId: pseudoRandom() > 0.5 ? `user-${randomInt(1, 5)}` : undefined,
+      } as SprintBurndownConfig;
+    case "ai-insight":
+      return {
+        type: "ai-insight",
+        variant: pickRandom(["card", "inline"]),
+        topicHint: pseudoRandom() > 0.5 ? "deployment frequency" : undefined,
+      } as AIInsightConfig;
+    case "anomaly-detector":
+      return {
+        type: "anomaly-detector",
+        watchMetrics: [pickRandom(allMetricIds), pickRandom(allMetricIds)],
+      } as AnomalyDetectorConfig;
+    default:
+      throw new Error(`Unknown widget type: ${type}`);
+  }
+}
+
+function generateWidgets(count: number): DashboardWidgetInstance[] {
+  const types: WidgetType[] = [
+    "metric-chart",
+    "compare-bar-chart",
+    "stat-card",
+    "dora-overview",
+    "health-gauge",
+    "heatmap",
+    "data-table",
+    "leaderboard",
+    "sprint-burndown",
+    "ai-insight",
+    "anomaly-detector",
+  ];
+  return Array.from({ length: count }, (_, i) => {
+    const type = pickRandom(types);
+    return {
+      instanceId: `widget-${i}-${randomInt(1000, 9999)}`,
+      widgetType: type,
+      config: generateWidgetConfig(type),
+    };
+  });
+}
+
+function generateLayout(widgets: DashboardWidgetInstance[]): WidgetLayout[] {
+  let y = 0;
+  return widgets.map((w, i) => {
+    const layout: WidgetLayout = {
+      i: w.instanceId,
+      x: (i % 2) * 6,
+      y: y,
+      w: 6,
+      h: 4,
+      minW: 3,
+      minH: 2,
+      static: false,
+    };
+    if (i % 2 === 1) y += 4;
+    return layout;
+  });
+}
+
+const sampleDashboardId = "dash-1";
+const sampleTemplateDashboardId = "tmpl-cto";
+
+// Инициализация хранилища дашбордов
+const dashboards: Map<string, Dashboard> = new Map();
+
+function initDashboards() {
+  const defaultFilters: DashboardFilters = {
+    timeRange: "30d",
+    team: "All teams",
+    repo: "All repos",
+  };
+
+  // Пользовательский дашборд
+  const userWidgets = generateWidgets(6);
+  const userLayout = generateLayout(userWidgets);
+  const userDash: Dashboard = {
+    id: sampleDashboardId,
+    name: "My Engineering Overview",
+    description: "Personal dashboard for daily standups",
+    sourceType: "user-created",
+    sourceTemplateId: undefined,
+    forkedFromId: undefined,
+    visibility: "private",
+    defaultFilters,
+    widgets: userWidgets,
+    layout: userLayout,
+    createdBy: "user-1",
+    createdAt: isoDate(-30),
+    updatedAt: isoDate(-1),
+    version: 3,
+  };
+  dashboards.set(userDash.id, userDash);
+
+  // Ещё пара дашбордов для списка
+  for (let i = 1; i <= 4; i++) {
+    const id = `dash-${i + 1}`;
+    const widgets = generateWidgets(randomInt(3, 8));
+    const layout = generateLayout(widgets);
+    const dash: Dashboard = {
+      id,
+      name: `Team ${i} Dashboard`,
+      description: `Dashboard for team ${i}`,
+      sourceType: i % 2 === 0 ? "forked" : "user-created",
+      forkedFromId: i % 2 === 0 ? sampleDashboardId : undefined,
+      visibility: i % 2 === 0 ? "team" : "private",
+      teamId: i % 2 === 0 ? `team-${i}` : undefined,
+      defaultFilters: { ...defaultFilters, team: pickRandom(teamNames) },
+      widgets,
+      layout,
+      createdBy: "user-1",
+      createdAt: isoDate(-60 + i * 7),
+      updatedAt: isoDate(-i),
+      version: 1,
+    };
+    dashboards.set(id, dash);
+  }
+}
+
+initDashboards();
+
+// ──────────────────────────────────────────────
+// 2. Вспомогательные функции для ответов
+// ──────────────────────────────────────────────
+
+function delay(ms = 200): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function generateDORAData(): DORAResponse {
+  const makeDetail = (
+    id: "deploy-freq" | "lead-time" | "cfr" | "mttr",
+    label: string,
+    unit: string,
+    base: number,
+  ): DORAMetricDetail => {
+    const currentRaw = base + pseudoRandom() * base * 0.4;
+    const delta =
+      (pseudoRandom() > 0.5 ? "+" : "-") +
+      (Math.random() * 20).toFixed(1) +
+      "%";
+    const level: DORALevel = pickRandom(doraLevels);
+    return {
+      id,
+      label,
+      currentValue: `${currentRaw.toFixed(1)}${unit}`,
+      currentValueRaw: currentRaw,
+      delta,
+      level,
+      benchmarkNote: `Benchmark: ${level} level`,
+      timeSeries: fakeTimeSeries(14, base * 0.8, base * 1.2, unit),
+    };
+  };
+
+  return {
+    deployFrequency: makeDetail("deploy-freq", "Deploy Frequency", "/week", 12),
+    leadTime: makeDetail("lead-time", "Lead Time for Changes", "h", 8.5),
+    changeFailureRate: makeDetail("cfr", "Change Failure Rate", "%", 5.2),
+    mttr: makeDetail("mttr", "Mean Time to Recovery", "min", 45),
+  };
+}
+
+function generateMetricData(metricId: MetricId): MetricDataResponse {
+  const labelMap: Record<MetricId, string> = {
+    "deploy-freq": "Deploy Frequency",
+    "lead-time": "Lead Time",
+    cfr: "Change Failure Rate",
+    mttr: "MTTR",
+    "ci-pass": "CI Pass Rate",
+    "ci-duration": "CI Duration",
+    "ci-queue": "CI Queue Time",
+    "pr-cycle": "PR Cycle Time",
+    "pr-review": "PR Review Time",
+    "pr-merge": "PR Merge Time",
+    velocity: "Velocity",
+    throughput: "Throughput",
+    "health-score": "Health Score",
+    "sprint-burndown": "Sprint Burndown",
+  };
+  const unitMap: Record<MetricId, string> = {
+    "deploy-freq": "/week",
+    "lead-time": "h",
+    cfr: "%",
+    mttr: "min",
+    "ci-pass": "%",
+    "ci-duration": "min",
+    "ci-queue": "min",
+    "pr-cycle": "h",
+    "pr-review": "h",
+    "pr-merge": "min",
+    velocity: "pts",
+    throughput: "items",
+    "health-score": "%",
+    "sprint-burndown": "pts",
+  };
+  return {
+    metricId,
+    label: labelMap[metricId],
+    unit: unitMap[metricId],
+    current: fakeTimeSeries(14, 0, 100, unitMap[metricId]),
+    previous: fakeTimeSeries(14, 0, 100, unitMap[metricId]),
+  };
+}
+
+function generateBreakdown(metricId: MetricId): MetricBreakdownItem[] {
+  return teamNames.map((team) => ({
+    name: metricId,
+    team,
+    value: `${(pseudoRandom() * 50).toFixed(1)}`,
+    valueRaw: pseudoRandom() * 100,
+    doraLevel: pickRandom(doraLevels),
+    delta:
+      (pseudoRandom() > 0.5 ? "+" : "-") +
+      (pseudoRandom() * 30).toFixed(1) +
+      "%",
+  }));
+}
+
+// ──────────────────────────────────────────────
+// 3. Mock API объект
+// ──────────────────────────────────────────────
+
+export const mockApi = {
+  // ── Дашборды ────────────────────────────────
+  async getDashboardList(): Promise<DashboardIndexEntry[]> {
+    await delay();
+    return Array.from(dashboards.values()).map((d) => ({
+      id: d.id,
+      name: d.name,
+      sourceType: d.sourceType,
+      sourceTemplateId: d.sourceTemplateId,
+      visibility: d.visibility,
+      updatedAt: d.updatedAt,
+      hasDraft: false, // для простоты
+    }));
+  },
+
+  async getDashboard(id: string): Promise<Dashboard> {
+    await delay();
+    const dash = dashboards.get(id);
+    if (!dash) throw new Error("Dashboard not found");
+    return { ...dash, layout: dash.layout.map((l) => ({ ...l })) }; // неглубокая копия
+  },
+
+  async createDashboard(
+    req: CreateDashboardRequest,
+  ): Promise<CreateDashboardResponse> {
+    await delay();
+    const id = `dash-${dashboards.size + 1}`;
+    const newDash: Dashboard = {
+      id,
+      name: req.name,
+      description: req.description,
+      sourceType: req.sourceType,
+      sourceTemplateId: req.sourceTemplateId,
+      forkedFromId: req.forkedFromId,
+      visibility: req.visibility,
+      teamId: req.teamId,
+      defaultFilters: req.defaultFilters,
+      widgets: req.widgets,
+      layout: req.layout,
+      createdBy: "current-user",
+      createdAt: isoDate(0),
+      updatedAt: isoDate(0),
+      version: 1,
+    };
+    dashboards.set(id, newDash);
+    return { dashboard: newDash };
+  },
+
+  async updateDashboard(
+    id: string,
+    req: UpdateDashboardRequest,
+  ): Promise<UpdateDashboardResponse> {
+    await delay();
+    const dash = dashboards.get(id);
+    if (!dash) throw new Error("Dashboard not found");
+    if (req.version !== dash.version) throw new Error("Version conflict");
+    Object.assign(dash, {
+      name: req.name ?? dash.name,
+      description: req.description ?? dash.description,
+      visibility: req.visibility ?? dash.visibility,
+      teamId: req.teamId ?? dash.teamId,
+      defaultFilters: req.defaultFilters ?? dash.defaultFilters,
+      widgets: req.widgets ?? dash.widgets,
+      layout: req.layout ?? dash.layout,
+      updatedAt: isoDate(0),
+      version: dash.version + 1,
+    });
+    return { dashboard: { ...dash } };
+  },
+
+  async forkDashboard(
+    id: string,
+    req: ForkDashboardRequest,
+  ): Promise<ForkDashboardResponse> {
+    await delay();
+    const original = dashboards.get(id);
+    if (!original) throw new Error("Original dashboard not found");
+    const newId = `dash-${dashboards.size + 1}`;
+    const forked: Dashboard = {
+      id: newId,
+      name: req.name || `${original.name} (fork)`,
+      description: original.description,
+      sourceType: "forked",
+      sourceTemplateId: undefined,
+      forkedFromId: id,
+      visibility: req.visibility,
+      defaultFilters: { ...original.defaultFilters },
+      widgets: original.widgets.map((w) => ({ ...w })),
+      layout: original.layout.map((l) => ({ ...l })),
+      createdBy: "current-user",
+      createdAt: isoDate(0),
+      updatedAt: isoDate(0),
+      version: 1,
+    };
+    dashboards.set(newId, forked);
+    return { dashboard: forked };
+  },
+
+  async updateLayout(id: string, req: UpdateLayoutRequest): Promise<void> {
+    await delay();
+    const dash = dashboards.get(id);
+    if (!dash) throw new Error("Dashboard not found");
+    if (req.version !== dash.version) throw new Error("Version conflict");
+    dash.layout = req.layout;
+    dash.version += 1;
+    dash.updatedAt = isoDate(0);
+  },
+
+  async shareDashboard(
+    id: string,
+    req: ShareDashboardRequest,
+  ): Promise<ShareDashboardResponse> {
+    await delay();
+    const dash = dashboards.get(id);
+    if (!dash) throw new Error("Dashboard not found");
+    dash.visibility = req.visibility;
+    if (req.teamId) dash.teamId = req.teamId;
+    const response: ShareDashboardResponse = { visibility: req.visibility };
+    if (req.generateShareToken) {
+      dash.shareToken = `share-${randomInt(1000, 9999)}`;
+      response.shareToken = dash.shareToken;
+      response.shareUrl = `https://app.example.com/shared/${dash.shareToken}`;
+    }
+    dash.updatedAt = isoDate(0);
+    dash.version += 1;
+    return response;
+  },
+
+  // ── Данные виджетов ─────────────────────────
+  async getWidgetData(req: WidgetDataRequest): Promise<WidgetDataItem> {
+    await delay(100);
+    // Генерируем данные в зависимости от типа виджета
+    const { instanceId, widgetType, config } = req;
+    let data: any = null;
+
+    switch (widgetType) {
+      case "metric-chart":
+        data = generateMetricData((config as MetricChartConfig).metricId);
+        break;
+      case "compare-bar-chart":
+        data = {
+          primary: fakeTimeSeries(7, 0, 50, "%"),
+          compare: fakeTimeSeries(7, 0, 50, "%"),
+        };
+        break;
+      case "stat-card":
+        data = {
+          value: (pseudoRandom() * 100).toFixed(1),
+          delta:
+            (pseudoRandom() > 0.5 ? "+" : "-") +
+            (pseudoRandom() * 20).toFixed(1) +
+            "%",
+          sparkline: fakeTimeSeries(10, 0, 100, "%"),
+        };
+        break;
+      case "dora-overview":
+        data = generateDORAData();
+        break;
+      case "health-gauge":
+        data = {
+          score: pseudoRandom() * 100,
+          dimensions: {
+            quality: pseudoRandom() * 100,
+            speed: pseudoRandom() * 100,
+            reliability: pseudoRandom() * 100,
+          },
+        };
+        break;
+      case "heatmap":
+        data = {
+          cells: Array.from({ length: 5 }, () => ({
+            label: pickRandom(teamNames),
+            value: pseudoRandom() * 100,
+          })),
+        };
+        break;
+      case "data-table":
+        data = {
+          rows: Array.from(
+            { length: (config as DataTableConfig).maxRows },
+            (_, i) => ({
+              id: i,
+              title: `Item ${i}`,
+              status: pickRandom(["Open", "Done", "Blocked"]),
+            }),
+          ),
+        };
+        break;
+      case "leaderboard":
+        data = generateBreakdown((config as LeaderboardConfig).metricId).slice(
+          0,
+          (config as LeaderboardConfig).limit,
+        );
+        break;
+      case "sprint-burndown":
+        data = {
+          ideal: fakeTimeSeries(10, 0, 50, "pts"),
+          actual: fakeTimeSeries(10, 0, 50, "pts"),
+        };
+        break;
+      case "ai-insight":
+        data = {
+          insight: `Insight for ${(config as AIInsightConfig).topicHint || "general"}`,
+        };
+        break;
+      case "anomaly-detector":
+        data = {
+          anomalies: [
+            {
+              metric: pickRandom(allMetricIds),
+              detectedAt: isoDate(-1),
+              score: pseudoRandom(),
+            },
+          ],
+        };
+        break;
+      default:
+        data = {};
+    }
+    return { instanceId, data };
+  },
+
+  async getDashboardData(
+    dashboardId: string,
+    widgets: WidgetDataRequest[],
+  ): Promise<DashboardDataResponse> {
+    await delay(300);
+    const dataItems = await Promise.all(
+      widgets.map((w) => this.getWidgetData(w)),
+    );
+    return { widgets: dataItems, fetchedAt: isoDate(0) };
+  },
+
+  // ── Пользователь ────────────────────────────
+  async getMe(): Promise<MeResponse> {
+    await delay();
+    const user: CurrentUser = {
+      id: "user-1",
+      displayName: "Alex Johnson",
+      initials: "AJ",
+      role: "Engineering Lead",
+      avatarUrl: "https://i.pravatar.cc/150?u=user-1",
+    };
+    const system: SystemStatus = {
+      status: "nominal",
+      label: "All systems operational",
+    };
+    const pinnedIds = [sampleDashboardId, "dash-2"];
+    const dashList = await this.getDashboardList();
+    return {
+      user,
+      system,
+      pinnedDashboardIds: pinnedIds,
+      dashboards: dashList,
+    };
+  },
+
+  async getSystemTemplates(): Promise<SystemTemplate[]> {
+    await delay();
+    const template: SystemTemplate = {
+      templateId: "cto",
+      label: "CTO Overview",
+      description: "High-level metrics for engineering leadership",
+      dashboard: {
+        name: "CTO Dashboard",
+        description: "Pre-built dashboard for CTOs",
+        sourceType: "system-template",
+        sourceTemplateId: "cto",
+        visibility: "org",
+        defaultFilters: {
+          timeRange: "30d",
+          team: "All teams",
+          repo: "All repos",
+        },
+        widgets: generateWidgets(4),
+        layout: [],
+      },
+    };
+    return [template];
+  },
+
+  // ── Плагины и интеграции ────────────────────
+  async getPlugins(): Promise<Plugin[]> {
+    await delay();
+    const plugins: Plugin[] = [
+      {
+        id: "gh",
+        name: "GitHub",
+        category: "Sources",
+        description: "Sync repos, PRs, deployments",
+        rating: 4.8,
+        installCount: "12.3k",
+        installed: true,
+        accentColor: "#2da44e",
+      },
+      {
+        id: "jira",
+        name: "Jira",
+        category: "Sources",
+        description: "Track issues and sprints",
+        rating: 4.2,
+        installCount: "8.1k",
+        installed: false,
+        accentColor: "#0052cc",
+      },
+      {
+        id: "slack",
+        name: "Slack",
+        category: "Alerts",
+        description: "Send notifications",
+        rating: 4.5,
+        installCount: "15.7k",
+        installed: true,
+        accentColor: "#4A154B",
+      },
+      {
+        id: "pd",
+        name: "PagerDuty",
+        category: "Alerts",
+        description: "Incident alerts",
+        rating: 4.0,
+        installCount: "3.4k",
+        installed: false,
+        accentColor: "#06AC38",
+      },
+      {
+        id: "ai-1",
+        name: "AI Insights",
+        category: "AI",
+        description: "Smart recommendations",
+        rating: 4.9,
+        installCount: "5.2k",
+        installed: true,
+        accentColor: "#7C3AED",
+      },
+      {
+        id: "csv",
+        name: "CSV Exporter",
+        category: "Exporters",
+        description: "Export data to CSV",
+        rating: 4.3,
+        installCount: "9.8k",
+        installed: false,
+        accentColor: "#2563EB",
+      },
+    ];
+    return plugins;
+  },
+
+  async installPlugin(pluginId: string): Promise<InstallPluginResponse> {
+    await delay(500);
+    return { pluginId, installed: true };
+  },
+
+  async connectSource(req: ConnectSourceRequest): Promise<IntegrationStatus> {
+    await delay(800);
+    return {
+      sourceId: req.sourceId,
+      name: req.sourceId.charAt(0).toUpperCase() + req.sourceId.slice(1),
+      connected: true,
+      status: "active",
+    };
+  },
+
+  // ── AI ───────────────────────────────────────
+  async getAIInsights(): Promise<AIInsight[]> {
+    await delay();
+    return [
+      {
+        id: "ins-1",
+        title: "Deployment frequency dropped",
+        body: "Deploy frequency is 15% lower this week compared to last week.",
+        action: "Check CI pipeline",
+        generatedAt: isoDate(-1),
+      },
+      {
+        id: "ins-2",
+        title: "PR review time improving",
+        body: "Average review time decreased by 20% over the last 30 days.",
+        generatedAt: isoDate(-2),
+      },
+    ];
+  },
+
+  async sendAIChat(req: AIChatRequest): Promise<AIChatResponse> {
+    await delay(1000);
+    const lastMsg = req.messages[req.messages.length - 1]?.content || "";
+    return {
+      reply: `You asked about "${lastMsg.substring(0, 30)}...". Based on the data, I suggest looking at CI pipeline metrics.`,
+      relatedMetrics: ["ci-duration", "ci-pass"],
+    };
+  },
+
+  // ── Метрики ──────────────────────────────────
+  async getMetricData(
+    metricId: MetricId,
+    _params?: any,
+  ): Promise<MetricDataResponse> {
+    await delay(200);
+    return generateMetricData(metricId);
+  },
+
+  async getDORAData(): Promise<DORAResponse> {
+    await delay();
+    return generateDORAData();
+  },
+
+  async getBreakdown(metricId: MetricId): Promise<MetricBreakdownItem[]> {
+    await delay();
+    return generateBreakdown(metricId);
+  },
+};
