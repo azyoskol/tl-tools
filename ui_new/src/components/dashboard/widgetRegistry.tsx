@@ -234,19 +234,37 @@ const GaugeWidget = ({ data }: { config: WidgetConfig; data?: any }) => {
   );
 };
 
-const HeatmapWidget = ({ data }: { config: WidgetConfig; data?: any }) => {
-  if (!data) return <div style={widgetStyle}><div style={{padding: 20}}>Loading...</div></div>;
+const HeatmapWidget = ({ config, data }: { config: WidgetConfig; data?: any }) => {
+  if (!data || !data.cells) return <div style={widgetStyle}><div style={{padding: 20}}>Loading...</div></div>;
+
+  const cfg = config as HeatmapConfig;
+  const cells = data.cells || [];
+  const cols = cfg.columns || 4;
+  const rows = Math.ceil(cells.length / cols);
+  const height = 60 + rows * 45;
 
   return (
-    <div style={{...widgetStyle, background: 'var(--glass)', border: '1px solid var(--border)', borderRadius: 12, padding: 16}}>
-      <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 8 }}>Heatmap</div>
-      <div style={{ display: 'flex', gap: 4 }}>
-        {data.cells?.map((cell: any, i: number) => (
-          <div key={i} style={{ flex: 1, background: `rgba(0,229,255,${cell.value / 100})`, borderRadius: 4, padding: 8, textAlign: 'center' }}>
-            <div style={{ fontSize: 11, color: 'var(--text)' }}>{cell.label}</div>
-            <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>{cell.value?.toFixed(0)}</div>
-          </div>
-        ))}
+    <div style={{...widgetStyle, height, background: 'var(--glass)', border: '1px solid var(--border)', borderRadius: 12, padding: 16}}>
+      <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)', marginBottom: 12 }}>Team Activity</div>
+      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: 8 }}>
+        {cells.map((cell: any, i: number) => {
+          const intensity = cell.value / 100;
+          const bgColor = intensity > 0.7 ? 'rgba(0,200,83,0.8)' : intensity > 0.4 ? 'rgba(0,229,255,0.6)' : 'rgba(0,229,255,0.2)';
+          return (
+            <div key={i} style={{ 
+              background: bgColor, 
+              borderRadius: 8, 
+              padding: '10px 8px', 
+              display: 'flex', 
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+              <div style={{ fontSize: 11, color: 'var(--text)', fontWeight: 500, textAlign: 'center' }}>{cell.label}</div>
+              <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)', marginTop: 2 }}>{cell.value?.toFixed(0)}</div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -255,13 +273,45 @@ const HeatmapWidget = ({ data }: { config: WidgetConfig; data?: any }) => {
 const SprintBurndownWidget = ({ data }: { config: WidgetConfig; data?: any }) => {
   if (!data) return <div style={widgetStyle}><div style={{padding: 20}}>Loading...</div></div>;
 
+  const ideal = data.ideal?.values || [];
+  const actual = data.actual?.values || [];
+  const maxVal = Math.max(...ideal, ...actual, 1);
+
   return (
     <div style={{...widgetStyle, background: 'var(--glass)', border: '1px solid var(--border)', borderRadius: 12, padding: 16}}>
-      <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 8 }}>Sprint Burndown</div>
-      <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end', height: 60 }}>
-        {data.ideal?.values?.map((v: number, i: number) => (
-          <div key={i} style={{ flex: 1, background: 'var(--border)', height: `${v}%`, borderRadius: 2 }} />
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
+        <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)' }}>Sprint Burndown</div>
+        <div style={{ display: 'flex', gap: 12, fontSize: 10 }}>
+          <span style={{ color: 'var(--border)' }}>● Ideal</span>
+          <span style={{ color: 'var(--cyan)' }}>● Actual</span>
+        </div>
+      </div>
+      <div style={{ display: 'flex', gap: 4, alignItems: 'flex-end', height: 70 }}>
+        {ideal.map((v: number, i: number) => (
+          <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+            <div style={{ width: '100%', background: 'var(--border)', height: `${(v / maxVal) * 70}px`, borderRadius: 2, position: 'relative' }}>
+              {actual[i] !== undefined && (
+                <div style={{ 
+                  position: 'absolute', 
+                  bottom: 0, 
+                  left: 0, 
+                  width: '100%', 
+                  background: 'var(--cyan)', 
+                  height: `${(actual[i] / maxVal) * 70}px`, 
+                  borderRadius: 2,
+                  opacity: 0.7 
+                }} />
+              )}
+            </div>
+            <span style={{ fontSize: 9, color: 'var(--muted)' }}>{i + 1}</span>
+          </div>
         ))}
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, fontSize: 11 }}>
+        <span style={{ color: 'var(--muted)' }}>Remaining: {actual[actual.length - 1]?.toFixed(0) || 0} pts</span>
+        <span style={{ color: actual[actual.length - 1] <= ideal[ideal.length - 1] ? 'var(--success)' : 'var(--error)' }}>
+          {actual[actual.length - 1] <= ideal[ideal.length - 1] ? 'On Track' : 'Behind'}
+        </span>
       </div>
     </div>
   );

@@ -182,7 +182,7 @@ function generateWidgetConfig(type: WidgetType, role?: string, wizardId?: string
       return { type: 'sprint-burndown', showTaskList: true } as SprintBurndownConfig;
     }
     if (map.type === 'heatmap') {
-      return { type: 'heatmap', rowGroupBy: 'team' } as HeatmapConfig;
+      return { type: 'heatmap', rowGroupBy: 'team', columns: 4 } as HeatmapConfig;
     }
     if (map.type === 'dora-overview') {
       return { type: 'dora-overview' } as DORAOverviewConfig;
@@ -241,6 +241,7 @@ function generateWidgetConfig(type: WidgetType, role?: string, wizardId?: string
       return {
         type: "heatmap",
         rowGroupBy: pickRandom(["team", "weekday"]),
+        columns: 4,
         colorOverride:
           pseudoRandom() > 0.5
             ? "#" +
@@ -656,7 +657,7 @@ export const mockApi = {
         } else if (widgetType === 'sprint-burndown') {
           config = { type: 'sprint-burndown', showTaskList: true };
         } else if (widgetType === 'heatmap') {
-          config = { type: 'heatmap', rowGroupBy: 'team' };
+          config = { type: 'heatmap', rowGroupBy: 'team', columns: 4 };
         } else if (widgetType === 'dora-overview') {
           config = { type: 'dora-overview' };
         } else {

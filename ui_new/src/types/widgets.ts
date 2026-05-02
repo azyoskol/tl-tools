@@ -42,6 +42,7 @@ export interface HeatmapConfig extends BaseWidgetConfig {
   type: 'heatmap';
   rowGroupBy: 'team' | 'weekday';
   colorOverride?: string;
+  columns?: number;
 }
 
 export type TableDataType =
