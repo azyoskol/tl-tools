@@ -379,18 +379,30 @@ const AIInsightWidget = ({ config, data }: { config: WidgetConfig; data?: any })
 
   const cfg = config as any;
 
+  const containerStyle: React.CSSProperties = {
+    borderRadius: 14,
+    padding: '18px 20px',
+    borderTop: '1px solid var(--border)',
+    borderRight: '1px solid var(--border)',
+    borderBottom: '1px solid var(--border)',
+    borderLeft: '3px solid transparent',
+    transition: 'all 0.22s ease',
+    boxShadow: hovered ? '0 8px 32px rgba(0,0,0,0.35)' : 'none',
+    cursor: 'pointer',
+    width: '100%', height: '100%', boxSizing: 'border-box',
+  };
+
+  if (seen) {
+    containerStyle.background = hovered ? 'var(--glass2)' : 'var(--glass)';
+  } else {
+    containerStyle.background = 'linear-gradient(var(--glass), var(--glass)) padding-box, linear-gradient(135deg, var(--cyan), var(--purple)) border-box';
+    containerStyle.backgroundClip = 'padding-box, border-box';
+  }
+
   return (
     <div
-      style={{
-        background: hovered ? 'var(--glass2)' : 'var(--glass)',
-        border: '1px solid var(--border)',
-        borderRadius: 14, padding: '18px 20px',
-        borderLeft: '3px solid transparent',
-        transition: 'all 0.22s ease',
-        boxShadow: hovered ? '0 8px 32px rgba(0,0,0,0.35)' : 'none',
-        cursor: 'pointer',
-        width: '100%', height: '100%', boxSizing: 'border-box',
-      }}
+      className="fade-up-1"
+      style={containerStyle}
       onMouseEnter={() => { setHovered(true); if (!seen) setSeen(true); }}
       onMouseLeave={() => setHovered(false)}
     >
