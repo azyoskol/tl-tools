@@ -335,13 +335,13 @@ function generateLayout(widgets: DashboardWidgetInstance[]): WidgetLayout[] {
   };
 
   const heightByType: Record<string, number> = {
-    'leaderboard': 3,
-    'data-table': 3,
+    'leaderboard': 4,
+    'data-table': 4,
     'dora-overview': 2,
     'sprint-burndown': 3,
     'heatmap': 2,
     'metric-chart': 3,
-    'stat-card': 1,
+    'stat-card': 2,
     'ai-insight': 1,
     'anomaly-detector': 1,
     'health-gauge': 1,
