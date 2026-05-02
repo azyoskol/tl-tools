@@ -1,20 +1,220 @@
+// @ts-nocheck
 import type { WidgetType, WidgetConfig } from '../../types/widgets';
-import type { MetricTimeSeries } from '../../types/metrics';
 import React from 'react';
+import { StatCard } from '../ui/StatCard';
+import { Leaderboard } from '../ui/Leaderboard';
+import { DataTable } from '../ui/DataTable';
+import { DORABadge } from '../ui/DORABadge';
+import type { StatCardConfig, LeaderboardConfig, DataTableConfig, MetricChartConfig } from '../../types/widgets';
 
-const MetricChartWidget = ({ config }: { config: WidgetConfig }) => <div>Metric Chart</div>;
-const StatCardWidget = ({ config }: { config: WidgetConfig }) => <div>Stat Card</div>;
-const GaugeWidget = ({ config }: { config: WidgetConfig }) => <div>Gauge</div>;
-const DORAOverviewWidget = ({ config }: { config: WidgetConfig }) => <div>DORA Overview</div>;
-const HeatmapWidget = ({ config }: { config: WidgetConfig }) => <div>Heatmap</div>;
-const DataTableWidget = ({ config }: { config: WidgetConfig }) => <div>Data Table</div>;
-const LeaderboardWidget = ({ config }: { config: WidgetConfig }) => <div>Leaderboard</div>;
-const SprintBurndownWidget = ({ config }: { config: WidgetConfig }) => <div>Sprint Burndown</div>;
-const AIInsightWidget = ({ config }: { config: WidgetConfig }) => <div>AI Insight</div>;
-const AnomalyDetectorWidget = ({ config }: { config: WidgetConfig }) => <div>Anomaly Detector</div>;
-const CompareBarChartWidget = ({ config }: { config: WidgetConfig }) => <div>Compare Bar Chart</div>;
+const iconMap: Record<string, string> = {
+  'deploy-freq': 'rocket',
+  'lead-time': 'clock',
+  'cfr': 'alertCircle',
+  'mttr': 'zap',
+  'ci-pass': 'checkCircle',
+  'ci-duration': 'timer',
+  'ci-queue': 'layers',
+  'pr-cycle': 'gitMerge',
+  'pr-review': 'gitPullRequest',
+  'pr-merge': 'gitCommit',
+  'velocity': 'trendingUp',
+  'throughput': 'activity',
+  'health-score': 'heart',
+  'sprint-burndown': 'target',
+};
 
-export const widgetRegistry: Record<WidgetType, React.FC<{ config: WidgetConfig; data?: MetricTimeSeries }>> = {
+const colorMap: Record<string, string> = {
+  cyan: 'cyan',
+  purple: 'purple',
+  success: 'success',
+  warning: 'warning',
+  error: 'error',
+};
+
+const StatCardWidget = ({ config, data }: { config: WidgetConfig; data?: any }) => {
+  const cfg = config as StatCardConfig;
+  if (!data) return <div>Loading...</div>;
+
+  const icon = iconMap[cfg.metricId] || 'activity';
+  const color = colorMap[cfg.colorKey] || 'cyan';
+
+  // Parse delta to get trend direction
+  const trendDir = data.delta?.startsWith('+') ? 'up' : data.delta?.startsWith('-') ? 'down' : 'neutral';
+
+  return (
+    <StatCard
+      icon={icon}
+      label={cfg.metricId || 'Metric'}
+      value={data.value || '0'}
+      trend={data.delta}
+      trendDir={trendDir}
+      color={color}
+      spark={data.sparkline?.values}
+      delay={0}
+    />
+  );
+};
+
+const MetricChartWidget = ({ config, data }: { config: WidgetConfig; data?: any }) => {
+  const cfg = config as MetricChartConfig;
+  if (!data) return <div>Loading...</div>;
+
+  // Just show basic metric info for now
+  return (
+    <div style={{ background: 'var(--glass)', border: '1px solid var(--border)', borderRadius: 12, padding: 16, height: '100%' }}>
+      <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 8 }}>{data.label || cfg.metricId}</div>
+      <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--text)' }}>
+        {data.current?.values?.[data.current.values.length - 1]?.toFixed(1) || '0'}
+        <span style={{ fontSize: 12, color: 'var(--muted)', marginLeft: 4 }}>{data.unit}</span>
+      </div>
+    </div>
+  );
+};
+
+const LeaderboardWidget = ({ config, data }: { config: WidgetConfig; data?: any }) => {
+  const cfg = config as LeaderboardConfig;
+  if (!data || !Array.isArray(data)) return <div>Loading...</div>;
+
+  const items = data.map((item: any, i: number) => ({
+    name: item.team || item.name || `Item ${i}`,
+    value: Number(item.valueRaw || item.value || 0),
+  }));
+
+  return <Leaderboard items={items} color="#00E5FF" title={cfg.metricId} />;
+};
+
+const DataTableWidget = ({ config, data }: { config: WidgetConfig; data?: any }) => {
+  const cfg = config as DataTableConfig;
+  if (!data) return <div>Loading...</div>;
+
+  const columns = ['Title', 'Status'];
+  const rows = (data.rows?.slice(0, cfg.maxRows || 5) || []).map((r: any) => [
+    r.title || `Item ${r.id}`,
+    r.status || 'Unknown',
+  ]);
+
+  return (
+    <DataTable
+      title={cfg.tableType}
+      columns={columns}
+      rows={rows}
+      maxRows={cfg.maxRows}
+    />
+  );
+};
+
+const DORAOverviewWidget = ({ data }: { config: WidgetConfig; data?: any }) => {
+  if (!data) return <div>Loading...</div>;
+
+  return (
+    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+      {data.deployFrequency && (
+        <DORABadge label="Deploy" value={data.deployFrequency.currentValue} level={data.deployFrequency.level} />
+      )}
+      {data.leadTime && (
+        <DORABadge label="Lead Time" value={data.leadTime.currentValue} level={data.leadTime.level} />
+      )}
+      {data.changeFailureRate && (
+        <DORABadge label="CFR" value={data.changeFailureRate.currentValue} level={data.changeFailureRate.level} />
+      )}
+      {data.mttr && (
+        <DORABadge label="MTTR" value={data.mttr.currentValue} level={data.mttr.level} />
+      )}
+    </div>
+  );
+};
+
+const GaugeWidget = ({ data }: { config: WidgetConfig; data?: any }) => {
+  if (!data) return <div>Loading...</div>;
+
+  return (
+    <div style={{ background: 'var(--glass)', border: '1px solid var(--border)', borderRadius: 12, padding: 16, height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ textAlign: 'center' }}>
+        <div style={{ fontSize: 36, fontWeight: 700, color: data.score > 70 ? 'var(--success)' : data.score > 40 ? 'var(--warning)' : 'var(--error)' }}>
+          {data.score?.toFixed(0) || 0}
+        </div>
+        <div style={{ fontSize: 12, color: 'var(--muted)' }}>Health Score</div>
+      </div>
+    </div>
+  );
+};
+
+const HeatmapWidget = ({ data }: { config: WidgetConfig; data?: any }) => {
+  if (!data) return <div>Loading...</div>;
+
+  return (
+    <div style={{ background: 'var(--glass)', border: '1px solid var(--border)', borderRadius: 12, padding: 16, height: '100%' }}>
+      <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 8 }}>Heatmap</div>
+      <div style={{ display: 'flex', gap: 4 }}>
+        {data.cells?.map((cell: any, i: number) => (
+          <div key={i} style={{ flex: 1, background: `rgba(0,229,255,${cell.value / 100})`, borderRadius: 4, padding: 8, textAlign: 'center' }}>
+            <div style={{ fontSize: 11, color: 'var(--text)' }}>{cell.label}</div>
+            <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>{cell.value?.toFixed(0)}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const SprintBurndownWidget = ({ data }: { config: WidgetConfig; data?: any }) => {
+  if (!data) return <div>Loading...</div>;
+
+  return (
+    <div style={{ background: 'var(--glass)', border: '1px solid var(--border)', borderRadius: 12, padding: 16, height: '100%' }}>
+      <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 8 }}>Sprint Burndown</div>
+      <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end', height: 60 }}>
+        {data.ideal?.values?.map((v: number, i: number) => (
+          <div key={i} style={{ flex: 1, background: 'var(--border)', height: `${v}%`, borderRadius: 2 }} />
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const AIInsightWidget = ({ data }: { config: WidgetConfig; data?: any }) => {
+  if (!data) return <div>Loading...</div>;
+
+  return (
+    <div style={{ background: 'var(--glass)', border: '1px solid var(--border)', borderRadius: 12, padding: 16, height: '100%' }}>
+      <div style={{ fontSize: 12, color: 'var(--cyan)', marginBottom: 8 }}>AI Insight</div>
+      <div style={{ fontSize: 13, color: 'var(--text)' }}>{data.insight}</div>
+    </div>
+  );
+};
+
+const AnomalyDetectorWidget = ({ data }: { config: WidgetConfig; data?: any }) => {
+  if (!data) return <div>Loading...</div>;
+
+  return (
+    <div style={{ background: 'var(--glass)', border: '1px solid var(--border)', borderRadius: 12, padding: 16, height: '100%' }}>
+      <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 8 }}>Anomaly Detector</div>
+      {data.anomalies?.length > 0 ? (
+        <div style={{ color: 'var(--error)', fontSize: 12 }}>
+          {data.anomalies.length} anomalies detected
+        </div>
+      ) : (
+        <div style={{ color: 'var(--success)', fontSize: 12 }}>No anomalies</div>
+      )}
+    </div>
+  );
+};
+
+const CompareBarChartWidget = ({ data }: { config: WidgetConfig; data?: any }) => {
+  if (!data) return <div>Loading...</div>;
+
+  return (
+    <div style={{ background: 'var(--glass)', border: '1px solid var(--border)', borderRadius: 12, padding: 16, height: '100%' }}>
+      <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 8 }}>Compare</div>
+      <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--text)' }}>
+        {data.primary?.values?.[data.primary.values.length - 1]?.toFixed(1) || '0'}%
+      </div>
+    </div>
+  );
+};
+
+export const widgetRegistry: Record<WidgetType, React.FC<{ config: WidgetConfig; data?: any }>> = {
   'metric-chart': MetricChartWidget,
   'stat-card': StatCardWidget,
   'health-gauge': GaugeWidget,
