@@ -468,12 +468,14 @@ function initDashboards() {
     { id: "dash-ic", name: "My Dashboard", sourceTemplateId: "ic" as const },
   ];
 
-  // Overview dashboard - based on DashboardScreen.tsx
+  // Overview dashboard - based on original DashboardScreen.tsx
   const overviewWidgets: DashboardWidgetInstance[] = [
-    { instanceId: "overview-stat-1", widgetType: "stat-card", config: { type: "stat-card", metricId: "deploy-freq", showSparkline: true, colorKey: "cyan" } as StatCardConfig },
-    { instanceId: "overview-stat-2", widgetType: "stat-card", config: { type: "stat-card", metricId: "lead-time", showSparkline: true, colorKey: "purple" } as StatCardConfig },
-    { instanceId: "overview-stat-3", widgetType: "stat-card", config: { type: "stat-card", metricId: "cfr", showSparkline: true, colorKey: "warning" } as StatCardConfig },
-    { instanceId: "overview-stat-4", widgetType: "stat-card", config: { type: "stat-card", metricId: "mttr", showSparkline: true, colorKey: "success" } as StatCardConfig },
+    // Row 1: StatCards (Engineering Health, Deploy Freq, Lead Time, CFR)
+    { instanceId: "overview-stat-1", widgetType: "stat-card", config: { type: "stat-card", metricId: "health-score", showSparkline: true, colorKey: "cyan" } as StatCardConfig },
+    { instanceId: "overview-stat-2", widgetType: "stat-card", config: { type: "stat-card", metricId: "deploy-freq", showSparkline: true, colorKey: "success" } as StatCardConfig },
+    { instanceId: "overview-stat-3", widgetType: "stat-card", config: { type: "stat-card", metricId: "lead-time", showSparkline: true, colorKey: "purple" } as StatCardConfig },
+    { instanceId: "overview-stat-4", widgetType: "stat-card", config: { type: "stat-card", metricId: "cfr", showSparkline: true, colorKey: "warning" } as StatCardConfig },
+    // Row 2: AI Insights
     { instanceId: "overview-ai-1", widgetType: "ai-insight", config: { type: "ai-insight", variant: "card", topicHint: "deployment frequency" } as AIInsightConfig },
     { instanceId: "overview-ai-2", widgetType: "ai-insight", config: { type: "ai-insight", variant: "card", topicHint: "PR review time" } as AIInsightConfig },
     { instanceId: "overview-ai-3", widgetType: "ai-insight", config: { type: "ai-insight", variant: "card", topicHint: "PR review time improving" } as AIInsightConfig },
