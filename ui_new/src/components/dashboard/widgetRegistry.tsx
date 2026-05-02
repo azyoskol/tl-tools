@@ -135,7 +135,6 @@ const DORAOverviewWidget = ({ data }: { config: WidgetConfig; data?: any }) => {
         <DORABadge label="MTTR" value={data.mttr.currentValue} level={data.mttr.level} />
       )}
     </div>
-    </div>
   );
 };
 
