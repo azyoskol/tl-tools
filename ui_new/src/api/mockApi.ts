@@ -190,7 +190,20 @@ function generateWidgetConfig(type: WidgetType, role?: string, wizardId?: string
       return { type: 'leaderboard', metricId: map.metricId || 'deploy-freq', groupBy: 'team', limit: 5 } as LeaderboardConfig;
     }
     if (map.type === 'ai-insight') {
-      return { type: 'ai-insight', variant: 'card', topicHint: map.metricId } as AIInsightConfig;
+      return {
+        type: 'ai-insight', variant: 'card', topicHint: map.metricId,
+        containerStyle: {
+          borderRadius: 14, padding: '18px 20px',
+          borderTop: '1px solid var(--border)', borderRight: '1px solid var(--border)',
+          borderBottom: '1px solid var(--border)', borderLeft: '3px solid rgba(0,0,0,0)',
+        },
+        unseenStyle: {
+          background: 'linear-gradient(var(--glass), var(--glass)) padding-box, linear-gradient(135deg, var(--cyan), var(--purple)) border-box',
+          backgroundClip: 'padding-box, border-box',
+          borderTop: '1px solid var(--border)', borderRight: '1px solid var(--border)',
+          borderBottom: '1px solid var(--border)', borderLeft: '3px solid rgba(0,0,0,0)',
+        },
+      } as any;
     }
     if (map.type === 'anomaly-detector') {
       return { type: 'anomaly-detector', watchMetrics: [map.metricId as any] } as AnomalyDetectorConfig;
@@ -294,7 +307,18 @@ function generateWidgetConfig(type: WidgetType, role?: string, wizardId?: string
         type: "ai-insight",
         variant: pickRandom(["card", "inline"]),
         topicHint: pseudoRandom() > 0.5 ? "deployment frequency" : undefined,
-      } as AIInsightConfig;
+        containerStyle: {
+          borderRadius: 14, padding: '18px 20px',
+          borderTop: '1px solid var(--border)', borderRight: '1px solid var(--border)',
+          borderBottom: '1px solid var(--border)', borderLeft: '3px solid rgba(0,0,0,0)',
+        },
+        unseenStyle: {
+          background: 'linear-gradient(var(--glass), var(--glass)) padding-box, linear-gradient(135deg, var(--cyan), var(--purple)) border-box',
+          backgroundClip: 'padding-box, border-box',
+          borderTop: '1px solid var(--border)', borderRight: '1px solid var(--border)',
+          borderBottom: '1px solid var(--border)', borderLeft: '3px solid rgba(0,0,0,0)',
+        },
+      } as any;
     case "anomaly-detector":
       return {
         type: "anomaly-detector",
@@ -482,9 +506,48 @@ function initDashboards() {
     // Section header for AI Insights
     { instanceId: "overview-sh-ai", widgetType: "section-header", config: { type: "section-header", title: "AI Insights", rightText: "Updated 2 min ago" } as any },
     // Row 2: AI Insights
-    { instanceId: "overview-ai-1", widgetType: "ai-insight", config: { type: "ai-insight", variant: "card", topicHint: "deployment frequency" } as AIInsightConfig },
-    { instanceId: "overview-ai-2", widgetType: "ai-insight", config: { type: "ai-insight", variant: "card", topicHint: "PR review time" } as AIInsightConfig },
-    { instanceId: "overview-ai-3", widgetType: "ai-insight", config: { type: "ai-insight", variant: "card", topicHint: "PR review time improving" } as AIInsightConfig },
+    { instanceId: "overview-ai-1", widgetType: "ai-insight", config: {
+      type: "ai-insight", variant: "card", topicHint: "deployment frequency",
+      containerStyle: {
+        borderRadius: 14, padding: '18px 20px',
+        borderTop: '1px solid var(--border)', borderRight: '1px solid var(--border)',
+        borderBottom: '1px solid var(--border)', borderLeft: '3px solid rgba(0,0,0,0)',
+      },
+      unseenStyle: {
+        background: 'linear-gradient(var(--glass), var(--glass)) padding-box, linear-gradient(135deg, var(--cyan), var(--purple)) border-box',
+        backgroundClip: 'padding-box, border-box',
+        borderTop: '1px solid var(--border)', borderRight: '1px solid var(--border)',
+        borderBottom: '1px solid var(--border)', borderLeft: '3px solid rgba(0,0,0,0)',
+      },
+    } as any },
+    { instanceId: "overview-ai-2", widgetType: "ai-insight", config: {
+      type: "ai-insight", variant: "card", topicHint: "PR review time",
+      containerStyle: {
+        borderRadius: 14, padding: '18px 20px',
+        borderTop: '1px solid var(--border)', borderRight: '1px solid var(--border)',
+        borderBottom: '1px solid var(--border)', borderLeft: '3px solid rgba(0,0,0,0)',
+      },
+      unseenStyle: {
+        background: 'linear-gradient(var(--glass), var(--glass)) padding-box, linear-gradient(135deg, var(--cyan), var(--purple)) border-box',
+        backgroundClip: 'padding-box, border-box',
+        borderTop: '1px solid var(--border)', borderRight: '1px solid var(--border)',
+        borderBottom: '1px solid var(--border)', borderLeft: '3px solid rgba(0,0,0,0)',
+      },
+    } as any },
+    { instanceId: "overview-ai-3", widgetType: "ai-insight", config: {
+      type: "ai-insight", variant: "card", topicHint: "PR review time improving",
+      containerStyle: {
+        borderRadius: 14, padding: '18px 20px',
+        borderTop: '1px solid var(--border)', borderRight: '1px solid var(--border)',
+        borderBottom: '1px solid var(--border)', borderLeft: '3px solid rgba(0,0,0,0)',
+      },
+      unseenStyle: {
+        background: 'linear-gradient(var(--glass), var(--glass)) padding-box, linear-gradient(135deg, var(--cyan), var(--purple)) border-box',
+        backgroundClip: 'padding-box, border-box',
+        borderTop: '1px solid var(--border)', borderRight: '1px solid var(--border)',
+        borderBottom: '1px solid var(--border)', borderLeft: '3px solid rgba(0,0,0,0)',
+      },
+    } as any },
     // Recent Activity widget
     { instanceId: "overview-activity", widgetType: "recent-activity", config: { type: "recent-activity", maxItems: 10 } as any },
   ];
@@ -528,7 +591,20 @@ function initDashboards() {
         // Row 4: Lead Time
         { instanceId: "cto-chart-2", widgetType: "metric-chart", config: { type: "metric-chart", metricId: "lead-time", chartVariant: "area", showCompare: true, colorOverride: "#B44CFF" } as MetricChartConfig },
         // AI Insight
-        { instanceId: "cto-ai-1", widgetType: "ai-insight", config: { type: "ai-insight", variant: "inline", topicHint: "security" } as AIInsightConfig },
+        { instanceId: "cto-ai-1", widgetType: "ai-insight", config: {
+          type: "ai-insight", variant: "inline", topicHint: "security",
+          containerStyle: {
+            borderRadius: 14, padding: '18px 20px',
+            borderTop: '1px solid var(--border)', borderRight: '1px solid var(--border)',
+            borderBottom: '1px solid var(--border)', borderLeft: '3px solid rgba(0,0,0,0)',
+          },
+          unseenStyle: {
+            background: 'linear-gradient(var(--glass), var(--glass)) padding-box, linear-gradient(135deg, var(--cyan), var(--purple)) border-box',
+            backgroundClip: 'padding-box, border-box',
+            borderTop: '1px solid var(--border)', borderRight: '1px solid var(--border)',
+            borderBottom: '1px solid var(--border)', borderLeft: '3px solid rgba(0,0,0,0)',
+          },
+        } as any },
       ];
       layout = generateLayout(widgets);
     } else if (role.id === "dash-vp") {
@@ -546,7 +622,20 @@ function initDashboards() {
         { instanceId: "vp-heat-1", widgetType: "heatmap", config: { type: "heatmap", rowGroupBy: "team", columns: 14 } as HeatmapConfig },
         { instanceId: "vp-table-1", widgetType: "data-table", config: { type: "data-table", tableType: "delivery-risk", maxRows: 5 } as DataTableConfig },
         // AI Insight
-        { instanceId: "vp-ai-1", widgetType: "ai-insight", config: { type: "ai-insight", variant: "inline", topicHint: "pr cycle time" } as AIInsightConfig },
+        { instanceId: "vp-ai-1", widgetType: "ai-insight", config: {
+          type: "ai-insight", variant: "inline", topicHint: "pr cycle time",
+          containerStyle: {
+            borderRadius: 14, padding: '18px 20px',
+            borderTop: '1px solid var(--border)', borderRight: '1px solid var(--border)',
+            borderBottom: '1px solid var(--border)', borderLeft: '3px solid rgba(0,0,0,0)',
+          },
+          unseenStyle: {
+            background: 'linear-gradient(var(--glass), var(--glass)) padding-box, linear-gradient(135deg, var(--cyan), var(--purple)) border-box',
+            backgroundClip: 'padding-box, border-box',
+            borderTop: '1px solid var(--border)', borderRight: '1px solid var(--border)',
+            borderBottom: '1px solid var(--border)', borderLeft: '3px solid rgba(0,0,0,0)',
+          },
+        } as any },
       ];
       layout = generateLayout(widgets);
     } else if (role.id === "dash-tl") {
@@ -564,7 +653,20 @@ function initDashboards() {
         { instanceId: "tl-table-1", widgetType: "data-table", config: { type: "data-table", tableType: "pr-queue", maxRows: 5 } as DataTableConfig },
         { instanceId: "tl-table-2", widgetType: "data-table", config: { type: "data-table", tableType: "ci-failures", maxRows: 5 } as DataTableConfig },
         // AI Insight
-        { instanceId: "tl-ai-1", widgetType: "ai-insight", config: { type: "ai-insight", variant: "inline", topicHint: "flaky tests" } as AIInsightConfig },
+        { instanceId: "tl-ai-1", widgetType: "ai-insight", config: {
+          type: "ai-insight", variant: "inline", topicHint: "flaky tests",
+          containerStyle: {
+            borderRadius: 14, padding: '18px 20px',
+            borderTop: '1px solid var(--border)', borderRight: '1px solid var(--border)',
+            borderBottom: '1px solid var(--border)', borderLeft: '3px solid rgba(0,0,0,0)',
+          },
+          unseenStyle: {
+            background: 'linear-gradient(var(--glass), var(--glass)) padding-box, linear-gradient(135deg, var(--cyan), var(--purple)) border-box',
+            backgroundClip: 'padding-box, border-box',
+            borderTop: '1px solid var(--border)', borderRight: '1px solid var(--border)',
+            borderBottom: '1px solid var(--border)', borderLeft: '3px solid rgba(0,0,0,0)',
+          },
+        } as any },
       ];
       layout = generateLayout(widgets);
     } else if (role.id === "dash-devops") {
@@ -582,7 +684,20 @@ function initDashboards() {
         { instanceId: "devops-heat-1", widgetType: "heatmap", config: { type: "heatmap", rowGroupBy: "weekday", columns: 16 } as HeatmapConfig },
         { instanceId: "devops-table-1", widgetType: "data-table", config: { type: "data-table", tableType: "incidents", maxRows: 5 } as DataTableConfig },
         // AI Insight
-        { instanceId: "devops-ai-1", widgetType: "ai-insight", config: { type: "ai-insight", variant: "inline", topicHint: "incident response" } as AIInsightConfig },
+        { instanceId: "devops-ai-1", widgetType: "ai-insight", config: {
+          type: "ai-insight", variant: "inline", topicHint: "incident response",
+          containerStyle: {
+            borderRadius: 14, padding: '18px 20px',
+            borderTop: '1px solid var(--border)', borderRight: '1px solid var(--border)',
+            borderBottom: '1px solid var(--border)', borderLeft: '3px solid rgba(0,0,0,0)',
+          },
+          unseenStyle: {
+            background: 'linear-gradient(var(--glass), var(--glass)) padding-box, linear-gradient(135deg, var(--cyan), var(--purple)) border-box',
+            backgroundClip: 'padding-box, border-box',
+            borderTop: '1px solid var(--border)', borderRight: '1px solid var(--border)',
+            borderBottom: '1px solid var(--border)', borderLeft: '3px solid rgba(0,0,0,0)',
+          },
+        } as any },
       ];
       layout = generateLayout(widgets);
     } else if (role.id === "dash-ic") {
@@ -600,7 +715,20 @@ function initDashboards() {
         { instanceId: "ic-table-2", widgetType: "data-table", config: { type: "data-table", tableType: "review-queue", maxRows: 5 } as DataTableConfig },
         { instanceId: "ic-burndown-1", widgetType: "sprint-burndown", config: { type: "sprint-burndown", showTaskList: true } as SprintBurndownConfig },
         // AI Insight
-        { instanceId: "ic-ai-1", widgetType: "ai-insight", config: { type: "ai-insight", variant: "inline", topicHint: "CI failure" } as AIInsightConfig },
+        { instanceId: "ic-ai-1", widgetType: "ai-insight", config: {
+          type: "ai-insight", variant: "inline", topicHint: "CI failure",
+          containerStyle: {
+            borderRadius: 14, padding: '18px 20px',
+            borderTop: '1px solid var(--border)', borderRight: '1px solid var(--border)',
+            borderBottom: '1px solid var(--border)', borderLeft: '3px solid rgba(0,0,0,0)',
+          },
+          unseenStyle: {
+            background: 'linear-gradient(var(--glass), var(--glass)) padding-box, linear-gradient(135deg, var(--cyan), var(--purple)) border-box',
+            backgroundClip: 'padding-box, border-box',
+            borderTop: '1px solid var(--border)', borderRight: '1px solid var(--border)',
+            borderBottom: '1px solid var(--border)', borderLeft: '3px solid rgba(0,0,0,0)',
+          },
+        } as any },
       ];
       layout = generateLayout(widgets);
     } else {

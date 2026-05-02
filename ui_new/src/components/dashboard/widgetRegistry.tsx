@@ -379,24 +379,18 @@ const AIInsightWidget = ({ config, data }: { config: WidgetConfig; data?: any })
 
   const cfg = config as any;
 
-  const containerStyle: React.CSSProperties = {
-    borderRadius: 14,
-    padding: '18px 20px',
-    borderTop: '1px solid var(--border)',
-    borderRight: '1px solid var(--border)',
-    borderBottom: '1px solid var(--border)',
-    borderLeft: '3px solid transparent',
+  const containerStyle = {
+    ...(cfg.containerStyle || {}),
     transition: 'all 0.22s ease',
     boxShadow: hovered ? '0 8px 32px rgba(0,0,0,0.35)' : 'none',
     cursor: 'pointer',
-    width: '100%', height: '100%', boxSizing: 'border-box',
+    width: '100%', height: '100%', boxSizing: 'border-box' as const,
   };
 
   if (seen) {
-    containerStyle.background = hovered ? 'var(--glass2)' : 'var(--glass)';
-  } else {
-    containerStyle.background = 'linear-gradient(var(--glass), var(--glass)) padding-box, linear-gradient(135deg, var(--cyan), var(--purple)) border-box';
-    containerStyle.backgroundClip = 'padding-box, border-box';
+    (containerStyle as React.CSSProperties).background = hovered ? 'var(--glass2)' : 'var(--glass)';
+  } else if (cfg.unseenStyle) {
+    Object.assign(containerStyle, cfg.unseenStyle);
   }
 
   return (
