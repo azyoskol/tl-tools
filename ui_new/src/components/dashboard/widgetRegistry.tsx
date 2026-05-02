@@ -250,7 +250,7 @@ const HeatmapWidget = ({ config, data }: { config: WidgetConfig; data?: any }) =
   );
 
   return (
-    <div style={{...widgetStyle, padding: 16, background: 'var(--glass)', border: '1px solid var(--border)', borderRadius: 12, boxSizing: 'border-box'}}>
+    <div style={{...widgetStyle, padding: 12, background: 'var(--glass)', border: '1px solid var(--border)', borderRadius: 12, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', justifyContent: 'center'}}>
       <Heatmap 
         data={heatData}
         rows={rows}
@@ -259,7 +259,7 @@ const HeatmapWidget = ({ config, data }: { config: WidgetConfig; data?: any }) =
         labelRows={cfg.rowGroupBy === 'team' ? teams : undefined}
         labelCols={[]}
         title=""
-        cellSize={16}
+        cellSize={12}
         gap={2}
       />
     </div>
