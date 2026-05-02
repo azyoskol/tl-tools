@@ -35,19 +35,11 @@ export function useDashboard(dashboardId: string): UseDashboardResult {
     }
 
     const dashboardIdMapped = DASHBOARD_IDS[dashboardId];
-if (!dashboardIdMapped) {
+    if (!dashboardIdMapped || !dashboardId)  {
       setError(`Unknown dashboard: ${dashboardId}`);
       setIsLoading(false);
       setWidgetData({});
       setDashboard(null);
-      return;
-    }
-
-    // Also reset when dashboardId becomes empty
-    if (!dashboardId) {
-      setDashboard(null);
-      setWidgetData({});
-      setIsLoading(false);
       return;
     }
 
