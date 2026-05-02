@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Icon } from '../../components/shared/Icon';
 import { DashboardRenderer } from '../../components/dashboard/DashboardRenderer';
-import { createMockCTODashboard, createMockVPDashboard, createMockTLDashboard, createMockDevOpsDashboard, createMockICDashboard } from '../../types/mocks/dashboards';
+import { useRoleDashboard } from '../../hooks/useRoleDashboard';
 
 const ROLES = [
   { id: 'overview', label: 'Overview', icon: 'home', navId: 'dashboard' },
@@ -12,14 +12,6 @@ const ROLES = [
   { id: 'ic',       label: 'My View',  icon: 'activity', navId: 'dash-ic' },
 ];
 
-const mockDashboards: Record<string, ReturnType<typeof createMockCTODashboard>> = {
-  cto: createMockCTODashboard(),
-  vp: createMockVPDashboard(),
-  tl: createMockTLDashboard(),
-  devops: createMockDevOpsDashboard(),
-  ic: createMockICDashboard(),
-};
-
 interface RoleDashboardScreenProps {
   initialRole?: string;
   onNewDashboard?: () => void;
@@ -28,6 +20,7 @@ interface RoleDashboardScreenProps {
 
 export const RoleDashboardScreen: React.FC<RoleDashboardScreenProps> = ({ initialRole = 'cto', onNewDashboard, onNavigate }) => {
   const [role, setRole] = useState(initialRole);
+  const { dashboard, widgetData, isLoading } = useRoleDashboard(role);
 
   useEffect(() => {
     setRole(initialRole);
@@ -42,9 +35,15 @@ export const RoleDashboardScreen: React.FC<RoleDashboardScreenProps> = ({ initia
   };
 
   const renderRole = () => {
-    const dashboard = mockDashboards[role];
+    if (isLoading) {
+      return (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+          <span style={{ color: 'var(--muted)' }}>Loading dashboard...</span>
+        </div>
+      );
+    }
     if (!dashboard) return null;
-    return <DashboardRenderer dashboard={dashboard} />;
+    return <DashboardRenderer dashboard={dashboard} widgetData={widgetData} />;
   };
 
   const TabBar = () => (
