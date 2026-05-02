@@ -28,7 +28,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
 
   useEffect(() => {
     setDashboardId(initialDashboard);
-  }, [dashboard]);
+  }, [initialDashboard]);
 
   const handleDashboardChange = (newDashboard: string) => {
     setDashboardId(newDashboard);
