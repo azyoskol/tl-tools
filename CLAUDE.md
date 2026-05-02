@@ -2,116 +2,122 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Project Status
+## Project Overview
 
-This is a **Go project** for team engineering metrics API. The project is buildable and running.
+Metraly is a **team engineering metrics platform** — a self-hosted, open-source SaaS alternative.
+- `cmd/api/` — Go API backend (active rewrite, see `BACKEND_PLAN.md`)
+- `ui_new/` — New React/TypeScript frontend (Vite, currently uses `mockApi.ts` instead of real HTTP)
+- `ui/` — Legacy React frontend (served via Docker at port 3000, do not modify)
+- `internal/pkg/` — Legacy Go packages (ClickHouse-based, keep intact, not used by new backend)
 
-**Build:**
+## Current Work
+
+**Active task:** Replacing `ui_new/src/api/mockApi.ts` with a real Go backend in `cmd/api/`.
+See `BACKEND_PLAN.md` for the full architecture, schema, and implementation phases.
+
+> ⚠️ `cmd/api/` is being rewritten from scratch. Do not try to reuse existing handler files there.
+> ⚠️ Do not modify `ui_new/src/api/mockApi.ts`.
+
+## Build & Run
+
 ```bash
 make build           # Build Go binary
-make docker-up       # Start services
-make test            # Run tests (19 tests)
+make docker-up       # Start services (ClickHouse, Redis, API, UI)
+make test            # Run tests (19 tests in internal/pkg/)
+make lint            # Run linter
+
+# New backend (after implementing BACKEND_PLAN.md):
+cd cmd/api && go run . --seed   # Start with seed data
 ```
 
-## Architecture
+## New Backend Stack (`cmd/api/`)
 
-This is a **team engineering metrics API** that ingests events from Git, PM tools, and CI/CD pipelines and serves aggregated dashboards.
+| Concern | Library |
+|---------|---------|
+| Router | `go-chi/chi/v5` |
+| DB | PostgreSQL 16 + TimescaleDB |
+| DB driver | `github.com/jackc/pgx/v5` (no ORM) |
+| Cache | Redis `redis/go-redis/v9` |
+| Auth | `github.com/golang-jwt/jwt/v5` (RS256) + bcrypt |
+| OIDC | `github.com/coreos/go-oidc/v3` (optional enterprise SSO) |
+| JSON | `github.com/json-iterator/go` |
+| Logger | `github.com/rs/zerolog` |
+| Validator | `github.com/go-playground/validator/v10` |
 
-### Layered Architecture
+## New Backend Architecture (`cmd/api/`)
 
 ```
-HTTP Request
-    ↓
-Handler (validate request, marshal)      # internal/pkg/handlers/
-    ↓
-Business Logic                           # internal/pkg/biz/
-    ↓
-Repository (data access, queries)         # internal/pkg/repo/
-    ↓
-Database (ClickHouse HTTP client)         # internal/pkg/database/
+cmd/api/
+├── main.go          # Wiring: pgx pool → migrate → seed → chi router → server
+├── config/          # AppConfig struct + Load() from env
+├── domain/          # Domain structs (WidgetInstance.Config is json.RawMessage — no union types)
+├── db/              # pgxpool wrapper + embedded SQL migration runner
+├── migrations/      # 007 SQL files (go:embed); TimescaleDB hypertable for metrics
+├── repo/            # Interfaces + pgx implementations (no ORM)
+├── auth/            # JWT KeyManager, authService, redisTokenStore, lazy OIDC provider
+├── biz/             # Business logic; errgroup for parallel widget/DORA fetch
+├── respond/         # sync.Pool[bytes.Buffer] + jsoniter; all handlers use this
+├── middleware/      # RequireAuth(keyMgr), RequireRole(roles...), zerolog request logger
+├── handlers/        # 10 handler files — one per domain group
+└── seed/            # Park-Miller PRNG (seed=42, matches mockApi.ts), idempotent runner
 ```
 
-### Package Layout
+**Layer contract:**
+- Handlers: decode → validate → call one biz method → `respond.JSON` or `respond.ErrorFrom`
+- Biz: business logic + cache + errgroup fan-out; returns typed errors (ErrNotFound, ErrConflict…)
+- Repo: raw pgx queries; dashboard UPDATE uses `WHERE id=$1 AND version=$2` for optimistic lock
+
+**Performance patterns:**
+- `sync.Pool[bytes.Buffer]` in `respond/respond.go` — every JSON response
+- `errgroup.WithContext` in biz — widget batch fetch and 4 DORA metrics in parallel
+- Redis cache: metrics TTL 5min, dashboards 30s, templates 1h
+
+## `ui_new/` Frontend
+
+React 18 + TypeScript + Vite app at `ui_new/`. Currently calls `mockApi` directly (not HTTP).
+
+```
+ui_new/src/
+├── api/mockApi.ts          # Source of truth for API contract — DO NOT MODIFY
+├── api/client.js           # axios: baseURL=VITE_API_BASE_URL || http://localhost:3001/api
+├── types/                  # TypeScript types (api.ts, dashboard.ts, metrics.ts, widgets.ts…)
+├── hooks/                  # useDashboard.ts, useDashboardOverview.ts use mockApi directly
+└── components/             # React components
+```
+
+**MetricId values** (from `types/metrics.ts`):
+`deploy-freq`, `lead-time`, `cfr`, `mttr`, `ci-pass`, `ci-duration`, `ci-queue`,
+`pr-cycle`, `pr-review`, `pr-merge`, `velocity`, `throughput`, `health-score`, `sprint-burndown`
+
+**Widget types** (11 variants, config is a discriminated union in TS, `json.RawMessage` in Go):
+`metric-chart`, `compare-bar-chart`, `stat-card`, `dora-overview`, `health-gauge`,
+`heatmap`, `data-table`, `leaderboard`, `sprint-burndown`, `ai-insight`, `anomaly-detector`
+
+## Legacy Architecture (`internal/pkg/`)
+
+Original ClickHouse-based backend — keep intact, not used by new `cmd/api/` rewrite.
 
 ```
 internal/pkg/
-├── biz/          # Business logic (DashboardService, etc.)
-├── cache/        # Cache interface + Redis implementation
-├── config/       # Config interface + env-var implementation
-├── database/     # Database interface + ClickHouse HTTP implementation
-├── handlers/      # HTTP handlers (chi router)
-├── logger/       # Logger interface + stdlib implementation
-├── middleware/   # CORS + response-caching middleware
-├── models/        # Shared request/response structs
-└── repo/         # Repository interfaces + ClickHouse implementations
-cmd/api/
-└── main.go       # Entry point with graceful shutdown
-
-clickhouse/       # SQL: schema.sql + test data
-collectors/       # Event collectors (git, pm, cicd, metrics)
-ui/               # React frontend
+├── biz/        # DashboardService (ClickHouse-backed)
+├── cache/      # Cache interface + Redis implementation
+├── config/     # Config interface + env-var implementation (Get/GetInt pattern)
+├── database/   # ClickHouse HTTP client (port 8123)
+├── handlers/   # Original HTTP handlers
+├── logger/     # Logger interface (variadic args ...any key-value)
+├── middleware/  # CORS + response-caching
+├── models/     # Shared structs
+└── repo/       # EventRepo (ClickHouse queries)
 ```
 
-### Key Interfaces
-
-- `database.Database` - Query, Exec, Ping
-- `repo.EventRepo` - CountEvents, GetActivity, GetTopTeams, GetHourly, GetTopAuthors
-- `biz.DashboardService` - GetDashboard, GetOverview, GetActivity, etc.
-- `cache.Cache` - Get, Set, Delete
-
-### Infrastructure
-
-Each infrastructure concern has an `interface.go` + implementation:
-- `database.NewClickHouse(cfg)` — ClickHouse via HTTP (port 8123)
-- `cache.NewRedisCache(cfg)` — Redis with in-memory fallback
-- `config.NewEnvConfig()` — env vars with Get/GetInt
-
-### HTTP Routes
-
-Chi router (`go-chi/chi/v5`). Handler structs receive services via constructor.
-
-| Endpoint | Handler |
-|----------|---------|
-| `GET /` | HealthHandler |
-| `GET /health` | HealthHandler |
-| `GET /health/clickhouse` | HealthHandler |
-| `GET /api/v1/dashboard` | DashboardHandler |
-| `GET /api/v1/teams` | TeamsHandler |
-| `GET /api/v1/teams/{id}` | TeamsHandler |
-| `GET /api/v1/teams/{id}/overview` | TeamsHandler |
-| `GET /api/v1/teams/{id}/activity` | TeamsHandler |
-| `GET /api/v1/teams/{id}/insights` | TeamsHandler |
-| `GET /api/v1/teams/{id}/velocity` | VelocityHandler |
-| `GET /api/v1/teams/comparison` | ComparisonHandler |
-| `POST /api/v1/collectors` | WebhookHandler |
-
-### Event Source Types
-
-`source_type` enum: `git` | `pm` | `cicd` | `metrics`
-
-Key event types:
-- `git`: `pr_opened`, `pr_merged`, `pr_reviewed`, `pr_review_request`, `pr_stale`
-- `pm`: `task_created`, `task_in_progress`, `task_done`, `task_blocked`, `task_overdue`
-- `cicd`: `pipeline_run`, `pipeline_success`, `pipeline_failed`, `pipeline_completed`
-
-### Makefile Commands
-
-```bash
-make build              # Build Go API
-make run                # Run locally
-make test               # Run tests
-make lint               # Run linter
-make docker-up          # Start Docker services
-make docker-down        # Stop Docker services
-make docker-restart     # Restart services
-make docker-build-api   # Rebuild API only
-make health             # Check API health
-make dashboard          # Check dashboard data
-make docker-test-data   # Insert test data
-```
+**Conventions to follow when extending:**
+- `interface.go` + implementation file per package
+- Constructor: `NewFoo(cfg config.Config) (Interface, error)`
+- Config access: `cfg.Get(key, default)` / `cfg.GetInt(key, default)`
 
 ## Environment Variables
 
+### Existing (legacy docker-compose)
 | Variable | Default | Purpose |
 |----------|---------|---------|
 | `CLICKHOUSE_HOST` | `localhost` | ClickHouse host |
@@ -121,15 +127,63 @@ make docker-test-data   # Insert test data
 | `REDIS_PORT` | `6379` | Redis port |
 | `PORT` | `8000` | API server port |
 
+### New (cmd/api rewrite)
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `POSTGRES_DSN` | `postgres://metraly:metraly@localhost:5432/metraly?sslmode=disable` | PostgreSQL |
+| `JWT_PRIVATE_KEY` | `""` (auto-gen + WARN) | RS256 private key PEM |
+| `ACCESS_TOKEN_TTL` | `900` | Access token seconds |
+| `REFRESH_TOKEN_TTL` | `604800` | Refresh token seconds |
+| `OIDC_ISSUER_URL` | `""` | Optional — activates OIDC routes |
+| `OIDC_CLIENT_ID` | `""` | OIDC client ID |
+| `OIDC_CLIENT_SECRET` | `""` | OIDC client secret |
+| `OIDC_REDIRECT_URL` | `""` | OIDC callback URL |
+| `SEED_ON_START` | `false` | Auto-seed on startup |
+| `SEED_ADMIN_EMAIL` | `""` | Seed admin email |
+| `SEED_ADMIN_PASSWORD` | `""` | Seed admin password |
+
+## API Routes (new backend)
+
+All under `/api/v1/`. Public: `auth/*`. Protected: everything else (Bearer JWT).
+
+```
+POST /auth/login   POST /auth/refresh   POST /auth/logout
+GET  /auth/oidc/login   GET /auth/oidc/callback
+
+GET  /me           GET  /activity        GET  /templates
+GET  /plugins      POST /plugins/{id}/install
+POST /sources/connect
+GET  /ai/insights  POST /ai/chat
+
+GET  /metrics/{metricId}?timeRange=30d&team=Platform
+GET  /metrics/{metricId}/breakdown
+GET  /dora?timeRange=30d
+
+GET/POST           /dashboards
+GET/PUT            /dashboards/{id}
+POST               /dashboards/{id}/fork
+PUT                /dashboards/{id}/layout
+PUT                /dashboards/{id}/share
+POST               /dashboards/{id}/data    ← parallel errgroup fetch
+POST               /widgets/data
+```
+
+## Error Response Format
+
+```json
+{ "error": { "code": "DASHBOARD_NOT_FOUND", "message": "dashboard not found" } }
+```
+Biz errors map: `ErrNotFound`→404, `ErrConflict`→409, `ErrForbidden`→403, `ErrValidation`→422, else→500 (message scrubbed).
+
 ## Testing
 
-- 19 unit tests across biz, cache, config, handlers, middleware packages
-- Tests use mock implementations for dependencies
-- Run: `make test` or `go test ./...`
+- Existing: 19 unit tests in `internal/pkg/` — `make test` or `go test ./...`
+- New backend: mock repo interfaces per biz service; httptest for handlers
 
 ## Docker Services
 
-- **api**: Go API server (port 8000)
-- **clickhouse**: ClickHouse DB (ports 8123 HTTP, 9000 native)
+- **api**: Go API (port 8000)
+- **clickhouse**: ClickHouse DB (ports 8123, 9000) — legacy
 - **redis**: Cache (port 6379)
-- **ui**: React frontend (port 3000)
+- **ui**: Legacy React frontend (port 3000)
+- **postgres** *(planned)*: PostgreSQL 16 + TimescaleDB (`timescale/timescaledb:latest-pg16`)
