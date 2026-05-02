@@ -13,20 +13,21 @@ export const DashboardRenderer: React.FC<DashboardRendererProps> = ({ dashboard,
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gridAutoRows: 'min-content', gridAutoFlow: 'dense', gap: '16px' }}>
       {dashboard.widgets.map((widget) => {
+        const scopedInstanceId = `${dashboard.id}-${widget.instanceId}`;
         const WidgetComponent = widgetRegistry[widget.widgetType];
         const layoutItem = dashboard.layout.find((l) => l.i === widget.instanceId);
         const w = layoutItem?.w || 6;
         const h = Math.max(layoutItem?.h || 2, 2);
         return (
           <div
-            key={widget.instanceId}
+            key={scopedInstanceId}
             style={{
               gridColumn: `span ${w}`,
               gridRow: `span ${h}`,
               overflow: 'hidden',
             }}
           >
-            <WidgetComponent config={widget.config} data={widgetData[widget.instanceId]} />
+            <WidgetComponent config={widget.config} data={widgetData[scopedInstanceId]} />
           </div>
         );
       })}

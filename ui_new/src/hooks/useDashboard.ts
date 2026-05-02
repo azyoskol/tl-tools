@@ -38,6 +38,7 @@ export function useDashboard(dashboardId: string): UseDashboardResult {
     if (!dashboardIdMapped) {
       setError(`Unknown dashboard: ${dashboardId}`);
       setIsLoading(false);
+      setWidgetData({});
       return;
     }
 
@@ -52,7 +53,7 @@ export function useDashboard(dashboardId: string): UseDashboardResult {
       // Fetch widget data
       if (dash.widgets.length > 0) {
         const widgetRequests = dash.widgets.map((w) => ({
-          instanceId: w.instanceId,
+          instanceId: `${dashboardIdMapped}-${w.instanceId}`,
           widgetType: w.widgetType,
           config: w.config,
         }));
@@ -62,7 +63,7 @@ export function useDashboard(dashboardId: string): UseDashboardResult {
           widgetRequests,
         );
 
-        // Map to record by instanceId
+        // Map to record by scoped instanceId
         const dataMap: Record<string, any> = {};
         dataResponse.widgets.forEach((item: WidgetDataItem) => {
           dataMap[item.instanceId] = item.data;
