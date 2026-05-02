@@ -341,7 +341,7 @@ function generateLayout(widgets: DashboardWidgetInstance[]): WidgetLayout[] {
     'sprint-burndown': 3,
     'heatmap': 2,
     'metric-chart': 3,
-    'stat-card': 2,
+    'stat-card': 3,
     'ai-insight': 1,
     'anomaly-detector': 1,
     'health-gauge': 1,
