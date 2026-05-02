@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Sidebar } from './components/layout/Sidebar';
 import { Topbar } from './components/layout/Topbar';
-import { RoleDashboardScreen  } from './features/roleDashboards';
+import { DashboardScreen  } from './features/dashboard';
 import { DashboardWizardScreen } from './features/dashboardWizard/DashboardWizardScreen';
 import { MetricsScreen } from './features/metricsExplorer/MetricsScreen';
 import { AIScreen } from './features/aiAssistant/AIScreen';
@@ -10,8 +10,6 @@ import { WizardScreen } from './features/onboarding/WizardScreen';
 import { PlaceholderScreen } from './components/ui/PlaceholderScreen';
 import { TweaksProvider } from './context/TweaksContext';
 import { DraggableTweaksPanel } from './components/layout/DraggableTweaksPanel';
-
-
 
 const titles = {
   overview: ['Overview', 'Last updated 2 min ago'],
@@ -36,52 +34,52 @@ const App = () => {
       case 'dashboard':
       case 'overview':
         return (
-          <RoleDashboardScreen
-            initialRole="overview"
+          <DashboardScreen
+            dashboard="overview"
             onNewDashboard={() => setActive('dash-wizard')}
             onNavigate={setActive}
           />
         );
       case 'dash-cto':
-          return (
-            <RoleDashboardScreen
-              initialRole="cto"
-              onNewDashboard={() => setActive('dash-wizard')}
-              onNavigate={setActive}
-            />
-          );
+        return (
+          <DashboardScreen
+            dashboard="cto"
+            onNewDashboard={() => setActive('dash-wizard')}
+            onNavigate={setActive}
+          />
+        );
       case 'dash-vp':
-          return (
-            <RoleDashboardScreen
-              initialRole="vp"
-              onNewDashboard={() => setActive('dash-wizard')}
-              onNavigate={setActive}
-            />
-          );
+        return (
+          <DashboardScreen
+            dashboard="vp"
+            onNewDashboard={() => setActive('dash-wizard')}
+            onNavigate={setActive}
+          />
+        );
       case 'dash-tl':
-          return (
-            <RoleDashboardScreen
-              initialRole="tl"
-              onNewDashboard={() => setActive('dash-wizard')}
-              onNavigate={setActive}
-            />
-          );
+        return (
+          <DashboardScreen
+            dashboard="tl"
+            onNewDashboard={() => setActive('dash-wizard')}
+            onNavigate={setActive}
+          />
+        );
       case 'dash-devops':
-          return (
-            <RoleDashboardScreen
-              initialRole="devops"
-              onNewDashboard={() => setActive('dash-wizard')}
-              onNavigate={setActive}
-            />
-          );
+        return (
+          <DashboardScreen
+            dashboard="devops"
+            onNewDashboard={() => setActive('dash-wizard')}
+            onNavigate={setActive}
+          />
+        );
       case 'dash-ic':
-          return (
-            <RoleDashboardScreen
-              initialRole="ic"
-              onNewDashboard={() => setActive('dash-wizard')}
-              onNavigate={setActive}
-            />
-          );
+        return (
+          <DashboardScreen
+            dashboard="ic"
+            onNewDashboard={() => setActive('dash-wizard')}
+            onNavigate={setActive}
+          />
+        );
       case 'dash-wizard': return <DashboardWizardScreen onSave={() => setActive('overview')} onCancel={() => setActive('overview')} />;
       case 'metrics': return <MetricsScreen />;
       case 'ai': return <AIScreen />;

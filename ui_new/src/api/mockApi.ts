@@ -460,7 +460,7 @@ function initDashboards() {
   dashboards.set(userDash.id, userDash);
 
   // Role dashboards - custom widgets based on prototype
-  const roleDashboards = [
+  const dashboardConfigs = [
     { id: "dash-cto", name: "CTO Dashboard", sourceTemplateId: "cto" as const },
     { id: "dash-vp", name: "VP Engineering Dashboard", sourceTemplateId: "vp" as const },
     { id: "dash-tl", name: "Tech Lead Dashboard", sourceTemplateId: "tl" as const },
@@ -497,7 +497,7 @@ function initDashboards() {
   };
   dashboards.set(overviewDash.id, overviewDash);
 
-  for (const role of roleDashboards) {
+  for (const role of dashboardConfigs) {
     let widgets: DashboardWidgetInstance[];
     let layout: WidgetLayout[];
 

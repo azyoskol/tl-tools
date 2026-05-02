@@ -4,7 +4,7 @@ import { mockApi } from "../api/mockApi";
 import type { Dashboard } from "../types/dashboard";
 import type { WidgetDataItem } from "../types/api";
 
-interface UseRoleDashboardResult {
+interface UseDashboardResult {
   dashboard: Dashboard | null;
   widgetData: Record<string, any>;
   isLoading: boolean;
@@ -12,7 +12,7 @@ interface UseRoleDashboardResult {
   refresh: () => void;
 }
 
-const ROLE_DASHBOARD_IDS: Record<string, string> = {
+const DASHBOARD_IDS: Record<string, string> = {
   cto: "dash-cto",
   vp: "dash-vp",
   tl: "dash-tl",
@@ -21,22 +21,22 @@ const ROLE_DASHBOARD_IDS: Record<string, string> = {
   overview: "dash-overview",
 };
 
-export function useRoleDashboard(roleId: string): UseRoleDashboardResult {
+export function useDashboard(dashboardId: string): UseDashboardResult {
   const [dashboard, setDashboard] = useState<Dashboard | null>(null);
   const [widgetData, setWidgetData] = useState<Record<string, any>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchData = async () => {
-    if (!roleId || roleId === "overview") {
+    if (!dashboardId) {
       setDashboard(null);
       setIsLoading(false);
       return;
     }
 
-    const dashboardId = ROLE_DASHBOARD_IDS[roleId];
-    if (!dashboardId) {
-      setError(`Unknown role: ${roleId}`);
+    const dashboardIdMapped = DASHBOARD_IDS[dashboardId];
+    if (!dashboardIdMapped) {
+      setError(`Unknown dashboard: ${dashboardId}`);
       setIsLoading(false);
       return;
     }
@@ -46,7 +46,7 @@ export function useRoleDashboard(roleId: string): UseRoleDashboardResult {
       setError(null);
 
       // Fetch dashboard
-      const dash = await mockApi.getDashboard(dashboardId);
+      const dash = await mockApi.getDashboard(dashboardIdMapped);
       setDashboard(dash);
 
       // Fetch widget data
@@ -58,7 +58,7 @@ export function useRoleDashboard(roleId: string): UseRoleDashboardResult {
         }));
 
         const dataResponse = await mockApi.getDashboardData(
-          dashboardId,
+          dashboardIdMapped,
           widgetRequests,
         );
 
@@ -78,7 +78,7 @@ export function useRoleDashboard(roleId: string): UseRoleDashboardResult {
 
   useEffect(() => {
     fetchData();
-  }, [roleId]);
+  }, [dashboardId]);
 
   return {
     dashboard,
