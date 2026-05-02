@@ -18,6 +18,7 @@ const ROLE_DASHBOARD_IDS: Record<string, string> = {
   tl: "dash-tl",
   devops: "dash-devops",
   ic: "dash-ic",
+  overview: "dash-overview",
 };
 
 export function useRoleDashboard(roleId: string): UseRoleDashboardResult {

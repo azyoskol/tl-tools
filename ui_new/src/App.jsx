@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Sidebar } from './components/layout/Sidebar';
 import { Topbar } from './components/layout/Topbar';
-import { DashboardScreen } from './features/dashboard/DashboardScreen';
 import { RoleDashboardScreen  } from './features/roleDashboards';
 import { DashboardWizardScreen } from './features/dashboardWizard/DashboardWizardScreen';
 import { MetricsScreen } from './features/metricsExplorer/MetricsScreen';
@@ -15,7 +14,7 @@ import { DraggableTweaksPanel } from './components/layout/DraggableTweaksPanel';
 
 
 const titles = {
-  dashboard: ['Overview', 'Last updated 2 min ago'],
+  overview: ['Overview', 'Last updated 2 min ago'],
   'dash-cto': ['CTO Dashboard', 'Strategic health, DORA trends, team velocity'],
   'dash-vp': ['VP Engineering', 'Delivery health & team performance'],
   'dash-tl': ['Tech Lead', 'CI health, PR queue & sprint progress'],
@@ -30,11 +29,19 @@ const titles = {
 };
 
 const App = () => {
-  const [active, setActive] = useState('dashboard');
+  const [active, setActive] = useState('overview');
   const [title, subtitle] = titles[active] || ['Metraly', ''];
   const renderScreen = () => {
     switch (active) {
-      case 'dashboard': return <DashboardScreen />;
+      case 'dashboard':
+      case 'overview':
+        return (
+          <RoleDashboardScreen
+            initialRole="overview"
+            onNewDashboard={() => setActive('dash-wizard')}
+            onNavigate={setActive}
+          />
+        );
       case 'dash-cto':
           return (
             <RoleDashboardScreen
@@ -75,7 +82,7 @@ const App = () => {
               onNavigate={setActive}
             />
           );
-      case 'dash-wizard': return <DashboardWizardScreen onSave={() => setActive('dashboard')} onCancel={() => setActive('dashboard')} />;
+      case 'dash-wizard': return <DashboardWizardScreen onSave={() => setActive('overview')} onCancel={() => setActive('overview')} />;
       case 'metrics': return <MetricsScreen />;
       case 'ai': return <AIScreen />;
       case 'plugins': return <PluginScreen />;

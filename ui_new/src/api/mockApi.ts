@@ -468,6 +468,35 @@ function initDashboards() {
     { id: "dash-ic", name: "My Dashboard", sourceTemplateId: "ic" as const },
   ];
 
+  // Overview dashboard - based on DashboardScreen.tsx
+  const overviewWidgets: DashboardWidgetInstance[] = [
+    { instanceId: "overview-stat-1", widgetType: "stat-card", config: { type: "stat-card", metricId: "deploy-freq", showSparkline: true, colorKey: "cyan" } as StatCardConfig },
+    { instanceId: "overview-stat-2", widgetType: "stat-card", config: { type: "stat-card", metricId: "lead-time", showSparkline: true, colorKey: "purple" } as StatCardConfig },
+    { instanceId: "overview-stat-3", widgetType: "stat-card", config: { type: "stat-card", metricId: "cfr", showSparkline: true, colorKey: "warning" } as StatCardConfig },
+    { instanceId: "overview-stat-4", widgetType: "stat-card", config: { type: "stat-card", metricId: "mttr", showSparkline: true, colorKey: "success" } as StatCardConfig },
+    { instanceId: "overview-ai-1", widgetType: "ai-insight", config: { type: "ai-insight", variant: "card", topicHint: "deployment frequency" } as AIInsightConfig },
+    { instanceId: "overview-ai-2", widgetType: "ai-insight", config: { type: "ai-insight", variant: "card", topicHint: "PR review time" } as AIInsightConfig },
+    { instanceId: "overview-ai-3", widgetType: "ai-insight", config: { type: "ai-insight", variant: "card", topicHint: "PR review time improving" } as AIInsightConfig },
+  ];
+  const overviewLayout = generateLayout(overviewWidgets);
+  const overviewDash: Dashboard = {
+    id: "dash-overview",
+    name: "Overview",
+    description: "Engineering overview dashboard",
+    sourceType: "system-template",
+    sourceTemplateId: "overview",
+    visibility: "org",
+    defaultFilters: { timeRange: "30d", team: "All teams", repo: "All repos" },
+    widgets: overviewWidgets,
+    layout: overviewLayout,
+    recentActivity: generateRecentActivity(),
+    createdBy: "system",
+    createdAt: isoDate(-60),
+    updatedAt: isoDate(-1),
+    version: 1,
+  };
+  dashboards.set(overviewDash.id, overviewDash);
+
   for (const role of roleDashboards) {
     let widgets: DashboardWidgetInstance[];
     let layout: WidgetLayout[];

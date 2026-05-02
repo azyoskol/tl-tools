@@ -19,7 +19,7 @@ interface RoleDashboardScreenProps {
 }
 
 export const RoleDashboardScreen: React.FC<RoleDashboardScreenProps> = ({
-  initialRole = "cto",
+  initialRole = "overview",
   onNewDashboard,
   onNavigate,
 }) => {
@@ -125,32 +125,6 @@ export const RoleDashboardScreen: React.FC<RoleDashboardScreenProps> = ({
       )}
     </div>
   );
-
-  if (role === "overview") {
-    return (
-      <div
-        style={{
-          flex: 1,
-          display: "flex",
-          flexDirection: "column",
-          overflow: "hidden",
-        }}
-      >
-        <TabBar />
-        <div style={{ flex: 1, overflow: "auto", padding: "20px 24px" }}>
-          <div
-            style={{
-              color: "var(--muted)",
-              textAlign: "center",
-              marginTop: 40,
-            }}
-          >
-            Switch to a role tab to see your dashboard
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div
