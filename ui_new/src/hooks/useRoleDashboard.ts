@@ -1,8 +1,8 @@
 // @ts-nocheck
-import { useState, useEffect } from 'react';
-import { mockApi } from '../api/mockApi';
-import type { Dashboard } from '../types/dashboard';
-import type { WidgetDataItem } from '../types/api';
+import { useState, useEffect } from "react";
+import { mockApi } from "../api/mockApi";
+import type { Dashboard } from "../types/dashboard";
+import type { WidgetDataItem } from "../types/api";
 
 interface UseRoleDashboardResult {
   dashboard: Dashboard | null;
@@ -13,11 +13,11 @@ interface UseRoleDashboardResult {
 }
 
 const ROLE_DASHBOARD_IDS: Record<string, string> = {
-  cto: 'dash-cto',
-  vp: 'dash-vp',
-  tl: 'dash-tl',
-  devops: 'dash-devops',
-  ic: 'dash-ic',
+  cto: "dash-cto",
+  vp: "dash-vp",
+  tl: "dash-tl",
+  devops: "dash-devops",
+  ic: "dash-ic",
 };
 
 export function useRoleDashboard(roleId: string): UseRoleDashboardResult {
@@ -27,7 +27,7 @@ export function useRoleDashboard(roleId: string): UseRoleDashboardResult {
   const [error, setError] = useState<string | null>(null);
 
   const fetchData = async () => {
-    if (!roleId || roleId === 'overview') {
+    if (!roleId || roleId === "overview") {
       setDashboard(null);
       setIsLoading(false);
       return;
@@ -56,7 +56,10 @@ export function useRoleDashboard(roleId: string): UseRoleDashboardResult {
           config: w.config,
         }));
 
-        const dataResponse = await mockApi.getDashboardData(dashboardId, widgetRequests);
+        const dataResponse = await mockApi.getDashboardData(
+          dashboardId,
+          widgetRequests,
+        );
 
         // Map to record by instanceId
         const dataMap: Record<string, any> = {};
@@ -66,7 +69,7 @@ export function useRoleDashboard(roleId: string): UseRoleDashboardResult {
         setWidgetData(dataMap);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load dashboard');
+      setError(err instanceof Error ? err.message : "Failed to load dashboard");
     } finally {
       setIsLoading(false);
     }
@@ -84,3 +87,4 @@ export function useRoleDashboard(roleId: string): UseRoleDashboardResult {
     refresh: fetchData,
   };
 }
+

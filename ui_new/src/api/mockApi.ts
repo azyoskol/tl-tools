@@ -53,8 +53,18 @@ import {
   IntegrationStatus,
   InstallPluginResponse,
 } from "../types/plugins";
-import { AIInsight, AIChatRequest, AIChatResponse, ChatMessage } from "../types/ai";
-import { CurrentUser, SystemStatus, MeResponse, ActivityEvent } from "../types/user";
+import {
+  AIInsight,
+  AIChatRequest,
+  AIChatResponse,
+  ChatMessage,
+} from "../types/ai";
+import {
+  CurrentUser,
+  SystemStatus,
+  MeResponse,
+  ActivityEvent,
+} from "../types/user";
 import { TimeRange, TeamName, RepoName, DORALevel } from "../types/common";
 
 // ──────────────────────────────────────────────
@@ -268,16 +278,32 @@ function generateLayout(widgets: DashboardWidgetInstance[]): WidgetLayout[] {
 
 function generateRecentActivity(): ActivityEvent[] {
   const events = [
-    { actor: 'push → main', description: 'CI pipeline triggered for feat/auth-tokens', color: 'var(--cyan)' },
-    { actor: 'alex.kim', description: 'Merged PR #812: Add rate limiting middleware', color: 'var(--success)' },
-    { actor: 'sara.chen', description: 'PR #814 opened: Refactor API layer', color: 'var(--warning)' },
-    { actor: 'ci-bot', description: 'Deploy to staging failed — build #4221', color: 'var(--error)' },
+    {
+      actor: "push → main",
+      description: "CI pipeline triggered for feat/auth-tokens",
+      color: "var(--cyan)",
+    },
+    {
+      actor: "alex.kim",
+      description: "Merged PR #812: Add rate limiting middleware",
+      color: "var(--success)",
+    },
+    {
+      actor: "sara.chen",
+      description: "PR #814 opened: Refactor API layer",
+      color: "var(--warning)",
+    },
+    {
+      actor: "ci-bot",
+      description: "Deploy to staging failed — build #4221",
+      color: "var(--error)",
+    },
   ];
   return events.map((e, i) => ({
     id: `activity-${i}`,
     actor: e.actor,
     description: e.description,
-    relativeTime: ['2 min ago', '14 min ago', '31 min ago', '1 hr ago'][i],
+    relativeTime: ["2 min ago", "14 min ago", "31 min ago", "1 hr ago"][i],
     color: e.color,
   }));
 }
@@ -316,6 +342,35 @@ function initDashboards() {
     version: 3,
   };
   dashboards.set(userDash.id, userDash);
+
+  // Role dashboards
+  const roleDashboards = [
+    { id: "dash-cto", name: "CTO Dashboard", sourceTemplateId: "cto" as const, widgetCount: 4 },
+    { id: "dash-vp", name: "VP Engineering Dashboard", sourceTemplateId: "vp" as const, widgetCount: 4 },
+    { id: "dash-tl", name: "Tech Lead Dashboard", sourceTemplateId: "tl" as const, widgetCount: 4 },
+    { id: "dash-devops", name: "DevOps Dashboard", sourceTemplateId: "devops" as const, widgetCount: 4 },
+    { id: "dash-ic", name: "My Dashboard", sourceTemplateId: "ic" as const, widgetCount: 4 },
+  ];
+
+  for (const role of roleDashboards) {
+    const widgets = generateWidgets(role.widgetCount);
+    const layout = generateLayout(widgets);
+    dashboards.set(role.id, {
+      id: role.id,
+      name: role.name,
+      description: `Dashboard for ${role.sourceTemplateId} role`,
+      sourceType: "system-template" as const,
+      sourceTemplateId: role.sourceTemplateId,
+      visibility: "org" as const,
+      defaultFilters: { timeRange: "30d", team: "All teams", repo: "All repos" },
+      widgets,
+      layout,
+      createdBy: "system",
+      createdAt: isoDate(-60),
+      updatedAt: isoDate(-1),
+      version: 1,
+    });
+  }
 
   // Ещё пара дашбордов для списка
   for (let i = 1; i <= 4; i++) {
@@ -830,6 +885,12 @@ export const mockApi = {
         title: "PR review time improving",
         body: "Average review time decreased by 20% over the last 30 days.",
         generatedAt: isoDate(-2),
+      },
+      {
+        id: "ins-3",
+        title: "PR review time improving",
+        body: "Average review time decreased by 30% over the last 80 days.",
+        generatedAt: isoDate(-3),
       },
     ];
   },
