@@ -1,14 +1,29 @@
-// src/components/ui/StatCard.jsx
+// src/components/ui/StatCard.tsx
 import React, { useState } from 'react';
 import { Icon } from '../shared/Icon';
 import { Sparkline } from '../charts/Sparkline';
 import { useTweaks } from '../../context/TweaksContext';
 
-export const StatCard = ({ icon, label, value, sub, trend, trendDir, color, spark, delay = 0 }) => {
+type TrendDir = 'up' | 'down' | 'neutral';
+type ColorKey = 'cyan' | 'purple' | 'success' | 'warning' | 'error';
+
+interface StatCardProps {
+  icon: string;
+  label: string;
+  value: React.ReactNode;
+  sub?: string;
+  trend?: string;
+  trendDir?: TrendDir;
+  color?: ColorKey | string;
+  spark?: number[];
+  delay?: number;
+}
+
+export const StatCard = ({ icon, label, value, sub, trend, trendDir, color, spark, delay = 0 }: StatCardProps) => {
   const [hov, setHov] = useState(false);
-  const { tweaks } = useTweaks();
-  const colors = { cyan: '#00E5FF', purple: '#B44CFF', success: '#00C853', warning: '#FF9100', error: '#FF1744' };
-  const c = colors[color] || color || '#00E5FF';
+  const { tweaks } = useTweaks() as { tweaks: { showSparklines: boolean; density: string } };
+  const colors: Record<ColorKey, string> = { cyan: '#00E5FF', purple: '#B44CFF', success: '#00C853', warning: '#FF9100', error: '#FF1744' };
+  const c = (color && colors[color as ColorKey]) || color || '#00E5FF';
   const showSpark = tweaks.showSparklines && spark;
 
   return (
@@ -19,7 +34,6 @@ export const StatCard = ({ icon, label, value, sub, trend, trendDir, color, spar
       transition: 'all 0.2s ease', transform: hov ? 'translateY(-2px)' : 'none',
       boxShadow: hov ? `0 6px 24px rgba(0,0,0,0.35)` : 'none',
     }}>
-      {/* header same as before */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
         <div style={{ width: 32, height: 32, borderRadius: 8, background: `${c}18`, border: `1px solid ${c}28`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <Icon name={icon} size={15} color={c} />

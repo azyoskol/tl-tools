@@ -1,6 +1,11 @@
 import React from 'react';
 import { Icon } from '../shared/Icon';
-export const PlaceholderScreen = ({ name }) => (
+
+interface PlaceholderScreenProps {
+  name: string;
+}
+
+export const PlaceholderScreen = ({ name }: PlaceholderScreenProps) => (
   <div style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', flexDirection:'column', gap:10 }}>
     <Icon name="layers" size={36} color="var(--muted)"/>
     <div style={{ fontFamily:'var(--font-head)', fontSize:16, color:'var(--muted)' }}>{name}</div>

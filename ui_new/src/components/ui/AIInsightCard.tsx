@@ -1,6 +1,14 @@
 import React, { useState } from 'react';
 import { Icon } from '../shared/Icon';
-export const AIInsightCard = ({ title, body, action, delay = 0 }) => {
+
+interface AIInsightCardProps {
+  title: string;
+  body: string;
+  action?: string;
+  delay?: number;
+}
+
+export const AIInsightCard = ({ title, body, action, delay = 0 }: AIInsightCardProps) => {
   const [hovered, setHovered] = useState(false);
   return (
     <div className={`fade-up-${delay+1}`} onMouseEnter={()=>setHovered(true)} onMouseLeave={()=>setHovered(false)} style={{ background: hovered ? 'var(--glass2)' : 'var(--glass)', borderRadius: 14, padding: '18px 20px', border: '1px solid var(--border)', borderLeft: '3px solid transparent', transition: 'all 0.22s ease', transform: hovered ? 'translateY(-2px)' : 'none', boxShadow: hovered ? '0 8px 32px rgba(0,0,0,0.35)' : 'none' }}>
