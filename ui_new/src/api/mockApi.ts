@@ -316,21 +316,67 @@ function generateWidgets(count: number, role?: string): DashboardWidgetInstance[
 }
 
 function generateLayout(widgets: DashboardWidgetInstance[]): WidgetLayout[] {
-  let y = 0;
-  return widgets.map((w, i) => {
-    const layout: WidgetLayout = {
-      i: w.instanceId,
-      x: (i % 2) * 6,
-      y: y,
-      w: 6,
-      h: 4,
-      minW: 3,
-      minH: 2,
+  const layouts: WidgetLayout[] = [];
+  let currentY = 0;
+  let currentX = 0;
+
+  const widthByType: Record<string, number> = {
+    'leaderboard': 4,
+    'data-table': 6,
+    'dora-overview': 12,
+    'sprint-burndown': 6,
+    'heatmap': 6,
+    'metric-chart': 6,
+    'stat-card': 3,
+    'ai-insight': 4,
+    'anomaly-detector': 4,
+    'health-gauge': 3,
+    'compare-bar-chart': 6,
+  };
+
+  const heightByType: Record<string, number> = {
+    'leaderboard': 3,
+    'data-table': 3,
+    'dora-overview': 2,
+    'sprint-burndown': 3,
+    'heatmap': 2,
+    'metric-chart': 3,
+    'stat-card': 1,
+    'ai-insight': 1,
+    'anomaly-detector': 1,
+    'health-gauge': 1,
+    'compare-bar-chart': 2,
+  };
+
+  for (let i = 0; i < widgets.length; i++) {
+    const w = widgets[i].widgetType;
+    const width = widthByType[w] || 6;
+    const height = heightByType[w] || 2;
+
+    if (currentX + width > 12) {
+      currentX = 0;
+      currentY += 2;
+    }
+
+    layouts.push({
+      i: widgets[i].instanceId,
+      x: currentX,
+      y: currentY,
+      w: width,
+      h: height,
+      minW: 2,
+      minH: 1,
       static: false,
-    };
-    if (i % 2 === 1) y += 4;
-    return layout;
-  });
+    });
+
+    currentX += width;
+    if (currentX >= 12) {
+      currentX = 0;
+      currentY += 2;
+    }
+  }
+
+  return layouts;
 }
 
 function generateRecentActivity(): ActivityEvent[] {

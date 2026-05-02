@@ -12,16 +12,9 @@ interface DashboardRendererProps {
 export const DashboardRenderer: React.FC<DashboardRendererProps> = ({ dashboard, widgetData = {} }) => {
   const rowHeight = 60;
 
-  // Sort widgets by y position for proper flow
-  const sortedWidgets = [...dashboard.widgets].sort((a, b) => {
-    const layoutA = dashboard.layout.find(l => l.i === a.instanceId);
-    const layoutB = dashboard.layout.find(l => l.i === b.instanceId);
-    return (layoutA?.y || 0) - (layoutB?.y || 0);
-  });
-
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gridAutoRows: `${rowHeight}px`, gridAutoFlow: 'dense', gap: '16px' }}>
-      {sortedWidgets.map((widget) => {
+      {dashboard.widgets.map((widget) => {
         const WidgetComponent = widgetRegistry[widget.widgetType];
         const layoutItem = dashboard.layout.find((l) => l.i === widget.instanceId);
         const w = layoutItem?.w || 6;
