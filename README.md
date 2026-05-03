@@ -10,7 +10,7 @@ Most engineering metrics tools (LinearB, Waydev, Code Climate Velocity, Swarmia,
 
 | Capability | SaaS Solutions | Metraly |
 | :--- | :--- | :--- |
-| **Data ownership** | Your data lives on the vendor’s cloud; you’re bound by their retention policies and data processing agreements. | You host it yourself. All data stays in your ClickHouse/Redis, on your infrastructure. Full GDPR / compliance control. |
+| **Data ownership** | Your data lives on the vendor’s cloud; you’re bound by their retention policies and data processing agreements. | You host it yourself. All data stays in your PostgreSQL/Redis, on your infrastructure. Full GDPR / compliance control. |
 | **Customization** | Limited to what the vendor allows. Custom metrics and dashboards often require enterprise plans. | Completely extensible. Build **custom plugins**, dashboards, and data sources using simple Go interfaces. White-label the UI. |
 | **AI & LLM integration** | AI features are typically closed-source, using your data to train proprietary models (often without clear opt-out). | Built-in AI-assistant and smart insights run locally against your data. Bring your own LLM or use built-in lightweight models. No data ever leaves your environment. |
 | **Extensibility** | Closed ecosystems. Integrations are slow to add. | Open plugin architecture (data sources, widgets, alert exporters). Plugins can be written in Go or compiled to WASM and executed in a secure sandbox. |
