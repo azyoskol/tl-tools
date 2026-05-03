@@ -10,10 +10,10 @@ import (
 
 type DashboardSvc struct {
 	repo  repo.DashboardRepo
-	cache *cache.DashboardCache
+	cache cache.DashboardCache
 }
 
-func NewDashboardSvc(r repo.DashboardRepo, c *cache.DashboardCache) *DashboardSvc {
+func NewDashboardSvc(r repo.DashboardRepo, c cache.DashboardCache) *DashboardSvc {
 	return &DashboardSvc{repo: r, cache: c}
 }
 

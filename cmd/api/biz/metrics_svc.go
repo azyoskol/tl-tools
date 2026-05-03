@@ -11,10 +11,10 @@ import (
 
 type MetricsSvc struct {
 	repo  repo.MetricRepo
-	cache *cache.MetricsCache
+	cache cache.MetricsCache
 }
 
-func NewMetricsSvc(r repo.MetricRepo, c *cache.MetricsCache) *MetricsSvc {
+func NewMetricsSvc(r repo.MetricRepo, c cache.MetricsCache) *MetricsSvc {
 	return &MetricsSvc{repo: r, cache: c}
 }
 

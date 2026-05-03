@@ -35,8 +35,7 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func meHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	w.Write([]byte(`{"email":"user@example.com"}`))
+	handlers.MeHandler(w, r)
 }
 
 func activityHandler(w http.ResponseWriter, r *http.Request) {

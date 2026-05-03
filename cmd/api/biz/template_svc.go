@@ -10,10 +10,10 @@ import (
 
 type TemplateSvc struct {
 	repo  repo.DashboardRepo
-	cache *cache.TemplateCache
+	cache cache.TemplateCache
 }
 
-func NewTemplateSvc(r repo.DashboardRepo, c *cache.TemplateCache) *TemplateSvc {
+func NewTemplateSvc(r repo.DashboardRepo, c cache.TemplateCache) *TemplateSvc {
 	return &TemplateSvc{repo: r, cache: c}
 }
 

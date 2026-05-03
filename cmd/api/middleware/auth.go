@@ -11,7 +11,7 @@ import (
 
 type contextKey string
 
-const claimsKey contextKey = "claims"
+const ClaimsKey contextKey = "claims"
 
 func RequireAuth(km *auth.KeyManager) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
@@ -27,7 +27,7 @@ func RequireAuth(km *auth.KeyManager) func(http.Handler) http.Handler {
 				respond.Error(w, http.StatusUnauthorized, "UNAUTHORIZED", "invalid token")
 				return
 			}
-			ctx := context.WithValue(r.Context(), claimsKey, claims)
+			ctx := context.WithValue(r.Context(), ClaimsKey, claims)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
@@ -40,7 +40,7 @@ func RequireRole(roles ...string) func(http.Handler) http.Handler {
 	}
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			claims, ok := r.Context().Value(claimsKey).(*auth.Claims)
+			claims, ok := r.Context().Value(ClaimsKey).(*auth.Claims)
 			if !ok || !allowed[claims.Role] {
 				respond.Error(w, http.StatusForbidden, "FORBIDDEN", "insufficient role")
 				return
@@ -51,6 +51,6 @@ func RequireRole(roles ...string) func(http.Handler) http.Handler {
 }
 
 func ClaimsFrom(ctx context.Context) *auth.Claims {
-	c, _ := ctx.Value(claimsKey).(*auth.Claims)
+	c, _ := ctx.Value(ClaimsKey).(*auth.Claims)
 	return c
 }

@@ -9,18 +9,23 @@ import (
 	"github.com/getmetraly/metraly/cmd/api/domain"
 )
 
-type DashboardCache struct {
+type DashboardCache interface {
+	Get(ctx context.Context, id string) (*domain.Dashboard, error)
+	Set(ctx context.Context, d *domain.Dashboard) error
+}
+
+type redisDashboardCache struct {
 	rdb *redis.Client
 	ttl time.Duration
 }
 
-func NewDashboardCache(rdb *redis.Client, ttl time.Duration) *DashboardCache {
-	return &DashboardCache{rdb: rdb, ttl: ttl}
+func NewDashboardCache(rdb *redis.Client, ttl time.Duration) DashboardCache {
+	return &redisDashboardCache{rdb: rdb, ttl: ttl}
 }
 
-func (c *DashboardCache) key(id string) string { return "dashboard:" + id }
+func (c *redisDashboardCache) key(id string) string { return "dashboard:" + id }
 
-func (c *DashboardCache) Get(ctx context.Context, id string) (*domain.Dashboard, error) {
+func (c *redisDashboardCache) Get(ctx context.Context, id string) (*domain.Dashboard, error) {
 	data, err := c.rdb.Get(ctx, c.key(id)).Bytes()
 	if err != nil {
 		return nil, err
@@ -32,7 +37,7 @@ func (c *DashboardCache) Get(ctx context.Context, id string) (*domain.Dashboard,
 	return &d, nil
 }
 
-func (c *DashboardCache) Set(ctx context.Context, d *domain.Dashboard) error {
+func (c *redisDashboardCache) Set(ctx context.Context, d *domain.Dashboard) error {
 	b, err := json.Marshal(d)
 	if err != nil {
 		return err

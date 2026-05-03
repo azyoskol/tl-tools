@@ -9,18 +9,23 @@ import (
 	"github.com/getmetraly/metraly/cmd/api/domain"
 )
 
-type TemplateCache struct {
+type TemplateCache interface {
+	Get(ctx context.Context) ([]*domain.DashboardTemplate, error)
+	Set(ctx context.Context, t []*domain.DashboardTemplate) error
+}
+
+type redisTemplateCache struct {
 	rdb *redis.Client
 	ttl time.Duration
 }
 
-func NewTemplateCache(rdb *redis.Client, ttl time.Duration) *TemplateCache {
-	return &TemplateCache{rdb: rdb, ttl: ttl}
+func NewTemplateCache(rdb *redis.Client, ttl time.Duration) TemplateCache {
+	return &redisTemplateCache{rdb: rdb, ttl: ttl}
 }
 
-func (c *TemplateCache) key() string { return "templates" }
+func (c *redisTemplateCache) key() string { return "templates" }
 
-func (c *TemplateCache) Get(ctx context.Context) ([]*domain.DashboardTemplate, error) {
+func (c *redisTemplateCache) Get(ctx context.Context) ([]*domain.DashboardTemplate, error) {
 	data, err := c.rdb.Get(ctx, c.key()).Bytes()
 	if err != nil {
 		return nil, err
@@ -32,7 +37,7 @@ func (c *TemplateCache) Get(ctx context.Context) ([]*domain.DashboardTemplate, e
 	return t, nil
 }
 
-func (c *TemplateCache) Set(ctx context.Context, t []*domain.DashboardTemplate) error {
+func (c *redisTemplateCache) Set(ctx context.Context, t []*domain.DashboardTemplate) error {
 	b, err := json.Marshal(t)
 	if err != nil {
 		return err

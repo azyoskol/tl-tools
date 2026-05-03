@@ -11,18 +11,25 @@ import (
 
 var ErrCacheMiss = redis.Nil
 
-type MetricsCache struct {
+type MetricsCache interface {
+	Get(ctx context.Context, metricID, team string) ([]domain.MetricDataPoint, error)
+	Set(ctx context.Context, metricID, team string, pts []domain.MetricDataPoint) error
+}
+
+type redisMetricsCache struct {
 	rdb *redis.Client
 	ttl time.Duration
 }
 
-func NewMetricsCache(rdb *redis.Client, ttl time.Duration) *MetricsCache {
-	return &MetricsCache{rdb: rdb, ttl: ttl}
+func NewMetricsCache(rdb *redis.Client, ttl time.Duration) MetricsCache {
+	return &redisMetricsCache{rdb: rdb, ttl: ttl}
 }
 
-func (c *MetricsCache) key(metricID, team string) string { return "metrics:" + metricID + ":" + team }
+func (c *redisMetricsCache) key(metricID, team string) string {
+	return "metrics:" + metricID + ":" + team
+}
 
-func (c *MetricsCache) Get(ctx context.Context, metricID, team string) ([]domain.MetricDataPoint, error) {
+func (c *redisMetricsCache) Get(ctx context.Context, metricID, team string) ([]domain.MetricDataPoint, error) {
 	data, err := c.rdb.Get(ctx, c.key(metricID, team)).Bytes()
 	if err != nil {
 		return nil, err
@@ -34,7 +41,7 @@ func (c *MetricsCache) Get(ctx context.Context, metricID, team string) ([]domain
 	return pts, nil
 }
 
-func (c *MetricsCache) Set(ctx context.Context, metricID, team string, pts []domain.MetricDataPoint) error {
+func (c *redisMetricsCache) Set(ctx context.Context, metricID, team string, pts []domain.MetricDataPoint) error {
 	b, err := json.Marshal(pts)
 	if err != nil {
 		return err
