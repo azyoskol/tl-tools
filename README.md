@@ -116,11 +116,18 @@ make docker-logs # Watch logs from all services in real time
 
 ## 💻 Tech Stack
 
-- **Backend**: Go 1.26+, Chi Router, gRPC (in progress), OpenTelemetry
-- **Database**: ClickHouse 23.8
-- **Cache**: Redis 7
-- **UI**: React 20, TypeScript, Vite, Recharts
-- **Infrastructure**: Docker, Docker Compose, Helm (in progress)
+- **Backend**: Go 1.26+, Chi router, JSON‑iterator, Zerolog, OpenTelemetry (future gRPC)
+- **Database**: PostgreSQL 16 + TimescaleDB (time‑series) and ClickHouse 23.8 for event storage
+- **Cache**: Redis 7 (metrics 5 min TTL, dashboards 30 s TTL)
+- **Auth**: JWT RS256, optional OIDC, bcrypt for passwords
+- **UI**: React 18, TypeScript, Vite, Recharts, custom widget system
+- **Infrastructure**: Docker, Docker‑Compose, Helm (future), Kubernetes‑ready
+
+**Backend‑to‑Frontend flow**
+> The Go API stores dashboard definitions (widgets and layout) as JSONB in PostgreSQL. The UI fetches a dashboard via `GET /api/v1/dashboards/{id}`, deserialises it into the TypeScript `Dashboard` model, and renders each widget according to the `layout` grid. Widget‑specific data is requested in parallel with `POST /api/v1/widgets/data`, which the `biz/dashboard_svc` executes using an `errgroup` for concurrency.
+
+**License header note**
+> Every Go source file must begin with the SPDX‑AGPL‑3.0‑or‑later header (`// SPDX‑License-Identifier: AGPL‑3.0‑or‑later`). See `AGENTS.md` for the exact header text.
 
 ## 📜 License
 

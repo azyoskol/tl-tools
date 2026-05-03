@@ -144,6 +144,10 @@ POST /api/v1/widgets/data
 | `sync.WaitGroup`                | `biz/metrics_svc.go` → current + previous period                           |
 | Redis cache                     | metrics TTL 5min, dashboards TTL 30s, templates TTL 1h                     |
 
+## Dashboard Rendering Flow (Backend → UI)
+
+A high‑level description of how a dashboard definition stored in PostgreSQL is served by the Go API and rendered by the React UI. See the detailed document **[`docs/dashboard_rendering.md`](dashboard_rendering.md)** for the full pipeline.
+
 ---
 
 ## Authentication

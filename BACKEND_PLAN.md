@@ -1,7 +1,7 @@
 # Backend Implementation Plan — Metraly `cmd/api` Rewrite
 
 > Status: **Architecture approved, implementation pending**
-> Replaces all mock data from `ui_new/src/api/mockApi.ts` with a real Go backend.
+> Replaces all mock data from `ui/src/api/mockApi.ts` with a real Go backend.
 > `cmd/api/` is rewritten from scratch; `internal/pkg/` legacy packages remain untouched.
 
 ---
@@ -363,7 +363,7 @@ SEED_ON_START=true ./api      # auto-seed on every start (idempotent)
 
 ### Phase 7 — docker-compose + Makefile
 - [ ] Add `postgres` service (postgres:16 + TimescaleDB image: `timescale/timescaledb:latest-pg16`)
-- [ ] Update `ui_new` compose service to point at `:8000` backend
+- [ ] Update `ui` compose service to point at `:8000` backend
 - [ ] Add `make seed` target
 
 ### Phase 8 — Tests
