@@ -21,24 +21,6 @@ services:
     networks:
       - metraly
 
-  clickhouse:
-    image: clickhouse/clickhouse-server:23.8
-    ports:
-      - "8123:8123"
-      - "9000:9000"
-    environment:
-      CLICKHOUSE_DB: default
-    volumes:
-      - ./clickhouse/init:/docker-entrypoint-initdb.d
-      - clickhouse_data:/var/lib/clickhouse
-    healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:8123/ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - metraly
-
   api:
     build:
       context: .
@@ -46,16 +28,12 @@ services:
     ports:
       - "${API_PORT:-8000}:8000"
     environment:
-      CLICKHOUSE_HOST: clickhouse
-      CLICKHOUSE_PORT: 8123
       REDIS_HOST: redis
       REDIS_PORT: 6379
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
       POSTGRES_DSN: postgres://metraly:metraly@postgres:5432/metraly
     depends_on:
-      clickhouse:
-        condition: service_healthy
       redis:
         condition: service_started
       postgres:
@@ -75,7 +53,6 @@ services:
       - metraly
 
 volumes:
-  clickhouse_data:
   redis_data:
   postgres_data:
 

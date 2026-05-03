@@ -6,9 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Metraly is a **team engineering metrics platform** — a self-hosted, open-source SaaS alternative.
 - `cmd/api/` — Go API backend (active rewrite, see `BACKEND_PLAN.md`)
-- `ui_new/` — New React/TypeScript frontend (Vite, currently uses `mockApi.ts` instead of real HTTP)
-- `ui/` — Legacy React frontend (served via Docker at port 3000, do not modify)
-- `internal/pkg/` — Legacy Go packages (ClickHouse-based, keep intact, not used by new backend)
+- `ui/` — New React/TypeScript frontend (Vite, currently uses `mockApi.ts` instead of real HTTP)
 
 ## Current Work
 
@@ -72,12 +70,12 @@ cmd/api/
 - `errgroup.WithContext` in biz — widget batch fetch and 4 DORA metrics in parallel
 - Redis cache: metrics TTL 5min, dashboards 30s, templates 1h
 
-## `ui_new/` Frontend
+## `ui/` Frontend
 
-React 18 + TypeScript + Vite app at `ui_new/`. Currently calls `mockApi` directly (not HTTP).
+React 18 + TypeScript + Vite app at `ui/`. Currently calls `mockApi` directly (not HTTP).
 
 ```
-ui_new/src/
+ui/src/
 ├── api/mockApi.ts          # Source of truth for API contract — DO NOT MODIFY
 ├── api/client.js           # axios: baseURL=VITE_API_BASE_URL || http://localhost:3001/api
 ├── types/                  # TypeScript types (api.ts, dashboard.ts, metrics.ts, widgets.ts…)
@@ -93,39 +91,12 @@ ui_new/src/
 `metric-chart`, `compare-bar-chart`, `stat-card`, `dora-overview`, `health-gauge`,
 `heatmap`, `data-table`, `leaderboard`, `sprint-burndown`, `ai-insight`, `anomaly-detector`
 
-## Legacy Architecture (`internal/pkg/`)
-
-Original ClickHouse-based backend — keep intact, not used by new `cmd/api/` rewrite.
-
-```
-internal/pkg/
-├── biz/        # DashboardService (ClickHouse-backed)
-├── cache/      # Cache interface + Redis implementation
-├── config/     # Config interface + env-var implementation (Get/GetInt pattern)
-├── database/   # ClickHouse HTTP client (port 8123)
-├── handlers/   # Original HTTP handlers
-├── logger/     # Logger interface (variadic args ...any key-value)
-├── middleware/  # CORS + response-caching
-├── models/     # Shared structs
-└── repo/       # EventRepo (ClickHouse queries)
-```
-
 **Conventions to follow when extending:**
 - `interface.go` + implementation file per package
 - Constructor: `NewFoo(cfg config.Config) (Interface, error)`
 - Config access: `cfg.Get(key, default)` / `cfg.GetInt(key, default)`
 
 ## Environment Variables
-
-### Existing (legacy docker-compose)
-| Variable | Default | Purpose |
-|----------|---------|---------|
-| `CLICKHOUSE_HOST` | `localhost` | ClickHouse host |
-| `CLICKHOUSE_PORT` | `8123` | ClickHouse HTTP port |
-| `CLICKHOUSE_DB` | `default` | Database name |
-| `REDIS_HOST` | `redis` | Redis host |
-| `REDIS_PORT` | `6379` | Redis port |
-| `PORT` | `8000` | API server port |
 
 ### New (cmd/api rewrite)
 | Variable | Default | Purpose |
@@ -175,15 +146,9 @@ POST               /widgets/data
 ```
 Biz errors map: `ErrNotFound`→404, `ErrConflict`→409, `ErrForbidden`→403, `ErrValidation`→422, else→500 (message scrubbed).
 
-## Testing
-
-- Existing: 19 unit tests in `internal/pkg/` — `make test` or `go test ./...`
-- New backend: mock repo interfaces per biz service; httptest for handlers
-
 ## Docker Services
 
 - **api**: Go API (port 8000)
-- **clickhouse**: ClickHouse DB (ports 8123, 9000) — legacy
 - **redis**: Cache (port 6379)
 - **ui**: Legacy React frontend (port 3000)
 - **postgres** *(planned)*: PostgreSQL 16 + TimescaleDB (`timescale/timescaledb:latest-pg16`)

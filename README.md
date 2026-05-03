@@ -1,127 +1,120 @@
-# Metraly — Team Engineering Metrics API (Alpha)
+# 🚀 Metraly — Open-Core Engineering Metrics Platform
 
-**⚠️ Current status: Prototype / Early version. Many features are under active development.**
+**⚠️ Current Status: Early Prototype. Some features are under active development and may not yet be fully functional.**
 
-Metraly is a multi-team engineering productivity dashboard. It helps track development efficiency in real time by collecting data from Git, CI/CD, and PM tools.
+**Metraly** is an open-core, self-hosted engineering analytics platform that helps you track team productivity, delivery performance, and developer experience — without sending your data to a third party. It brings together metrics from Git, CI/CD, and project management tools, turns them into actionable dashboards, and offers AI-powered insights you can run on your own infrastructure.
 
-## ✨ Planned Features (Roadmap)
+## 🤔 Why Metraly? (vs. SaaS competitors)
 
-- **Metrics & Charts**: PRs (open/merged), Cycle Time, Velocity, CI/CD Success Rate, Blocked Tasks.
-- **Dashboards**: Executive Overview, Activity Drill-down, Team Comparison.
-- **Role-Based Views**: Tailored perspectives for engineers, team leads, and executives.
-- **Integrations**: Built-in data collection from GitHub, GitLab, Jenkins, Jira.
-- **Enterprise**: SSO, RBAC, audit trails (future versions).
+Most engineering metrics tools (LinearB, Waydev, Code Climate Velocity, Swarmia, etc.) are proprietary SaaS products. They force you to ship your entire codebase and project management data to their cloud. Metraly takes a completely different approach:
 
-## 🚀 Quick Start (Docker Compose)
+| Capability | SaaS Solutions | Metraly |
+| :--- | :--- | :--- |
+| **Data ownership** | Your data lives on the vendor’s cloud; you’re bound by their retention policies and data processing agreements. | You host it yourself. All data stays in your ClickHouse/Redis, on your infrastructure. Full GDPR / compliance control. |
+| **Customization** | Limited to what the vendor allows. Custom metrics and dashboards often require enterprise plans. | Completely extensible. Build **custom plugins**, dashboards, and data sources using simple Go interfaces. White-label the UI. |
+| **AI & LLM integration** | AI features are typically closed-source, using your data to train proprietary models (often without clear opt-out). | Built-in AI-assistant and smart insights run locally against your data. Bring your own LLM or use built-in lightweight models. No data ever leaves your environment. |
+| **Extensibility** | Closed ecosystems. Integrations are slow to add. | Open plugin architecture (data sources, widgets, alert exporters). Plugins can be written in Go or compiled to WASM and executed in a secure sandbox. |
+| **Transparency** | You can't see how metrics are calculated or how data is transformed. | Open-core. Every core calculation is visible and auditable. You can fork, modify, and contribute back. |
+| **Vendor lock-in** | High. Migrating historical data away is often impossible. | None. Your data is in standard ClickHouse tables. Export to Parquet/CSV at any time. |
 
-The easiest way to get a local instance running for demonstration.
+If you value data privacy, unlimited flexibility, and full control over your engineering intelligence layer — Metraly is built for you.
 
-1. **Clone the repository**:
-   ```bash
-   git clone https://github.com/getmetraly/metraly.git
-   cd metraly
-   ```
+## ✨ Key Features & Roadmap
 
-1. **Launch all services**:
+Metraly is being designed as the central hub for engineering productivity. Here's what you get now and what’s planned for the near future.
 
-   ```bash
-   make docker-up
-   ```
+- **Classic metrics** – PR throughput, cycle time, deployment frequency, change failure rate, lead time for changes (DORA).
+- **Team-level dashboards** – Per-team overviews, velocity trends, comparison views, and blocked work analysis.
+- **Role-based perspectives** – Tailored views for individual contributors, engineering managers, and VPs of Engineering.
+- **Extensible plugin system** – Add your own data sources, custom widgets, and alert exporters without touching the core code.
+- **AI-powered analytics** – Automated anomaly detection, NLP-based natural language querying, and predictive velocity forecasting.
+- **Enterprise readiness** – SSO (OIDC), RBAC, audit logging, air-gapped deployment, and white-labeling.
 
-   This builds and starts the API, ClickHouse, Redis, and the UI.
+The roadmap below outlines the major pillars currently in development or fully designed.
 
-2. **Open in your browser**:
-   - **User Interface**: [http://localhost:3000](http://localhost:3000)
-   - **API (Health Check)**: [http://localhost:8000/health](http://localhost:8000/health)
-   - **ClickHouse (HTTP Interface)**: [http://localhost:8123](http://localhost:8123)
+### 🧩 Custom Plugins
+Metraly is built as an extensible platform. Plugins allow anyone to integrate new tools or create entirely new visualizations.
 
-3. **Insert demo data (optional)**:
+- **Plugin types**: Data source adapters (Jira, GitHub, Linear, Sentry, custom HTTP webhooks), dashboard widgets, alert exporters.
+- **Developer experience**: Implement a simple Go interface (`Plugin`), package as a binary or WASM module, and drop it into the `/plugins` directory. Plugins are auto-discovered.
+- **Security**: Third-party plugins run in isolated sandboxes (gVisor) with strict CPU/memory limits.
+- **One-click install**: Plugins can be installed directly from the UI or via `POST /api/v1/plugins/{id}/install`.
+- **Metraly Hub (planned)**: A community registry where developers can share and discover plugins and dashboards.
 
-   ```bash
-   make docker-test-data
-   ```
+### 🤖 AI Features
+Metraly treats AI not as a black-box magic wand, but as a transparent, self-hosted engineering analyst.
 
-   This populates the database with sample events so the UI isn’t empty.
+- **Smart insights**: Automatically detects delivery bottlenecks (e.g., "PR review times increased by 35% this sprint"), imbalanced review load, and flaky CI/CD steps. Provides natural language explanations, not just charts.
+- **AI assistant**: Ask questions in plain English — "Which team had the highest deployment frequency last month?", "Show me the repos where cycle time is above 3 days", "Which epics are at risk of slipping?".
+- **Predictive analytics**: Uses historical team performance to forecast sprint completion probability and highlight risky release trains before they derail.
+- **BYO-LLM**: Supports plugging in your own LLM endpoint (OpenAI-compatible) or can run local models. No telemetry data leaks to external AI providers.
 
-## 💻 Development
+### 🏢 Enterprise Capabilities
+For organizations rolling Metraly out to hundreds of teams, the “Enterprise” feature set provides everything needed for compliant, production-grade operations.
 
-### Prerequisites
+- **Authentication & authorization**: Single Sign-On via OIDC (Okta, Azure AD, Keycloak), full RBAC (Admin, Editor, Viewer) with team-level scoping.
+- **Audit & compliance**: Immutable activity log for every user action, exportable to external SIEMs. Configurable data retention policies.
+- **White-labeling**: Replace logos, colours, and domain names. Create private dashboard templates for consistent reporting across the company.
+- **High availability**: Supports TimescaleDB for time-series, ClickHouse sharding, and Kubernetes-native deployment with Helm.
 
-- Go 1.26+
-- Node.js 20+
-- Docker and Docker Compose
+## 🚧 Future Directions
 
-### Makefile Commands
+Beyond the immediate roadmap, we’re actively exploring several strategic initiatives:
+
+1. **DevSecOps Scorecard** – Pull vulnerability data from Trivy, Snyk, and Semgrep. Track mean time to remediate security issues and test coverage directly alongside delivery metrics.
+2. **Team Health & Gamification** – Introduce a system of positive “engineering kudos” based on healthy practices (timely code reviews, stable releases, documentation quality) to encourage the right behaviours without weaponizing metrics.
+3. **Flow Metrics & Sprint Planning** – Deep monitoring of Flow Metrics (Velocity, Time, Load, Efficiency, Distribution) and calendar-aware release forecasting so teams can answer “When will this feature ship?” with confidence.
+4. **Metraly Hub** – A marketplace for community-built plugins, dashboards, AI prompts, and alert templates, turning Metraly into a truly open ecosystem.
+
+## 🐳 Quick Start (Docker Compose)
+
+The fastest way to get a local Metraly instance up and running.
 
 ```bash
-make help            # Show all available commands
-make build           # Build the Go API binary
-make test            # Run tests (currently 19 tests)
-make lint            # Run the linter
-make run             # Build and run the API locally (without Docker)
-make docker-up       # Start all services in Docker
-make docker-down     # Stop and remove all Docker services
-make docker-logs     # Tail logs from all services
+git clone https://github.com/getmetraly/metraly.git
+cd metraly
+make docker-up
 ```
 
-## 🏗️ Architecture
+This will build and start the API, ClickHouse, Redis, and the React UI.
 
-The project follows a layered architecture, separating request handling, business logic, and data access.
+- **UI**: [http://localhost:3000](http://localhost:3000)
+- **API Health**: [http://localhost:8000/health](http://localhost:8000)
+- **ClickHouse HTTP**: [http://localhost:8123](http://localhost:8123)
 
-```
-HTTP Request ↓
-Handler (validation, marshaling) ↓
-Biz (business logic) ↓
-Repo (data access) ↓
-Database (ClickHouse HTTP)
-```
-
-### Project Structure
-
-```
-.
-├── cmd/api/main.go         # API server entry point
-├── internal/pkg/           # Business logic and infrastructure
-│   ├── biz/                # Business logic services (DashboardService, etc.)
-│   ├── cache/              # Redis-backed cache with in-memory fallback
-│   ├── config/             # Environment and file-based configuration
-│   ├── database/           # HTTP client for ClickHouse
-│   ├── handlers/           # HTTP request handlers (API endpoints)
-│   ├── middleware/          # CORS, logging, and other middleware
-│   ├── logger/             # Structured logging
-│   ├── models/             # Shared data types
-│   ├── repo/               # Data access layer (ClickHouse implementation)
-│   └── telemetry/          # OpenTelemetry tracing and metrics
-├── ui/                     # React frontend (Vite, Recharts)
-├── clickhouse/             # ClickHouse schemas and initialization scripts
-├── collectors/             # (In Development) Data collection services
-├── helm/                   # (In Development) Helm chart for Kubernetes
-└── config.yaml             # Application configuration file
+(Optional) Load demo data:
+```bash
+make docker-test-data
 ```
 
-## 📡 API (Endpoints)
+## 🛠️ Development
 
-| Endpoint | Description | Status |
-| :--- | :--- | :--- |
-| `GET /health` | API health check | ✅ Working |
-| `GET /api/v1/teams` | List of teams | ⚠️ Demo data |
-| `GET /api/v1/dashboard` | Metrics overview | ⚠️ Demo data |
-| `GET /api/v1/teams/{id}/overview` | Team metrics overview | ⚠️ Demo data |
-| `GET /api/v1/teams/{id}/velocity` | Team velocity | ⚠️ Demo data |
-| `GET /api/v1/teams/comparison` | Team comparison | ⚠️ Demo data |
-| `GET /api/v1/dora` | DORA metrics | ⚠️ Demo data |
-| `GET /api/v1/insights` | AI-powered insights | ⚠️ Demo data |
+### Prerequisites
+- Go 1.26+
+- Node.js 20+
+- Docker & Docker Compose
 
-> **Note on "⚠️ Demo data"**: These endpoints currently return static sample values to exercise the UI, not real data from ClickHouse. They will be upgraded to fully functional soon.
+### Common Make Commands
+```bash
+make help        # Show all available commands
+make build       # Build the API binary
+make test        # Run tests (19 tests currently)
+make lint        # Run linter
+make run         # Build and run API locally (without Docker)
+make docker-up   # Start all services in Docker
+make docker-down # Stop and remove Docker services
+make docker-logs # Watch logs from all services in real time
+```
 
-## 🛠️ Technology Stack
 
-- **Backend**: Go 1.26+, Chi Router, gRPC (in development), OpenTelemetry
+## 💻 Tech Stack
+
+- **Backend**: Go 1.26+, Chi Router, gRPC (in progress), OpenTelemetry
 - **Database**: ClickHouse 23.8
 - **Cache**: Redis 7
 - **UI**: React 20, TypeScript, Vite, Recharts
-- **Infrastructure**: Docker, Docker Compose, Helm (in development)
+- **Infrastructure**: Docker, Docker Compose, Helm (in progress)
 
-## 📄 License
+## 📜 License
 
 This project is licensed under the GNU AGPLv3. See the [LICENSE](LICENSE) file for details.
