@@ -8,12 +8,16 @@ import (
 	"golang.org/x/oauth2"
 )
 
-type OIDCProvider struct {
+type OIDCProvider interface {
+	VerifyIDToken(ctx context.Context, rawIDToken string) (string, error)
+}
+
+type oidcProvider struct {
 	verifier *oidc.IDTokenVerifier
 	config   oauth2.Config
 }
 
-func NewOIDCProvider(issuer, clientID, clientSecret, redirectURL string) (*OIDCProvider, error) {
+func NewOIDCProvider(issuer, clientID, clientSecret, redirectURL string) (OIDCProvider, error) {
 	if issuer == "" {
 		return nil, fmt.Errorf("OIDC issuer not configured")
 	}
@@ -30,10 +34,10 @@ func NewOIDCProvider(issuer, clientID, clientSecret, redirectURL string) (*OIDCP
 		Endpoint:     provider.Endpoint(),
 		Scopes:       []string{oidc.ScopeOpenID, "profile", "email"},
 	}
-	return &OIDCProvider{verifier: verifier, config: cfg}, nil
+	return &oidcProvider{verifier: verifier, config: cfg}, nil
 }
 
-func (p *OIDCProvider) VerifyIDToken(ctx context.Context, rawIDToken string) (string, error) {
+func (p *oidcProvider) VerifyIDToken(ctx context.Context, rawIDToken string) (string, error) {
 	token, err := p.verifier.Verify(ctx, rawIDToken)
 	if err != nil {
 		return "", err

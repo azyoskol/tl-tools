@@ -23,13 +23,13 @@ type TokenPair struct {
 
 type Service struct {
 	km        *KeyManager
-	store     *TokenStore
+	store     TokenStore
 	users     repo.UserRepo
 	accessTTL time.Duration
-	oidc      *OIDCProvider
+	oidc      OIDCProvider
 }
 
-func NewService(km *KeyManager, store *TokenStore, users repo.UserRepo, accessTTL time.Duration, oidc *OIDCProvider) *Service {
+func NewService(km *KeyManager, store TokenStore, users repo.UserRepo, accessTTL time.Duration, oidc OIDCProvider) *Service {
 	return &Service{km: km, store: store, users: users, accessTTL: accessTTL, oidc: oidc}
 }
 
