@@ -56,3 +56,15 @@ make docker-test-data   # Insert test data
 
 - Go: idiomatic, interfaces for dependencies, context.Context for all I/O
 - Tests: table-driven where appropriate, clear mock implementations
+
+## License Requirements
+
+- **License**: GNU AGPLv3 — all Go files must include the license header
+- When creating new `.go` files, add this header at the very top:
+  ```go
+  // SPDX-License-Identifier: AGPL-3.0-or-later
+  // Metraly - Team Engineering Metrics API
+  // Copyright (C) 2026 Metraly Contributors
+  ```
+- Existing `.go` files should also be updated to include this header
+- Swagger docs: use `// @license AGPL-3.0-or-later` in `cmd/api/main.go`
