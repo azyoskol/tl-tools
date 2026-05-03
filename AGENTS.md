@@ -14,7 +14,7 @@ Worktrees should be created inside project directory (`.worktrees/`), not in glo
 
 - **Name**: Metraly — Team Engineering Metrics API
 - **Language**: Go (backend), React (frontend)
-- **Database**: ClickHouse
+- **Database**: PostgreSQL + TimescaleDB
 - **Cache**: Redis
 
 ## Issue Tracker
@@ -41,44 +41,10 @@ make docker-restart     # Restart services
 # Debugging
 make health             # Check API health
 make dashboard          # Check dashboard data
-make docker-logs         # View logs
+make docker-logs         # View logsa
 
 # Data
 make docker-test-data   # Insert test data
-
-## Setup & Environment
-
-- Required env vars for `cmd/api`: `PORT`, `POSTGRES_DSN`, `REDIS_HOST`, `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD` (used by seed runner).
-- After adding Go dependencies run `go mod tidy` to keep `go.mod`/`go.sum` clean.
-- Worktree directory `.worktrees/` must be listed in `.gitignore`. If missing, add `/.worktrees/` and commit before creating worktrees.
-- Baseline verification: after creating a worktree run `go test ./...` to ensure all existing tests pass before starting implementation.
-- To run a single test: `go test ./cmd/api/... -run TestName`.
-
-```
-
-## Architecture Notes
-
-### Layered Architecture
-
-```
-Handler → Biz → Repo → Database
-```
-
-- **handlers/** — HTTP validation + marshaling only
-- **biz/** — Business logic, orchestration
-- **repo/** — Data access, queries
-- **database/** — Low-level DB communication
-
-### Key Interfaces
-
-- `database.Database` — Query, Exec, Ping
-- `repo.EventRepo` — CountEvents, GetActivity, etc.
-- `biz.DashboardService` — GetDashboard, GetOverview, etc.
-- `cache.Cache` — Get, Set, Delete
-
-### Database
-
-ClickHouse via HTTP (port 8123). Uses JSON format for responses.
 
 ## Testing Strategy
 

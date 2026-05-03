@@ -363,7 +363,6 @@ SEED_ON_START=true ./api      # auto-seed on every start (idempotent)
 
 ### Phase 7 — docker-compose + Makefile
 - [ ] Add `postgres` service (postgres:16 + TimescaleDB image: `timescale/timescaledb:latest-pg16`)
-- [ ] Remove ClickHouse from compose (or keep as optional for future event ingestion)
 - [ ] Update `ui_new` compose service to point at `:8000` backend
 - [ ] Add `make seed` target
 
