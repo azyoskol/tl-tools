@@ -2,7 +2,8 @@
 // @version 1.0
 // @description Team Engineering Metrics API
 // @contact.name Metraly
-// @license MIT
+// @license.name AGPL-3.0-only
+// @license.url https://www.gnu.org/licenses/agpl-3.0.html
 
 package main
 

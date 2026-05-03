@@ -36,13 +36,16 @@ The roadmap below outlines the major pillars currently in development or fully d
 
 ### 🧩 Custom Plugins
 
-Metraly is built as an extensible platform. Plugins allow anyone to integrate new tools or create entirely new visualizations.
+Metraly ships an extensible plugin system with a **three-tier runtime** so plugin authors can pick the right trade-off between performance, isolation, and language ecosystem. The full architectural decision (ADR-001) and plugin spec live in the Metraly documentation repository.
 
-- **Plugin types**: Data source adapters (Jira, GitHub, Linear, Sentry, custom HTTP webhooks), dashboard widgets, alert exporters.
-- **Developer experience**: Implement a simple Go interface (`Plugin`), package as a binary or WASM module, and drop it into the `/plugins` directory. Plugins are auto-discovered.
-- **Security**: Third-party plugins run in isolated sandboxes (gVisor) with strict CPU/memory limits.
-- **One-click install**: Plugins can be installed directly from the UI or via `POST /api/v1/plugins/{id}/install`.
-- **Metraly Hub (planned)**: A community registry where developers can share and discover plugins and dashboards.
+- **Six plugin types**: data sources (Jira, GitHub, Linear, Sentry, custom HTTP), processors, AI engines, dashboard widgets, notifiers (Slack, Teams, PagerDuty), and actions (restart CI, create ticket, reassign reviewer).
+- **Three execution tiers**:
+  - **Tier 1 — Go in-process** for first-party connectors that need bare-metal performance.
+  - **Tier 2 — WASM (via [`wazero`](https://wazero.io/))** for community plugins in Go, Rust, or AssemblyScript with built-in memory and CPU isolation.
+  - **Tier 3 — Docker + gRPC** for plugins in any language (Python, TypeScript, Ruby, Java) with full process and network isolation.
+- **Defense-in-depth security**: Ed25519-signed `.mpack` packages, strict manifest validation, container/sandbox isolation with CPU & memory caps, egress allow-listing, Vault-injected secrets, and a tamper-resistant audit trail for every plugin action.
+- **Plugin SDK** ([`getmetraly/plugin-sdk`](https://github.com/getmetraly/plugin-sdk)) — Go and Rust SDKs plus a CLI (`metraly plugin init|build|package|publish`). Hello-world to working plugin in under 10 minutes.
+- **Marketplace Hub** (planned): a community registry to browse, install, and update plugins straight from the UI. Air-gapped deployments can mirror the Hub locally.
 
 ### 🤖 AI Features
 
