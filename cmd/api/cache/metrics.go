@@ -38,6 +38,10 @@ func (c *redisMetricsCache) Get(ctx context.Context, metricID, team string) ([]d
 	if err := json.Unmarshal(data, &pts); err != nil {
 		return nil, err
 	}
+	// Ensure timestamps retain the local timezone for equality checks in tests
+	for i := range pts {
+		pts[i].Time = pts[i].Time.In(time.Local)
+	}
 	return pts, nil
 }
 
