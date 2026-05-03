@@ -16,6 +16,7 @@ const claimsKey contextKey = "claims"
 func RequireAuth(km *auth.KeyManager) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("X-Auth-Checked", "true")
 			header := r.Header.Get("Authorization")
 			if !strings.HasPrefix(header, "Bearer ") {
 				respond.Error(w, http.StatusUnauthorized, "UNAUTHORIZED", "missing token")

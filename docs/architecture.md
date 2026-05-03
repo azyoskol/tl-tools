@@ -151,9 +151,56 @@
   ├──────────────────────────────┼──────────────────────────────────────────────────────┤
   │ Redis кеш                    │ метрики TTL 5min, дашборды TTL 30s, шаблоны TTL 1h   │
   └──────────────────────────────┴──────────────────────────────────────────────────────┘
+---
 
-  ---
-  Новые зависимости в go.mod
+## Authentication
+
+### Local JWT (RS256)
+- Access tokens: 15-minute TTL, payload `{sub, email, role}`
+- Refresh tokens: 32 random bytes → base64url wire format, SHA-256 hex stored in Redis, 7-day TTL
+- Single-use refresh token rotation (old token revoked atomically)
+- Auto-generated RSA-2048 key if `JWT_PRIVATE_KEY` is empty (warned, tokens invalidated on restart)
+
+### OIDC / Enterprise SSO
+- Activated when `OIDC_ISSUER_URL` is set
+- Lazy initialization: `oidcProvider` constructed only when needed
+- Supported providers: Keycloak, Okta, Azure AD, Google Workspace, Authentik (any OIDC-compliant)
+- CSRF protection via Redis-stored state param (5-minute TTL)
+- On callback: find or create user by email, issue token pair
+
+### RBAC
+- Roles: `admin`, `editor`, `viewer`, `team-lead` stored in `users.app_role`
+- Enforced via `RequireRole(roles...)` middleware after `RequireAuth`
+
+---
+
+## Redis Caching Layer
+
+| Cached Data       | TTL       | Location                  |
+|-------------------|-----------|---------------------------|
+| Metrics responses | 5 minutes | `biz/metrics_svc.go`     |
+| Dashboard reads   | 30 seconds| `biz/dashboard_svc.go`   |
+| Template list     | 1 hour    | `biz/template_svc.go`     |
+| Refresh tokens    | 7 days    | `auth/service.go`         |
+| OIDC state params | 5 minutes | `auth/oidc.go`            |
+
+---
+
+## Testing
+
+### Unit Tests
+- `auth/jwt.go`: Token sign/validate round-trip
+- `biz/*_svc.go`: Mock repos, test version conflict, error propagation
+- `seed/prng.go`: Assert first 5 PRNG values against JS reference
+- `handlers/*`: `httptest.ResponseRecorder` with mock biz services
+
+### Integration Tests
+- Migration runner: Testcontainers Postgres, assert `schema_migrations` rows
+- End-to-end: Full stack tests with Docker services (postgres, redis)
+
+---
+
+Новые зависимости в go.mod
 
   github.com/jackc/pgx/v5
   github.com/golang-jwt/jwt/v5
