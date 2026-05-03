@@ -1,0 +1,129 @@
+package repo
+
+import (
+	"context"
+	"encoding/json"
+
+	"github.com/getmetraly/metraly/cmd/api/domain"
+	"github.com/jackc/pgx/v5/pgxpool"
+)
+
+type DashboardRepo interface {
+	List(ctx context.Context, userID string) ([]*domain.Dashboard, error)
+	GetByID(ctx context.Context, id string) (*domain.Dashboard, error)
+	Create(ctx context.Context, d *domain.Dashboard) error
+	Update(ctx context.Context, d *domain.Dashboard) (bool, error)
+	UpdateLayout(ctx context.Context, id string, layout []domain.WidgetLayout, version int) (bool, error)
+	UpdateShare(ctx context.Context, id string, isPublic bool, shareToken *string) error
+	ListTemplates(ctx context.Context) ([]*domain.DashboardTemplate, error)
+}
+
+type pgDashboardRepo struct{ pool *pgxpool.Pool }
+
+func NewDashboardRepo(pool *pgxpool.Pool) DashboardRepo { return &pgDashboardRepo{pool} }
+
+func (r *pgDashboardRepo) List(ctx context.Context, userID string) ([]*domain.Dashboard, error) {
+	rows, err := r.pool.Query(ctx,
+		`SELECT id, name, description, icon, owner_id, is_public, share_token,
+		        widgets, layout, version, forked_from_id, created_at, updated_at
+		 FROM dashboards WHERE owner_id=$1 OR is_public=true ORDER BY updated_at DESC`, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var result []*domain.Dashboard
+	for rows.Next() {
+		d := &domain.Dashboard{}
+		var widgetsJSON, layoutJSON []byte
+		err := rows.Scan(&d.ID, &d.Name, &d.Description, &d.Icon, &d.OwnerID, &d.IsPublic,
+			&d.ShareToken, &widgetsJSON, &layoutJSON, &d.Version, &d.ForkedFromID, &d.CreatedAt, &d.UpdatedAt)
+		if err != nil {
+			return nil, err
+		}
+		json.Unmarshal(widgetsJSON, &d.Widgets)
+		json.Unmarshal(layoutJSON, &d.Layout)
+		result = append(result, d)
+	}
+	return result, rows.Err()
+}
+
+func (r *pgDashboardRepo) GetByID(ctx context.Context, id string) (*domain.Dashboard, error) {
+	d := &domain.Dashboard{}
+	var widgetsJSON, layoutJSON []byte
+	err := r.pool.QueryRow(ctx,
+		`SELECT id, name, description, icon, owner_id, is_public, share_token,
+		        widgets, layout, version, forked_from_id, created_at, updated_at
+		 FROM dashboards WHERE id=$1`, id,
+	).Scan(&d.ID, &d.Name, &d.Description, &d.Icon, &d.OwnerID, &d.IsPublic,
+		&d.ShareToken, &widgetsJSON, &layoutJSON, &d.Version, &d.ForkedFromID, &d.CreatedAt, &d.UpdatedAt)
+	if err != nil {
+		return nil, err
+	}
+	json.Unmarshal(widgetsJSON, &d.Widgets)
+	json.Unmarshal(layoutJSON, &d.Layout)
+	return d, nil
+}
+
+func (r *pgDashboardRepo) Create(ctx context.Context, d *domain.Dashboard) error {
+	widgetsJSON, _ := json.Marshal(d.Widgets)
+	layoutJSON, _ := json.Marshal(d.Layout)
+	_, err := r.pool.Exec(ctx,
+		`INSERT INTO dashboards(id, name, description, icon, owner_id, is_public, widgets, layout, forked_from_id)
+		 VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+		d.ID, d.Name, d.Description, d.Icon, d.OwnerID, d.IsPublic,
+		widgetsJSON, layoutJSON, d.ForkedFromID,
+	)
+	return err
+}
+
+func (r *pgDashboardRepo) Update(ctx context.Context, d *domain.Dashboard) (bool, error) {
+	widgetsJSON, _ := json.Marshal(d.Widgets)
+	layoutJSON, _ := json.Marshal(d.Layout)
+	tag, err := r.pool.Exec(ctx,
+		`UPDATE dashboards SET name=$1, description=$2, icon=$3, widgets=$4, layout=$5,
+		        version=version+1, updated_at=NOW()
+		 WHERE id=$6 AND version=$7`,
+		d.Name, d.Description, d.Icon, widgetsJSON, layoutJSON, d.ID, d.Version,
+	)
+	return tag.RowsAffected() == 1, err
+}
+
+func (r *pgDashboardRepo) UpdateLayout(ctx context.Context, id string, layout []domain.WidgetLayout, version int) (bool, error) {
+	layoutJSON, _ := json.Marshal(layout)
+	tag, err := r.pool.Exec(ctx,
+		`UPDATE dashboards SET layout=$1, version=version+1, updated_at=NOW() WHERE id=$2 AND version=$3`,
+		layoutJSON, id, version,
+	)
+	return tag.RowsAffected() == 1, err
+}
+
+func (r *pgDashboardRepo) UpdateShare(ctx context.Context, id string, isPublic bool, shareToken *string) error {
+	_, err := r.pool.Exec(ctx,
+		`UPDATE dashboards SET is_public=$1, share_token=$2, updated_at=NOW() WHERE id=$3`,
+		isPublic, shareToken, id,
+	)
+	return err
+}
+
+func (r *pgDashboardRepo) ListTemplates(ctx context.Context) ([]*domain.DashboardTemplate, error) {
+	rows, err := r.pool.Query(ctx,
+		`SELECT id, name, description, icon, category, widgets, layout FROM dashboard_templates ORDER BY name`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var result []*domain.DashboardTemplate
+	for rows.Next() {
+		t := &domain.DashboardTemplate{}
+		var widgetsJSON, layoutJSON []byte
+		if err := rows.Scan(&t.ID, &t.Name, &t.Description, &t.Icon, &t.Category, &widgetsJSON, &layoutJSON); err != nil {
+			return nil, err
+		}
+		json.Unmarshal(widgetsJSON, &t.Widgets)
+		json.Unmarshal(layoutJSON, &t.Layout)
+		result = append(result, t)
+	}
+	return result, rows.Err()
+}

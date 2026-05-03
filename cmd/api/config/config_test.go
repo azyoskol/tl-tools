@@ -40,3 +40,25 @@ func TestLoad_fromEnv(t *testing.T) {
         t.Fatalf("expected admin@test.com, got %s", cfg.SeedAdminEmail)
     }
 }
+
+func TestLoad_CacheTTLs(t *testing.T) {
+    os.Setenv("METRICS_CACHE_TTL", "300")
+    os.Setenv("DASHBOARDS_CACHE_TTL", "30")
+    os.Setenv("TEMPLATES_CACHE_TTL", "3600")
+    defer func() {
+        os.Unsetenv("METRICS_CACHE_TTL")
+        os.Unsetenv("DASHBOARDS_CACHE_TTL")
+        os.Unsetenv("TEMPLATES_CACHE_TTL")
+    }()
+
+    cfg := config.Load()
+    if cfg.MetricsCacheTTL != 300 {
+        t.Fatalf("expected 300, got %d", cfg.MetricsCacheTTL)
+    }
+    if cfg.DashboardsCacheTTL != 30 {
+        t.Fatalf("expected 30, got %d", cfg.DashboardsCacheTTL)
+    }
+    if cfg.TemplatesCacheTTL != 3600 {
+        t.Fatalf("expected 3600, got %d", cfg.TemplatesCacheTTL)
+    }
+}
