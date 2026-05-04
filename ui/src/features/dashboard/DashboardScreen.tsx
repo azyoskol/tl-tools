@@ -71,6 +71,8 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
     if (dashboard) {
       setLocalName(dashboard.name || '');
       setLocalDesc(dashboard.description || '');
+      setLocalTimeRange(dashboard.defaultFilters?.timeRange || '7d');
+      setLocalTeam(dashboard.defaultFilters?.team || 'All teams');
     }
   }, [dashboard]);
 
