@@ -122,6 +122,11 @@ make docker-logs # Watch logs from all services in real time
 - **UI**: React 20, TypeScript, Vite, Recharts
 - **Infrastructure**: Docker, Docker Compose, Helm (in progress)
 
+## Community
+- 💬 [Discord server](https://discord.gg/XGkFfMFTV7) – help, ideas, discussions.
+- 🐞 [GitHub Issues](https://github.com/getmetraly/metraly/issues) – bugs and feature requests.
+- 📖 [Documentation](https://docs.metraly.io) (coming soon).
+
 ## 📜 License
 
 This project is licensed under the GNU AGPLv3. See the [LICENSE](LICENSE) file for details.
