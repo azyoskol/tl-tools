@@ -43,12 +43,14 @@ export const WizardPreviewGrid: React.FC = () => {
             layouts={{ lg: layout }}
             breakpoints={{ lg: 1200, md: 996, sm: 768 }}
             cols={{ lg: 12, md: 10, sm: 6 }}
-            rowHeight={100}
+            rowHeight={50}
             isDraggable={true}
             isResizable={true}
             onLayoutChange={(currentLayout) => updateLayout(currentLayout)}
             draggableHandle=".widget-drag-handle"
             compactType="vertical"
+            resizeHandles={['se']}
+            margin={[8, 8]}
           >
             {widgets.map(w => (
               <div key={w.instanceId}>
