@@ -1,6 +1,7 @@
 // src/features/dashboardWizard/components/WizardSettings.tsx
 import React from 'react';
 import { Icon } from '../../../components/shared/Icon';
+import { WizardWidget } from '../store/wizardStore';
 
 export interface WizardSettingsProps {
   name: string;
@@ -12,7 +13,17 @@ export interface WizardSettingsProps {
   onTimeRangeChange: (range: string) => void;
   onTeamChange: (team: string) => void;
   onDelete: () => void;
+  selectedWidgets: WizardWidget[];
+  widgetSizes: Record<string, string>;
+  onToggleWidget: (instanceId: string) => void;
+  onToggleSize: (instanceId: string) => void;
+  onMoveWidget: (fromIndex: number, toIndex: number) => void;
 }
+
+const getCatColor = (cat: string): string => {
+  const colors: Record<string, string> = { DORA: '#00E5FF', 'CI/CD': '#00C853', PR: '#B44CFF', Sprint: '#FF9100', Team: '#00E5FF', AI: '#B44CFF' };
+  return colors[cat] || '#00E5FF';
+};
 
 export const WizardSettings: React.FC<WizardSettingsProps> = ({
   name,
@@ -24,12 +35,20 @@ export const WizardSettings: React.FC<WizardSettingsProps> = ({
   onTimeRangeChange,
   onTeamChange,
   onDelete,
+  selectedWidgets,
+  widgetSizes,
+  onToggleWidget,
+  onToggleSize,
+  onMoveWidget,
 }) => {
   return (
-    <div>
-      <div style={{ fontFamily: 'var(--font-head)', fontWeight: 700, fontSize: 16, marginBottom: 4 }}>Dashboard settings</div>
-      <div style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 20 }}>Name it, configure defaults, and arrange widgets.</div>
-      <div style={{ marginBottom: 16 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16, height: '100%', overflow: 'auto' }}>
+      <div>
+        <div style={{ fontFamily: 'var(--font-head)', fontWeight: 700, fontSize: 16, marginBottom: 4 }}>Dashboard settings</div>
+        <div style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 16 }}>Name it, configure defaults.</div>
+      </div>
+      
+      <div>
         <label style={{ fontSize: 12, color: 'var(--muted)', display: 'block', marginBottom: 6 }}>Dashboard name *</label>
         <input
           value={name}
@@ -47,7 +66,8 @@ export const WizardSettings: React.FC<WizardSettingsProps> = ({
           }}
         />
       </div>
-      <div style={{ marginBottom: 16 }}>
+      
+      <div>
         <label style={{ fontSize: 12, color: 'var(--muted)', display: 'block', marginBottom: 6 }}>Description</label>
         <input
           value={desc}
@@ -65,7 +85,8 @@ export const WizardSettings: React.FC<WizardSettingsProps> = ({
           }}
         />
       </div>
-      <div style={{ marginBottom: 16 }}>
+      
+      <div>
         <label style={{ fontSize: 12, color: 'var(--muted)', display: 'block', marginBottom: 8 }}>Default time range</label>
         <div style={{ display: 'flex', gap: 6 }}>
           {['7d', '14d', '30d', '90d'].map((t) => (
@@ -87,7 +108,8 @@ export const WizardSettings: React.FC<WizardSettingsProps> = ({
           ))}
         </div>
       </div>
-      <div style={{ marginBottom: 24 }}>
+      
+      <div>
         <label style={{ fontSize: 12, color: 'var(--muted)', display: 'block', marginBottom: 8 }}>Team scope</label>
         <select
           value={team}
@@ -108,9 +130,93 @@ export const WizardSettings: React.FC<WizardSettingsProps> = ({
           ))}
         </select>
       </div>
+
       <div style={{ borderTop: '1px solid var(--border)', paddingTop: 16, marginTop: 8 }}>
+        <div style={{ fontFamily: 'var(--font-head)', fontWeight: 600, fontSize: 13, marginBottom: 8, color: 'var(--text)' }}>
+          Selected Widgets ({selectedWidgets.length})
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 200, overflowY: 'auto' }}>
+          {selectedWidgets.length === 0 ? (
+            <div style={{ textAlign: 'center', color: 'var(--muted)', padding: 16, fontSize: 12 }}>
+              No widgets selected
+            </div>
+          ) : (
+            selectedWidgets.map((widget, index) => {
+              const isEmpty = widget.id === 'empty';
+              const size = widgetSizes[widget.instanceId] || 'half';
+              const c = getCatColor(widget.cat);
+              
+              return (
+                <div key={widget.instanceId} style={{
+                  display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 8,
+                  border: isEmpty ? '1.5px dashed var(--cyan)' : '1px solid var(--border)',
+                  background: isEmpty ? 'rgba(0,229,255,0.06)' : 'rgba(255,255,255,0.03)',
+                }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <button
+                      type="button"
+                      onClick={() => onMoveWidget(index, index - 1)}
+                      disabled={index === 0}
+                      style={{
+                        background: 'none', border: 'none', padding: 2, cursor: index === 0 ? 'not-allowed' : 'pointer',
+                        color: index === 0 ? 'var(--border)' : 'var(--muted)',
+                      }}
+                    >
+                      <Icon name="chevronUp" size={12} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onMoveWidget(index, index + 1)}
+                      disabled={index === selectedWidgets.length - 1}
+                      style={{
+                        background: 'none', border: 'none', padding: 2, cursor: index === selectedWidgets.length - 1 ? 'not-allowed' : 'pointer',
+                        color: index === selectedWidgets.length - 1 ? 'var(--border)' : 'var(--muted)',
+                      }}
+                    >
+                      <Icon name="chevronDown" size={12} />
+                    </button>
+                  </div>
+                  <div style={{ width: 24, height: 24, borderRadius: 6, background: isEmpty ? 'rgba(0,229,255,0.15)' : `${c}18`, border: `1px solid ${isEmpty ? 'var(--cyan)' : c}22`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Icon name={widget.icon} size={12} color={isEmpty ? 'var(--cyan)' : c} />
+                  </div>
+                  <div style={{ flex: 1, fontSize: 12.5, fontWeight: 500 }}>{widget.label}</div>
+                  {!isEmpty && (
+                    <button
+                      type="button"
+                      onClick={() => onToggleSize(widget.instanceId)}
+                      style={{
+                        padding: '3px 8px',
+                        borderRadius: 5,
+                        fontSize: 11,
+                        cursor: 'pointer',
+                        border: size === 'full' ? '1px solid rgba(0,229,255,0.3)' : '1px solid var(--border)',
+                        background: size === 'full' ? 'rgba(0,229,255,0.08)' : 'transparent',
+                        color: size === 'full' ? 'var(--cyan)' : 'var(--muted)',
+                      }}
+                    >
+                      {size === 'full' ? 'Full' : 'Flex'}
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => onToggleWidget(widget.instanceId)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', padding: 4 }}
+                  >
+                    <Icon name="x" size={14} />
+                  </button>
+                </div>
+              );
+            })
+          )}
+        </div>
+      </div>
+
+      <div style={{ flex: 1 }} />
+      
+      <div style={{ borderTop: '1px solid var(--border)', paddingTop: 16 }}>
         <div style={{ fontSize: 12, color: 'rgba(255,82,82,0.9)', marginBottom: 8, fontWeight: 600 }}>Danger Zone</div>
         <button
+          type="button"
           onClick={onDelete}
           style={{
             display: 'flex',

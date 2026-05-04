@@ -331,52 +331,56 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   );
 
 return (
-    <div
-      style={{
-        flex: 1,
-        display: "flex",
-        flexDirection: "column",
-        overflow: "hidden",
-      }}
-    >
+    <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", height: "100%" }}>
       <TabBar />
-      <div style={{ flex: 1, overflow: "auto", padding: isEditMode ? "12px 20px" : "20px 24px" }}>
-        {renderDashboard()}
+      <div
+        style={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "row",
+          overflow: "hidden",
+        }}
+      >
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+          <div style={{ flex: 1, overflow: "auto", padding: isEditMode ? "12px 20px" : "20px 24px" }}>
+            {renderDashboard()}
+          </div>
+        </div>
+        <WizardSidebar
+          isOpen={isWizardSidebarOpen}
+          isPinned={isSidebarPinned}
+          onClose={() => setWizardSidebarOpen(false)}
+          onTogglePin={() => setSidebarPinned(!isSidebarPinned)}
+          selectedWidgets={(dashboard?.widgets as unknown as WizardWidget[]) || []}
+          widgetSizes={widgetSizes}
+          onToggleWidget={(instanceId: string) => {
+            const isSelected = dashboard?.widgets?.some((w) => w.instanceId === instanceId);
+            if (isSelected) {
+              handleRemoveWidget(instanceId);
+            } else {
+              const w = dashboard?.widgets?.find((w) => w.instanceId === instanceId);
+              if (w) handleAddWidget(w.widgetType);
+            }
+          }}
+          onToggleSize={handleToggleSize}
+          onMoveWidget={(from: number, to: number) => {
+            // Reorder logic if needed
+          }}
+          name={localName}
+          desc={localDesc}
+          timeRange={localTimeRange}
+          team={localTeam}
+          onNameChange={setLocalName}
+          onDescChange={setLocalDesc}
+          onTimeRangeChange={setLocalTimeRange}
+          onTeamChange={setLocalTeam}
+          onDelete={async () => {
+            if (dashboard && confirm('Are you sure you want to delete this dashboard?')) {
+              handleDashboardChange('overview');
+            }
+          }}
+        />
       </div>
-      <WizardSidebar
-        isOpen={isWizardSidebarOpen}
-        isPinned={isSidebarPinned}
-        onClose={() => setWizardSidebarOpen(false)}
-        onTogglePin={() => setSidebarPinned(!isSidebarPinned)}
-        selectedWidgets={(dashboard?.widgets as unknown as WizardWidget[]) || []}
-        widgetSizes={widgetSizes}
-        onToggleWidget={(instanceId: string) => {
-          const isSelected = dashboard?.widgets?.some((w) => w.instanceId === instanceId);
-          if (isSelected) {
-            handleRemoveWidget(instanceId);
-          } else {
-            const w = dashboard?.widgets?.find((w) => w.instanceId === instanceId);
-            if (w) handleAddWidget(w.widgetType);
-          }
-        }}
-        onToggleSize={handleToggleSize}
-        onMoveWidget={(from: number, to: number) => {
-          // Reorder logic if needed
-        }}
-        name={localName}
-        desc={localDesc}
-        timeRange={localTimeRange}
-        team={localTeam}
-        onNameChange={setLocalName}
-        onDescChange={setLocalDesc}
-        onTimeRangeChange={setLocalTimeRange}
-        onTeamChange={setLocalTeam}
-        onDelete={async () => {
-          if (dashboard && confirm('Are you sure you want to delete this dashboard?')) {
-            handleDashboardChange('overview');
-          }
-        }}
-      />
     </div>
   );
 };

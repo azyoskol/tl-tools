@@ -56,17 +56,14 @@ export const WizardSidebar: React.FC<WizardSidebarProps> = ({
 
   return (
     <div style={{
-      position: 'fixed',
-      right: 0,
-      top: 0,
-      height: '100%',
       width: 400,
+      height: '100%',
+      flexShrink: 0,
       background: 'var(--glass)',
       borderLeft: '1px solid var(--border)',
-      zIndex: 1000,
-      boxShadow: '-4px 0 20px rgba(0,0,0,0.3)',
       display: 'flex',
       flexDirection: 'column',
+      paddingTop: 28,
     }}>
       <div style={{
         display: 'flex',
@@ -173,6 +170,11 @@ export const WizardSidebar: React.FC<WizardSidebarProps> = ({
             onTimeRangeChange={onTimeRangeChange}
             onTeamChange={onTeamChange}
             onDelete={onDelete}
+            selectedWidgets={selectedWidgets}
+            widgetSizes={widgetSizes}
+            onToggleWidget={onToggleWidget}
+            onToggleSize={onToggleSize}
+            onMoveWidget={onMoveWidget}
           />
         )}
       </div>

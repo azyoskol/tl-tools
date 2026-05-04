@@ -3,291 +3,136 @@ import React from "react";
 import { Icon } from "../../../components/shared/Icon";
 import { useWizardStore } from "../store/wizardStore";
 import { WizardWidget } from "../store/wizardStore";
-import {
-  AreaChart,
-  BarChart,
-  Heatmap,
-  Sparkline,
-  Gauge,
-} from "../../../components/charts";
-import { Leaderboard } from "../../../components/ui/Leaderboard";
+import { widgetRegistry } from "../../../components/dashboard/widgetRegistry";
 import { makeTimeSeries, makeHeatData } from "../../../utils/seeds";
 
-const sparkA = makeTimeSeries(12, 4, 1.2, 0.05, 1);
-const sparkB = makeTimeSeries(12, 88, 5, 0.2, 2);
-const sparkC = makeTimeSeries(12, 22, 6, -0.3, 3);
-const areaData = makeTimeSeries(16, 4.2, 1.5, 0.03, 10);
-const heatData = makeHeatData(3, 16, 0.4, 33);
-const deployHeat = makeHeatData(7, 16, 0.45, 66);
-
-const widgetCharts: Record<string, React.ReactNode> = {
-  "dora-overview": (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(4, 1fr)",
-        gap: 8,
-        padding: 12,
-      }}
-    >
-      {[
-        ["4.2/day", "Deploy Freq", "#00E5FF"],
-        ["38h", "Lead Time", "#B44CFF"],
-        ["3.2%", "CFR", "#FF9100"],
-        ["18 min", "MTTR", "#00C853"],
-      ].map(([v, l, c], i) => (
-        <div key={i} style={{ textAlign: "center", padding: "8px 0" }}>
-          <div
-            style={{
-              fontSize: 18,
-              fontWeight: 700,
-              color: "var(--text)",
-              fontFamily: "var(--font-head)",
-            }}
-          >
-            {v}
-          </div>
-          <div style={{ fontSize: 10, color: "var(--muted)", marginTop: 2 }}>
-            {l}
-          </div>
-          <div
-            style={{
-              width: 6,
-              height: 6,
-              borderRadius: "50%",
-              background: c,
-              margin: "6px auto 0",
-            }}
-          />
-        </div>
-      ))}
-    </div>
-  ),
-  "deploy-freq": (
-    <div style={{ padding: 12 }}>
-      <Sparkline data={sparkA} color="#00E5FF" height={60} />
-    </div>
-  ),
-  "lead-time": (
-    <div style={{ padding: 12 }}>
-      <Sparkline data={sparkC} color="#B44CFF" height={60} />
-    </div>
-  ),
-  "mttr-trend": (
-    <div style={{ padding: 12 }}>
-      <Sparkline
-        data={makeTimeSeries(12, 28, 8, -0.8, 55)}
-        color="#FF9100"
-        height={60}
-      />
-    </div>
-  ),
-  "ci-pass-rate": (
-    <div style={{ padding: 12 }}>
-      <Sparkline data={sparkB} color="#00C853" height={60} />
-    </div>
-  ),
-  "failing-builds": (
-    <div style={{ padding: 12, fontSize: 11.5 }}>
-      {[
-        ["integration-tests", "api-gateway", "2h"],
-        ["docker-build", "monorepo", "5h"],
-        ["e2e-suite", "frontend", "9h"],
-      ].map(([wf, repo, ago], i) => (
-        <div
-          key={i}
-          style={{
-            display: "flex",
-            gap: 10,
-            padding: "5px 0",
-            borderBottom: "1px solid var(--border)",
-            color: "var(--muted2)",
-          }}
-        >
-          <span style={{ flex: 1, color: "var(--text)" }}>{wf}</span>
-          <span style={{ fontFamily: "var(--font-mono)" }}>{repo}</span>
-          <span
-            style={{
-              fontFamily: "var(--font-mono)",
-              color: parseInt(ago) > 12 ? "#FF9100" : "var(--muted)",
-            }}
-          >
-            {ago}
-          </span>
-        </div>
-      ))}
-    </div>
-  ),
-  "pr-queue": (
-    <div style={{ padding: 12, fontSize: 11.5 }}>
-      {[
-        ["feat/auth-tokens", "@j.kim", "3h"],
-        ["fix/rate-limit", "@s.chen", "8h"],
-        ["refactor/api", "@m.patel", "19h"],
-      ].map(([pr, a, age], i) => (
-        <div
-          key={i}
-          style={{
-            display: "flex",
-            gap: 10,
-            padding: "5px 0",
-            borderBottom: "1px solid var(--border)",
-            color: "var(--muted2)",
-          }}
-        >
-          <span
-            style={{
-              flex: 1,
-              color: "var(--text)",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {pr}
-          </span>
-          <span style={{ fontFamily: "var(--font-mono)" }}>{a}</span>
-          <span
-            style={{
-              fontFamily: "var(--font-mono)",
-              color: parseInt(age) > 12 ? "#FF9100" : "var(--muted)",
-            }}
-          >
-            {age}
-          </span>
-        </div>
-      ))}
-    </div>
-  ),
-  "pr-cycle": (
-    <div style={{ padding: 12 }}>
-      <Sparkline data={sparkC} color="#B44CFF" height={60} />
-    </div>
-  ),
-  burndown: (
-    <div style={{ padding: 12 }}>
-      <Sparkline
-        data={makeTimeSeries(12, 50, 5, -4, 88)}
-        color="#B44CFF"
-        height={60}
-      />
-    </div>
-  ),
-  velocity: (
-    <div style={{ padding: 12 }}>
-      <Sparkline
-        data={makeTimeSeries(12, 70, 8, 0.4, 77)}
-        color="#00E5FF"
-        height={60}
-      />
-    </div>
-  ),
-  "blocked-tasks": (
-    <div style={{ padding: 12, fontSize: 11.5 }}>
-      {[
-        ["Auth migration", "Backend", "High"],
-        ["iOS release blocker", "Mobile", "Critical"],
-        ["Data pipeline v2", "Data", "Med"],
-      ].map(([t, team, pri], i) => (
-        <div
-          key={i}
-          style={{
-            display: "flex",
-            gap: 8,
-            padding: "5px 0",
-            borderBottom: "1px solid var(--border)",
-            alignItems: "center",
-          }}
-        >
-          <div
-            style={{
-              width: 6,
-              height: 6,
-              borderRadius: "50%",
-              background:
-                pri === "Critical"
-                  ? "#FF1744"
-                  : pri === "High"
-                    ? "#FF9100"
-                    : "#6B7A9A",
-              flexShrink: 0,
-            }}
-          />
-          <span style={{ flex: 1, color: "var(--text)" }}>{t}</span>
-          <span style={{ color: "var(--muted)", fontSize: 10.5 }}>{team}</span>
-        </div>
-      ))}
-    </div>
-  ),
-  "team-heatmap": (
-    <div style={{ padding: 12 }}>
-      <Heatmap
-        data={heatData}
-        rows={3}
-        cols={16}
-        labelRows={["Platform", "Backend", "Mobile"]}
-        labelCols={[]}
-        title=""
-        color="var(--cyan)"
-        cellSize={14}
-        gap={3}
-      />
-    </div>
-  ),
-  leaderboard: (
-    <div style={{ padding: 12 }}>
-      <Leaderboard
-        title=""
-        items={[
-          { name: "Alex Kim", value: 42 },
-          { name: "Jamie Chen", value: 37 },
-          { name: "Taylor Smith", value: 29 },
-          { name: "Morgan Lee", value: 24 },
-        ]}
-        unit="pts"
-        color="var(--cyan)"
-      />
-    </div>
-  ),
-  "ai-summary": (
-    <div
-      style={{
-        padding: 12,
-        display: "flex",
-        gap: 10,
-        alignItems: "flex-start",
-      }}
-    >
-      <Icon name="sparkles" size={14} color="var(--purple)" />
-      <div style={{ fontSize: 12, color: "var(--muted2)", lineHeight: 1.5 }}>
-        AI insights will appear here based on your selected metrics and time
-        range.
-      </div>
-    </div>
-  ),
-  anomaly: (
-    <div
-      style={{
-        padding: 12,
-        display: "flex",
-        gap: 10,
-        alignItems: "flex-start",
-      }}
-    >
-      <Icon name="brain" size={14} color="#FF9100" />
-      <div style={{ fontSize: 12, color: "var(--muted2)", lineHeight: 1.5 }}>
-        ML anomaly detector will flag metric changes outside normal variance.
-      </div>
-    </div>
-  ),
+const WIDGET_TYPE_MAP: Record<string, string> = {
+  "dora-overview": "dora-overview",
+  "deploy-freq": "stat-card",
+  "lead-time": "stat-card",
+  "mttr-trend": "stat-card",
+  "ci-pass-rate": "stat-card",
+  "failing-builds": "data-table",
+  "pr-queue": "data-table",
+  "pr-cycle": "metric-chart",
+  "burndown": "sprint-burndown",
+  "velocity": "metric-chart",
+  "blocked-tasks": "data-table",
+  "team-heatmap": "heatmap",
+  "leaderboard": "leaderboard",
+  "ai-summary": "ai-insight",
+  "anomaly": "anomaly-detector",
 };
+
+const WIDGET_CONFIG_MAP: Record<string, Record<string, unknown>> = {
+  "deploy-freq": { metricId: "deploy-freq", colorKey: "cyan" },
+  "lead-time": { metricId: "lead-time", colorKey: "purple" },
+  "mttr-trend": { metricId: "mttr", colorKey: "warning" },
+  "ci-pass-rate": { metricId: "ci-pass", colorKey: "success" },
+  "pr-cycle": { metricId: "pr-cycle", chartVariant: "area" },
+  "burndown": {},
+  "velocity": { metricId: "velocity", chartVariant: "area" },
+  "failing-builds": { tableType: "ci-failures", maxRows: 5 },
+  "pr-queue": { tableType: "pr-queue", maxRows: 5 },
+  "blocked-tasks": { tableType: "blocked-tasks", maxRows: 5 },
+  "team-heatmap": { rowGroupBy: "team" },
+  "leaderboard": { metricId: "velocity" },
+  "ai-summary": { variant: "card" },
+  "anomaly": {},
+  "dora-overview": {},
+};
+
+function createMockData(widgetId: string): unknown {
+  const timeSeries = makeTimeSeries(12, 42, 8, 0.5, 0);
+  const sparkline = makeTimeSeries(12, 50, 10, 0.3, 0);
+
+  switch (widgetId) {
+    case "dora-overview":
+      return {
+        deployFrequency: { currentValue: "4.2/day", level: "elite" },
+        leadTime: { currentValue: "38h", level: "high" },
+        changeFailureRate: { currentValue: "3.2%", level: "elite" },
+        mttr: { currentValue: "18 min", level: "elite" },
+      };
+    case "deploy-freq":
+    case "lead-time":
+    case "mttr-trend":
+    case "ci-pass-rate":
+      return {
+        value: widgetId === "ci-pass-rate" ? "94%" : "4.2",
+        delta: "+12%",
+        sparkline: { values: sparkline },
+        unit: widgetId === "ci-pass-rate" ? "%" : "/day",
+      };
+    case "pr-cycle":
+    case "velocity":
+      return {
+        current: { values: timeSeries },
+        labels: ["W1", "W2", "W3", "W4", "W5", "W6", "W7", "W8", "W9", "W10", "W11", "W12"],
+        unit: "pts",
+      };
+    case "failing-builds":
+      return {
+        rows: [
+          { title: "integration-tests", author: "api-gateway", time: "2h", status: "Failed" },
+          { title: "docker-build", author: "monorepo", time: "5h", status: "Failed" },
+          { title: "e2e-suite", author: "frontend", time: "9h", status: "Failed" },
+        ],
+      };
+    case "pr-queue":
+      return {
+        rows: [
+          { title: "feat/auth-tokens", author: "@j.kim", time: "3h", status: "Review" },
+          { title: "fix/rate-limit", author: "@s.chen", time: "8h", status: "Review" },
+          { title: "refactor/api", author: "@m.patel", time: "19h", status: "Review" },
+        ],
+      };
+    case "blocked-tasks":
+      return {
+        rows: [
+          { title: "Auth migration", author: "Backend", time: "High", status: "Critical" },
+          { title: "iOS release blocker", author: "Mobile", time: "Critical", status: "Blocked" },
+          { title: "Data pipeline v2", author: "Data", time: "Med", status: "Blocked" },
+        ],
+      };
+    case "burndown":
+      return {
+        ideal: { values: [88, 75, 62, 50, 38, 25, 13, 0] },
+        actual: { values: [88, 80, 65, 55, 42, 30, 22, 15] },
+      };
+    case "team-heatmap":
+      return makeHeatData(3, 16, 0.4, 33);
+    case "leaderboard":
+      return [
+        { team: "Alex Kim", valueRaw: 42 },
+        { team: "Jamie Chen", valueRaw: 37 },
+        { team: "Taylor Smith", valueRaw: 29 },
+        { team: "Morgan Lee", valueRaw: 24 },
+      ];
+    case "ai-summary":
+      return {
+        title: "Weekly Team Insights",
+        body: "Deploy frequency increased 15% this week. PR review time is up - consider adding more reviewers.",
+        action: "View Details",
+      };
+    case "anomaly":
+      return {
+        anomalies: [],
+      };
+    default:
+      return null;
+  }
+}
 
 export const WidgetPreviewCard: React.FC<{ widget: WizardWidget }> = ({
   widget,
 }) => {
-  const { removeWidget } = useWizardStore();
+  const widgetType = WIDGET_TYPE_MAP[widget.id];
+  const widgetConfig = WIDGET_CONFIG_MAP[widget.id] || {};
+  const mockData = createMockData(widget.id);
+  const WidgetComponent = widgetType ? widgetRegistry[widgetType as keyof typeof widgetRegistry] : null;
 
-return (
+  return (
     <div
       style={{
         background:
@@ -349,7 +194,9 @@ return (
         </span>
       </div>
       <div style={{ flex: 1, overflow: "hidden" }}>
-        {widgetCharts[widget.id] || (
+        {WidgetComponent ? (
+          <WidgetComponent config={widgetConfig as any} data={mockData} />
+        ) : (
           <div
             style={{
               height: "100%",
