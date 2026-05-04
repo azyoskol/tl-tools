@@ -10,7 +10,7 @@ describe('SelectedWidgetsList', () => {
 
   it('shows empty state when no widgets selected', () => {
     render(<SelectedWidgetsList />);
-    expect(screen.getByText('Drop widgets here')).toBeInTheDocument();
+     expect(screen.getByText('Drop widgets here or click to add')).toBeInTheDocument();
   });
 
   it('renders selected widgets', () => {
@@ -22,7 +22,7 @@ describe('SelectedWidgetsList', () => {
   it('removes widget when MiniWidget remove clicked', () => {
     useWizardStore.getState().addWidget('deploy-freq');
     render(<SelectedWidgetsList />);
-    const removeBtn = screen.getByRole('button');
+     const removeBtn = screen.getAllByRole('button')[1];
     fireEvent.click(removeBtn);
     expect(useWizardStore.getState().widgets).toHaveLength(0);
   });

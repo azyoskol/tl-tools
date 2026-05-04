@@ -2,8 +2,11 @@
 import React from 'react';
 import { Icon } from '../../../components/shared/Icon';
 import { WIDGET_LIBRARY } from '../store/wizardStore';
+import { useWizardStore } from '../store/wizardStore';
 
 export const WidgetPalette: React.FC = () => {
+  const addWidget = useWizardStore(s => s.addWidget);
+
   const handleDragStart = (e: React.DragEvent, widgetId: string) => {
     e.dataTransfer.setData('widgetId', widgetId);
     e.dataTransfer.effectAllowed = 'copy';
@@ -20,9 +23,10 @@ export const WidgetPalette: React.FC = () => {
             key={w.id}
             draggable
             onDragStart={(e) => handleDragStart(e, w.id)}
+            onClick={() => addWidget(w.id)}
             style={{
               display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 9,
-              cursor: 'grab', border: '1px solid var(--border)',
+              cursor: 'pointer', border: '1px solid var(--border)',
               background: 'transparent',
               transition: 'background 0.15s',
             }}

@@ -31,6 +31,7 @@ interface WizardState {
   setDesc: (d: string) => void;
   setTimeRange: (t: string) => void;
   setTeam: (t: string) => void;
+  setWidgets: (widgets: WizardWidget[]) => void;
   reset: () => void;
 }
 
@@ -154,6 +155,16 @@ export const useWizardStore = create<WizardState>((set, get) => ({
   setDesc: (desc) => set({ desc }),
   setTimeRange: (timeRange) => set({ timeRange }),
   setTeam: (team) => set({ team }),
+  setWidgets: (newWidgets) => {
+    const layout = newWidgets.map((w, idx) => ({
+      i: w.instanceId,
+      x: 0,
+      y: idx * 2,
+      w: (w.id === 'dora-overview' || w.id === 'team-heatmap' || w.id === 'pr-queue' || w.id === 'failing-builds' || w.id === 'ai-summary') ? 12 : 6,
+      h: 2,
+    }));
+    set({ widgets: newWidgets, layout });
+  },
   reset: () => set({ step: 0, selectedTemplate: null, widgets: [], layout: [], widgetSizes: {}, name: '', desc: '', timeRange: '30d', team: 'All teams' }),
 }));
 
