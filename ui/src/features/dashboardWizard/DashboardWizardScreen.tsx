@@ -108,10 +108,7 @@ export const DashboardWizardScreen: React.FC<WizardProps> = ({ onSave, onCancel 
             <div>
               <div style={{ fontFamily: 'var(--font-head)', fontWeight: 700, fontSize: 16, marginBottom: 4 }}>Customize widgets</div>
               <div style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 14 }}>Add or remove widgets. Selected: {widgets.length}</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                <WidgetPalette />
-                <SelectedWidgetsList />
-              </div>
+              <WidgetPalette />
             </div>
           )}
 
@@ -146,17 +143,25 @@ export const DashboardWizardScreen: React.FC<WizardProps> = ({ onSave, onCancel 
                   ))}
                 </div>
               </div>
-              <div style={{ marginBottom: 16 }}>
-                <label style={{ fontSize: 12, color: 'var(--muted)', display: 'block', marginBottom: 8 }}>Team scope</label>
-                <select value={team} onChange={e => setTeam(e.target.value)} style={{
-                  width: '100%', background: 'var(--glass)', border: '1px solid var(--border)', borderRadius: 9,
-                  padding: '9px 12px', color: 'var(--text)', fontSize: 13.5, cursor: 'pointer',
-                }}>
-                  {['All teams', 'Platform', 'Backend', 'Frontend', 'Mobile', 'Data'].map(t => <option key={t}>{t}</option>)}
-                </select>
-              </div>
-            </div>
-          )}
+               <div style={{ marginBottom: 16 }}>
+                 <label style={{ fontSize: 12, color: 'var(--muted)', display: 'block', marginBottom: 8 }}>Team scope</label>
+                 <select value={team} onChange={e => setTeam(e.target.value)} style={{
+                   width: '100%', background: 'var(--glass)', border: '1px solid var(--border)', borderRadius: 9,
+                   padding: '9px 12px', color: 'var(--text)', fontSize: 13.5, cursor: 'pointer',
+                 }}>
+                   {['All teams', 'Platform', 'Backend', 'Frontend', 'Mobile', 'Data'].map(t => <option key={t}>{t}</option>)}
+                 </select>
+               </div>
+
+               {/* Selected widgets management */}
+               <div style={{ marginTop: 20 }}>
+                 <label style={{ fontSize: 12, color: 'var(--muted)', display: 'block', marginBottom: 8 }}>
+                   Widget layout — drag to reorder, toggle width
+                 </label>
+                 <SelectedWidgetsList />
+               </div>
+             </div>
+           )}
         </div>
 
         <div style={{ padding: '14px 20px', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', flexShrink: 0 }}>
