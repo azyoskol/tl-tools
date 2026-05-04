@@ -4,11 +4,15 @@ This file documents agent-specific information for this project.
 
 ## Worktrees
 
-Worktrees should be created inside project directory (`.worktrees/`), not in global location.
+All feature work should be done in a **project‑local Git worktree** located under the hidden `.worktrees/` directory. Example workflow:
 
 ```bash
-# Preferred location: .worktrees/ (hidden, project-local)
+# Create a new worktree for a feature branch
+git worktree add .worktrees/feature‑xyz feature/xyz
+cd .worktrees/feature‑xyz
 ```
+
+The worktree stays isolated from the main workspace, making it safe to run `make docker-restart` or other heavy commands without affecting other branches.
 
 ## Project Context
 
@@ -59,12 +63,13 @@ make docker-test-data   # Insert test data
 
 ## License Requirements
 
-- **License**: GNU AGPLv3 — all Go files must include the license header
-- When creating new `.go` files, add this header at the very top:
+- **License**: GNU AGPLv3 – every Go source file must start with the SPDX‑AGPL‑3.0‑or‑later header.
+- **Header text (exactly as required):**
   ```go
   // SPDX-License-Identifier: AGPL-3.0-or-later
   // Metraly - Team Engineering Metrics API
   // Copyright (C) 2026 Metraly Contributors
   ```
-- Existing `.go` files should also be updated to include this header
-- Swagger docs: use `// @license AGPL-3.0-or-later` in `cmd/api/main.go`
+- **When adding a new `.go` file** – insert the header at the very top of the file before the `package` clause.
+- **Existing files** – must already contain the header; if any are missing, add it.
+- **Swagger docs** – include the license line `// @license AGPL-3.0-or-later` in `cmd/api/main.go`.

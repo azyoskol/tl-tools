@@ -10,11 +10,13 @@ Metraly is a **team engineering metrics platform** — a self-hosted, open-sourc
 
 ## Current Work
 
-**Active task:** Replacing `ui_new/src/api/mockApi.ts` with a real Go backend in `cmd/api/`.
+**Active task:** Replacing `ui/src/api/mockApi.ts` with a real Go backend.
+
 See `BACKEND_PLAN.md` for the full architecture, schema, and implementation phases.
 
 > ⚠️ `cmd/api/` is being rewritten from scratch. Do not try to reuse existing handler files there.
-> ⚠️ Do not modify `ui_new/src/api/mockApi.ts`.
+> ⚠️ Do not modify `ui/src/api/mockApi.ts`.
+
 
 ## Build & Run
 
