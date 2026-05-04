@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Metraly - Team Engineering Metrics API
+// Copyright (C) 2026 Metraly Contributors
 import React, { useState, useEffect, useCallback } from "react";
 import { Layout as RGLLayout } from "react-grid-layout";
 import { Icon } from "../../components/shared/Icon";
@@ -117,19 +120,19 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   }, []);
 
   const handleToggleSize = useCallback((instanceId: string) => {
-    setWidgetSizes((prev) => {
-      const current = prev[instanceId] || 'half';
-      const next = current === 'full' ? 'half' : 'full';
-      setLocalLayout((layout) =>
-        layout.map((l) =>
-          l.i === instanceId
-            ? { ...l, w: current === 'full' ? 6 : 12 }
-            : l
-        )
-      );
-      return { ...prev, [instanceId]: next };
-    });
-  }, []);
+    const currentSize = widgetSizes[instanceId] || 'half';
+    const newSize = currentSize === 'full' ? 'half' : 'full';
+
+    setWidgetSizes((prev) => ({ ...prev, [instanceId]: newSize }));
+
+    setLocalLayout((layout) =>
+      layout.map((l) =>
+        l.i === instanceId
+          ? { ...l, w: newSize === 'full' ? 12 : 6 }
+          : l
+      )
+    );
+  }, [widgetSizes]);
 
   const handleSaveLayout = useCallback(async () => {
     if (!dashboard) return;
