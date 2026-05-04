@@ -57,7 +57,7 @@ const WIDGET_LIBRARY = [
   { cat: 'Sprint', id: 'burndown', icon: 'chart', label: 'Sprint Burndown', desc: 'Points remaining vs ideal' },
   { cat: 'Sprint', id: 'velocity', icon: 'trendingUp', label: 'Sprint Velocity', desc: 'Historical velocity trend' },
   { cat: 'Sprint', id: 'blocked-tasks', icon: 'alertTri', label: 'Blocked Tasks', desc: 'Items blocked this sprint' },
-  { cat: 'Team', id: 'empty', icon: 'square', label: 'Empty Space', desc: 'Transparent spacer for layout flexibility' },
+  { cat: 'Team', id: 'empty', icon: 'square', label: 'Empty Space', desc: 'Transparent spacer for layout flexibility', defaultSize: { w: 3, h: 2 } },
   { cat: 'Team', id: 'team-heatmap', icon: 'layers', label: 'Team Activity Map', desc: 'Commit heatmap per team' },
   { cat: 'Team', id: 'leaderboard', icon: 'star', label: 'Leaderboard', desc: 'Top contributors ranking' },
   { cat: 'AI', id: 'ai-summary', icon: 'sparkles', label: 'AI Summary', desc: 'Auto-generated insights' },
