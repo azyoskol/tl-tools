@@ -20,6 +20,15 @@ export const DashboardRenderer: React.FC<DashboardRendererProps> = ({ dashboard,
         const layoutItem = dashboard.layout.find((l) => l.i === widget.instanceId);
         const w = layoutItem?.w || 6;
         const h = Math.max(layoutItem?.h || 2, 2);
+
+        if (!WidgetComponent) {
+          return (
+            <div key={scopedInstanceId} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--muted)', fontSize: 12 }}>
+              Unknown widget: {widget.widgetType}
+            </div>
+          );
+        }
+
         return (
           <div
             key={scopedInstanceId}
