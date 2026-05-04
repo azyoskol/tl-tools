@@ -9,6 +9,7 @@ export interface WizardWidget {
   label: string;
   icon: string;
   color: string;
+  cat: string;
 }
 
 interface WizardState {
@@ -103,19 +104,26 @@ export const useWizardStore = create<WizardState>((set, get) => ({
         label: w?.label || wid,
         icon: w?.icon || 'layers',
         color: getWidgetColor(w?.cat || ''),
+        cat: w?.cat || '',
       };
     });
-    const layout = widgets.map((w, idx) => ({
-      i: w.instanceId,
-      x: 0,
-      y: idx * 2,
-      w: (w.id === 'dora-overview' || w.id === 'team-heatmap' || w.id === 'pr-queue' || w.id === 'failing-builds' || w.id === 'ai-summary') ? 12 : 6,
-      h: 2,
-    }));
+    const widgetSizes: Record<string, string> = {};
+    const layout = widgets.map((w, idx) => {
+      const isFull = ['dora-overview', 'team-heatmap', 'pr-queue', 'failing-builds', 'ai-summary'].includes(w.id);
+      widgetSizes[w.instanceId] = isFull ? 'full' : 'half';
+      return {
+        i: w.instanceId,
+        x: 0,
+        y: idx * 2,
+        w: isFull ? 12 : 6,
+        h: 2,
+      };
+    });
     set({
       selectedTemplate: id,
       widgets,
       layout,
+      widgetSizes,
       name: id === 'blank' ? 'My Dashboard' : `${TEMPLATES.find(t => t.id === id)?.label || ''} Dashboard`,
     });
   },
@@ -123,19 +131,23 @@ export const useWizardStore = create<WizardState>((set, get) => ({
   addWidget: (widgetId) => {
     const w = WIDGET_LIBRARY.find(x => x.id === widgetId);
     if (!w) return;
+    const instanceId = nanoid();
+    const isFull = ['dora-overview', 'team-heatmap', 'pr-queue', 'failing-builds', 'ai-summary'].includes(widgetId);
     const newWidget: WizardWidget = {
       id: w.id,
-      instanceId: nanoid(),
+      instanceId,
       type: w.id,
       label: w.label,
       icon: w.icon,
       color: getWidgetColor(w.cat),
+      cat: w.cat,
     };
-    const { widgets, layout } = get();
+    const { widgets, layout, widgetSizes } = get();
     const maxY = layout.reduce((acc, l) => Math.max(acc, l.y + l.h), 0);
     set({
       widgets: [...widgets, newWidget],
-      layout: [...layout, { i: newWidget.instanceId, x: 0, y: maxY, w: 6, h: 2 }],
+      layout: [...layout, { i: instanceId, x: 0, y: maxY, w: isFull ? 12 : 6, h: 2 }],
+      widgetSizes: { ...widgetSizes, [instanceId]: isFull ? 'full' : 'half' },
     });
   },
 
@@ -145,11 +157,22 @@ export const useWizardStore = create<WizardState>((set, get) => ({
     widgetSizes: (() => { const s = { ...state.widgetSizes }; delete s[instanceId]; return s; })(),
   })),
 
-  updateLayout: (newLayout) => set({ layout: newLayout }),
+  updateLayout: (newLayout) => set(state => {
+    const updatedLayout = newLayout.map(item => {
+      const size = state.widgetSizes[item.i];
+      const w = size === 'full' ? 12 : 6;
+      return { ...item, w };
+    });
+    return { layout: updatedLayout };
+  }),
 
-  toggleWidgetSize: (instanceId) => set(state => ({
-    layout: state.layout.map(l => l.i === instanceId ? { ...l, w: l.w === 12 ? 6 : 12 } : l),
-  })),
+  toggleWidgetSize: (instanceId) => set(state => {
+    const current = state.widgetSizes[instanceId] || 'half';
+    const next = current === 'full' ? 'half' : 'full';
+    const newSizes = { ...state.widgetSizes, [instanceId]: next };
+    const newLayout = state.layout.map(l => l.i === instanceId ? { ...l, w: next === 'full' ? 12 : 6 } : l);
+    return { widgetSizes: newSizes, layout: newLayout };
+  }),
 
   setName: (name) => set({ name }),
   setDesc: (desc) => set({ desc }),
@@ -165,6 +188,13 @@ export const useWizardStore = create<WizardState>((set, get) => ({
     }));
     set({ widgets: newWidgets, layout });
   },
+  moveWidget: (fromIndex, toIndex) => set(state => {
+    if (toIndex < 0 || toIndex >= state.widgets.length) return state;
+    const newWidgets = [...state.widgets];
+    const [moved] = newWidgets.splice(fromIndex, 1);
+    newWidgets.splice(toIndex, 0, moved);
+    return { widgets: newWidgets };
+  }),
   reset: () => set({ step: 0, selectedTemplate: null, widgets: [], layout: [], widgetSizes: {}, name: '', desc: '', timeRange: '30d', team: 'All teams' }),
 }));
 
