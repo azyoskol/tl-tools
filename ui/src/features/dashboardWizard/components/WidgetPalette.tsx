@@ -7,8 +7,7 @@ import { useWizardStore } from '../store/wizardStore';
 const CATS = ['All', 'DORA', 'CI/CD', 'PR', 'Sprint', 'Team', 'AI'];
 
 export const WidgetPalette: React.FC = () => {
-  const addWidget = useWizardStore(s => s.addWidget);
-  const widgets = useWizardStore(s => s.widgets);
+  const { widgets, addWidget, removeWidget } = useWizardStore();
   const [widgetCat, setWidgetCat] = React.useState('All');
 
   const handleDragStart = (e: React.DragEvent, widgetId: string) => {
@@ -44,7 +43,15 @@ export const WidgetPalette: React.FC = () => {
               key={w.id}
               draggable
               onDragStart={(e) => handleDragStart(e, w.id)}
-              onClick={() => addWidget(w.id)}
+              onClick={() => {
+                const isSelected = widgets.some(widget => widget.id === w.id);
+                if (isSelected) {
+                  const widgetToRemove = widgets.find(widget => widget.id === w.id);
+                  if (widgetToRemove) removeWidget(widgetToRemove.instanceId);
+                } else {
+                  addWidget(w.id);
+                }
+              }}
               style={{
                 display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 9,
                 cursor: 'pointer', border: sel ? `1px solid ${c}40` : '1px solid var(--border)',
