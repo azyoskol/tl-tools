@@ -76,7 +76,9 @@ export const WizardSidebar: React.FC<WizardSidebarProps> = ({
         borderBottom: '1px solid var(--border)',
       }}>
         <button
+          type="button"
           onClick={onTogglePin}
+          aria-label={isPinned ? 'Unpin sidebar' : 'Pin sidebar'}
           style={{
             background: 'none',
             border: 'none',
@@ -98,6 +100,7 @@ export const WizardSidebar: React.FC<WizardSidebarProps> = ({
           gap: 2,
         }}>
           <button
+            type="button"
             onClick={() => setActiveTab('widgets')}
             style={{
               padding: '6px 16px',
@@ -113,6 +116,7 @@ export const WizardSidebar: React.FC<WizardSidebarProps> = ({
             Widgets
           </button>
           <button
+            type="button"
             onClick={() => setActiveTab('settings')}
             style={{
               padding: '6px 16px',
@@ -131,6 +135,8 @@ export const WizardSidebar: React.FC<WizardSidebarProps> = ({
 
         {!isPinned && (
           <button
+            type="button"
+            aria-label="Close sidebar"
             onClick={onClose}
             style={{
               background: 'none',
