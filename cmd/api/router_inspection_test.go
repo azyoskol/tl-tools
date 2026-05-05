@@ -10,7 +10,7 @@ import (
 
 func TestProtectedRoutesHaveMiddleware(t *testing.T) {
 	km, _ := auth.NewKeyManager("")
-	r := NewRouter(km)
+	r := NewRouter(RouterDeps{KeyManager: km})
 
 	protected := []string{
 		"/api/v1/me",

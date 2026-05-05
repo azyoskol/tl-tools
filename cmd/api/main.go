@@ -1,14 +1,19 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Metraly - Team Engineering Metrics API
+// Copyright (C) 2026 Metraly Contributors
+//
 // @title Metraly API
 // @version 1.0
 // @description Team Engineering Metrics API
 // @contact.name Metraly
-// @license.name AGPL-3.0-only
+// @license.name AGPL-3.0-or-later
 // @license.url https://www.gnu.org/licenses/agpl-3.0.html
 
 package main
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
@@ -16,6 +21,8 @@ import (
 	"time"
 
 	"github.com/getmetraly/metraly/cmd/api/auth"
+	"github.com/getmetraly/metraly/cmd/api/biz"
+	"github.com/getmetraly/metraly/cmd/api/config"
 	"github.com/getmetraly/metraly/cmd/api/handlers"
 	localMiddleware "github.com/getmetraly/metraly/cmd/api/middleware"
 	"github.com/go-chi/chi/v5"
@@ -44,10 +51,13 @@ func activityHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(`{"data":[]}`))
 }
 
-// NewRouter creates and returns a chi router with all the API routes configured.
-// This is exported for testing purposes.
-// If km is nil, auth middleware is not applied (for testing unauthenticated access).
-func NewRouter(km *auth.KeyManager) *chi.Mux {
+type RouterDeps struct {
+	KeyManager   *auth.KeyManager
+	DashboardSvc *biz.DashboardSvc
+}
+
+// NewRouter creates and returns a chi router with all API routes configured.
+func NewRouter(deps RouterDeps) *chi.Mux {
 	r := chi.NewRouter()
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   []string{"*"},
@@ -66,9 +76,9 @@ func NewRouter(km *auth.KeyManager) *chi.Mux {
 	r.Get("/api/v1/insights", insightsHandler)
 
 	// Protected routes
-	if km != nil {
+	if deps.KeyManager != nil {
 		r.Group(func(r chi.Router) {
-			r.Use(localMiddleware.RequireAuth(km))
+			r.Use(localMiddleware.RequireAuth(deps.KeyManager))
 			r.Get("/api/v1/dashboards", getDashboardsHandler)
 			r.Post("/api/v1/dashboards", postDashboardHandler)
 			r.Get("/api/v1/me", meHandler)
@@ -184,12 +194,20 @@ func postDashboardHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	km, err := auth.NewKeyManager(os.Getenv("JWT_PRIVATE_KEY"))
+	cfg := config.Load()
+	ctx := context.Background()
+
+	deps, err := newRuntime(ctx, cfg)
 	if err != nil {
+		fmt.Fprintf(os.Stderr, "api startup failed: %v\n", err)
 		os.Exit(1)
 	}
+	defer deps.Close()
 
-	r := NewRouter(km)
+	r := NewRouter(RouterDeps{
+		KeyManager:   deps.keyManager,
+		DashboardSvc: deps.dashboardSvc,
+	})
 
 	// Swagger documentation
 	swaggerDir := "../docs/tech/app/docs/swagger"
@@ -199,7 +217,7 @@ func main() {
 	fs := http.FileServer(http.Dir(swaggerDir))
 	r.Handle("/swagger/*", http.StripPrefix("/swagger/", fs))
 
-	srv := &http.Server{Addr: ":8000", Handler: r}
+	srv := &http.Server{Addr: ":" + cfg.Port, Handler: r}
 
 	// Graceful shutdown
 	quit := make(chan os.Signal, 1)

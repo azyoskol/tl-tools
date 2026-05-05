@@ -12,7 +12,7 @@ import (
 
 func TestGracefulShutdown(t *testing.T) {
 	km, _ := auth.NewKeyManager("")
-	r := NewRouter(km)
+	r := NewRouter(RouterDeps{KeyManager: km})
 	srv := &http.Server{Addr: "localhost:18000", Handler: r}
 
 	go func() {
@@ -38,7 +38,7 @@ func TestGracefulShutdown(t *testing.T) {
 }
 
 func TestNewRouter(t *testing.T) {
-	r := NewRouter(nil)
+	r := NewRouter(RouterDeps{})
 	if r == nil {
 		t.Fatal("NewRouter returned nil")
 	}
@@ -55,7 +55,7 @@ func TestNewRouter(t *testing.T) {
 
 func TestNewRouterWithAuth(t *testing.T) {
 	km, _ := auth.NewKeyManager("")
-	r := NewRouter(km)
+	r := NewRouter(RouterDeps{KeyManager: km})
 
 	// Test that protected routes require auth
 	w := httptest.NewRecorder()
