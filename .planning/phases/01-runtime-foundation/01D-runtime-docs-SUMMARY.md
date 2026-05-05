@@ -11,6 +11,7 @@ affects:
   - Makefile
   - README.md
   - CLAUDE.md
+  - docker-compose.yaml
   - .planning/STATE.md
   - .planning/ROADMAP.md
   - .planning/REQUIREMENTS.md
@@ -23,11 +24,13 @@ key-files:
     - Makefile
     - README.md
     - CLAUDE.md
+    - docker-compose.yaml
     - .planning/STATE.md
     - .planning/ROADMAP.md
     - .planning/REQUIREMENTS.md
 key-decisions:
   - Default local runtime is documented as API, UI, Postgres/TimescaleDB, and Redis.
+  - Docker Compose now waits for Redis and Postgres health before starting the fail-fast API runtime.
   - ClickHouse references in app-local docs are retained only as deferred/future ingestion context.
   - Historical superpowers docs in the separate docs repository were left unchanged because they describe prior cleanup plans, not current default runtime requirements.
 requirements-completed: [FOUND-01, FOUND-04, FOUND-05]
@@ -46,7 +49,8 @@ Makefile, README, and CLAUDE.md now describe the Community Preview runtime witho
 | 01D-1 Clean Makefile runtime commands | Complete | `314361c` |
 | 01D-2 Update app README and CLAUDE runtime docs | Complete | `314361c` |
 | 01D-3 Clean moved app docs runtime mismatch claims | Complete | no change required |
-| 01D-4 Final Phase 1 verification and planning status update | Complete | pending metadata commit |
+| 01D-4 Final Phase 1 verification and planning status update | Complete | `0207d4b` |
+| Review fix: health-gate compose dependencies | Complete | `d30cdb1` |
 
 ## Verification
 
@@ -56,6 +60,7 @@ Makefile, README, and CLAUDE.md now describe the Community Preview runtime witho
 | `GOCACHE=/tmp/go-build go vet ./...` | PASS |
 | `make -n docker-up` | PASS |
 | `make -n health` | PASS |
+| `docker compose config` | PASS |
 | `find . -path './.worktrees' -prune -o -name '*.go' -print \| xargs -r awk 'FNR==1 && $0 !~ /^\/\/ SPDX-License-Identifier: AGPL-3.0-or-later$/ { print FILENAME }' \| sort -u` | PASS, empty output |
 | `rg -n "ClickHouse\|CLICKHOUSE\|clickhouse" README.md CLAUDE.md Makefile /home/zubarev/Projects/metraly/docs/tech/app -g '*.md'` | PASS; app-local hits are deferred/future context, docs-repo hits are historical superpowers cleanup artifacts |
 
