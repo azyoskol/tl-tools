@@ -24,6 +24,8 @@ Metraly should be built in a foundation-first sequence. The first five phases pr
 
 ## Phase 1: Runtime Foundation
 
+**Status:** Complete (2026-05-05)
+
 **Goal:** Make the current app stack real and internally consistent.
 
 **Requirements:** FOUND-01, FOUND-02, FOUND-03, FOUND-04, FOUND-05
@@ -38,12 +40,12 @@ Metraly should be built in a foundation-first sequence. The first five phases pr
 **Plans:**
 
 **Wave 1**
-- `01A-runtime-wiring` — Runtime composition, migrations, Redis fallback, startup tests. Covers FOUND-01, FOUND-02, FOUND-03.
-- `01B-dashboard-handler` — Replace active in-memory dashboard handler path with service-backed handlers. Covers FOUND-03.
-- `01C-license-headers` — Add required Go headers and align Swagger license metadata. Covers FOUND-05.
+- `01A-runtime-wiring` — Complete. Runtime composition, migrations, Redis fallback, startup tests. Covers FOUND-01, FOUND-02, FOUND-03.
+- `01B-dashboard-handler` — Complete. Replace active in-memory dashboard handler path with service-backed handlers. Covers FOUND-03.
+- `01C-license-headers` — Complete. Add required Go headers and align Swagger license metadata. Covers FOUND-05.
 
 **Wave 2** *(blocked on Wave 1 completion)*
-- `01D-runtime-docs` — Clean Makefile, README, CLAUDE.md, moved app docs, and run final verification. Covers FOUND-01, FOUND-04, FOUND-05.
+- `01D-runtime-docs` — Complete. Clean Makefile, README, CLAUDE.md, moved app docs, and run final verification. Covers FOUND-01, FOUND-04, FOUND-05.
 
 **Cross-cutting constraints:**
 - Postgres and migrations are mandatory startup dependencies; Redis is optional only with visible degraded cache behavior.

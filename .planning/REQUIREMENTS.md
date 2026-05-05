@@ -9,11 +9,11 @@ v1 here means the full planned product roadmap baseline, with Community Preview 
 
 ### Foundation
 
-- [ ] **FOUND-01**: Developer can run the default local stack with API, UI, PostgreSQL/TimescaleDB, and Redis using Docker Compose.
-- [ ] **FOUND-02**: API startup applies embedded SQL migrations before serving application routes.
-- [ ] **FOUND-03**: API startup wires config, Postgres pool, Redis clients, repositories, caches, services, and handlers through one runtime path.
-- [ ] **FOUND-04**: README, Makefile, and moved app documentation match the actual default stack and do not require ClickHouse for Community Preview.
-- [ ] **FOUND-05**: Every Go source file starts with the required `AGPL-3.0-or-later` SPDX header.
+- [x] **FOUND-01**: Developer can run the default local stack with API, UI, PostgreSQL/TimescaleDB, and Redis using Docker Compose.
+- [x] **FOUND-02**: API startup applies embedded SQL migrations before serving application routes.
+- [x] **FOUND-03**: API startup wires config, Postgres pool, Redis clients, repositories, caches, services, and handlers through one runtime path.
+- [x] **FOUND-04**: README, Makefile, and moved app documentation match the actual default stack and do not require ClickHouse for Community Preview.
+- [x] **FOUND-05**: Every Go source file starts with the required `AGPL-3.0-or-later` SPDX header.
 
 ### Authentication And Access
 
@@ -121,11 +121,11 @@ Deferred beyond the first full roadmap baseline.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| FOUND-01 | Phase 1 | Pending |
-| FOUND-02 | Phase 1 | Pending |
-| FOUND-03 | Phase 1 | Pending |
-| FOUND-04 | Phase 1 | Pending |
-| FOUND-05 | Phase 1 | Pending |
+| FOUND-01 | Phase 1 | Complete |
+| FOUND-02 | Phase 1 | Complete |
+| FOUND-03 | Phase 1 | Complete |
+| FOUND-04 | Phase 1 | Complete |
+| FOUND-05 | Phase 1 | Complete |
 | AUTH-01 | Phase 2 | Pending |
 | AUTH-02 | Phase 2 | Pending |
 | AUTH-03 | Phase 2 | Pending |
