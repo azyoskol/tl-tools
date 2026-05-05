@@ -1,17 +1,24 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Metraly - Team Engineering Metrics API
+// Copyright (C) 2026 Metraly Contributors
+
 package handlers
+
 import (
 	"encoding/json"
 	"net/http"
 )
+
 type Insight struct {
 	Title  string `json:"title"`
 	Body   string `json:"body"`
 	Action string `json:"action"`
 }
 type InsightsResponse struct {
-	Insights   []Insight `json:"insights"`
+	Insights  []Insight `json:"insights"`
 	UpdatedAt string    `json:"updatedAt"`
 }
+
 func InsightsHandler(w http.ResponseWriter, r *http.Request) {
 	resp := InsightsResponse{
 		Insights: []Insight{

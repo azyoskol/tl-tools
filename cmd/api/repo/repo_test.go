@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Metraly - Team Engineering Metrics API
+// Copyright (C) 2026 Metraly Contributors
+
 package repo
 
 import (
@@ -17,10 +21,16 @@ type mockUserRepo struct {
 func (m *mockUserRepo) FindByEmail(ctx context.Context, email string) (*domain.User, error) {
 	return m.findByEmailFunc(ctx, email)
 }
-func (m *mockUserRepo) FindByID(ctx context.Context, id string) (*domain.User, error) { return nil, nil }
-func (m *mockUserRepo) FindByOIDCSub(ctx context.Context, sub string) (*domain.User, error) { return nil, nil }
+func (m *mockUserRepo) FindByID(ctx context.Context, id string) (*domain.User, error) {
+	return nil, nil
+}
+func (m *mockUserRepo) FindByOIDCSub(ctx context.Context, sub string) (*domain.User, error) {
+	return nil, nil
+}
 func (m *mockUserRepo) Create(ctx context.Context, u *domain.User, hash string) error { return nil }
-func (m *mockUserRepo) GetPasswordHash(ctx context.Context, email string) (string, string, error) { return "", "", nil }
+func (m *mockUserRepo) GetPasswordHash(ctx context.Context, email string) (string, string, error) {
+	return "", "", nil
+}
 
 type mockDashboardRepo struct {
 	updateFunc func(ctx context.Context, d *domain.Dashboard) (bool, error)
@@ -29,14 +39,22 @@ type mockDashboardRepo struct {
 func (m *mockDashboardRepo) Update(ctx context.Context, d *domain.Dashboard) (bool, error) {
 	return m.updateFunc(ctx, d)
 }
-func (m *mockDashboardRepo) List(ctx context.Context, userID string) ([]*domain.Dashboard, error) { return nil, nil }
-func (m *mockDashboardRepo) GetByID(ctx context.Context, id string) (*domain.Dashboard, error) { return nil, nil }
+func (m *mockDashboardRepo) List(ctx context.Context, userID string) ([]*domain.Dashboard, error) {
+	return nil, nil
+}
+func (m *mockDashboardRepo) GetByID(ctx context.Context, id string) (*domain.Dashboard, error) {
+	return nil, nil
+}
 func (m *mockDashboardRepo) Create(ctx context.Context, d *domain.Dashboard) error { return nil }
 func (m *mockDashboardRepo) UpdateLayout(ctx context.Context, id string, layout []domain.WidgetLayout, version int) (bool, error) {
 	return false, nil
 }
-func (m *mockDashboardRepo) UpdateShare(ctx context.Context, id string, isPublic bool, shareToken *string) error { return nil }
-func (m *mockDashboardRepo) ListTemplates(ctx context.Context) ([]*domain.DashboardTemplate, error) { return nil, nil }
+func (m *mockDashboardRepo) UpdateShare(ctx context.Context, id string, isPublic bool, shareToken *string) error {
+	return nil
+}
+func (m *mockDashboardRepo) ListTemplates(ctx context.Context) ([]*domain.DashboardTemplate, error) {
+	return nil, nil
+}
 
 type mockMetricRepo struct {
 	getTimeSeriesFunc func(ctx context.Context, metricID, team string, from, to time.Time) ([]domain.MetricDataPoint, error)

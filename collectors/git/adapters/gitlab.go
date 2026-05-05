@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Metraly - Team Engineering Metrics API
+// Copyright (C) 2026 Metraly Contributors
+
 package adapters
 
 import (
@@ -8,8 +12,8 @@ import (
 )
 
 type GitLabAdapter struct {
-	token          string
-	webhookSecret  string
+	token         string
+	webhookSecret string
 }
 
 func NewGitLabAdapter(token, webhookSecret string) *GitLabAdapter {

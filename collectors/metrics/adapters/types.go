@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Metraly - Team Engineering Metrics API
+// Copyright (C) 2026 Metraly Contributors
+
 package adapters
 
 import (
@@ -10,9 +14,9 @@ type Event struct {
 	SourceType string          `json:"source_type"`
 	EventType  string          `json:"event_type"`
 	TeamID     string          `json:"team_id"`
-	ProjectID *string         `json:"project_id"`
-	Payload   json.RawMessage `json:"payload"`
-	OccurredAt time.Time      `json:"occurred_at"`
+	ProjectID  *string         `json:"project_id"`
+	Payload    json.RawMessage `json:"payload"`
+	OccurredAt time.Time       `json:"occurred_at"`
 }
 
 type EventSaver func(Event)

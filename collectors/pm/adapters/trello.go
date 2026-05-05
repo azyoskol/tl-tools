@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Metraly - Team Engineering Metrics API
+// Copyright (C) 2026 Metraly Contributors
+
 package adapters
 
 import (
@@ -13,10 +17,10 @@ type TrelloAdapter struct {
 }
 
 type TrelloCard struct {
-	ID              string    `json:"id"`
-	Name            string    `json:"name"`
+	ID             string    `json:"id"`
+	Name           string    `json:"name"`
 	DateLastActive time.Time `json:"dateLastActive"`
-	IDList          string    `json:"idList"`
+	IDList         string    `json:"idList"`
 }
 
 func NewTrelloAdapter() *TrelloAdapter {
@@ -28,27 +32,27 @@ func NewTrelloAdapter() *TrelloAdapter {
 
 func (t *TrelloAdapter) Fetch() ([]TrelloCard, error) {
 	url := "https://api.trello.com/1/members/me/cards?key=" + t.APIKey + "&token=" + t.Token
-	
+
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
-	
+
 	var cards []TrelloCard
 	json.NewDecoder(resp.Body).Decode(&cards)
-	
+
 	return cards, nil
 }
 
 func (t *TrelloAdapter) Transform(card TrelloCard) Event {
 	eventType := "card_updated"
-	
+
 	payload, _ := json.Marshal(map[string]string{
 		"card_id": card.ID,
 		"name":    card.Name,
 	})
-	
+
 	return Event{
 		SourceType: "pm",
 		EventType:  eventType,

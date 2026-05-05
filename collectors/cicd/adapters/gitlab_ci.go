@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Metraly - Team Engineering Metrics API
+// Copyright (C) 2026 Metraly Contributors
+
 package adapters
 
 import (
@@ -59,15 +63,15 @@ func fetchPipelines(ctx context.Context, teamID, baseURL, project, token string,
 	}
 
 	var pipelines []struct {
-		ID         int       `json:"id"`
-		Status     string    `json:"status"`
-		Ref        string    `json:"ref"`
-		SHA        string    `json:"sha"`
-		WebURL     string    `json:"web_url"`
-		CreatedAt  time.Time `json:"created_at"`
-		UpdatedAt  time.Time `json:"updated_at"`
-		Source     string    `json:"source"`
-		Duration   *int     `json:"duration"`
+		ID        int       `json:"id"`
+		Status    string    `json:"status"`
+		Ref       string    `json:"ref"`
+		SHA       string    `json:"sha"`
+		WebURL    string    `json:"web_url"`
+		CreatedAt time.Time `json:"created_at"`
+		UpdatedAt time.Time `json:"updated_at"`
+		Source    string    `json:"source"`
+		Duration  *int      `json:"duration"`
 	}
 
 	if err := json.NewDecoder(resp.Body).Decode(&pipelines); err != nil {
@@ -88,7 +92,7 @@ func fetchPipelines(ctx context.Context, teamID, baseURL, project, token string,
 			"sha":         p.SHA,
 			"url":         p.WebURL,
 			"source":      p.Source,
-			"duration":   p.Duration,
+			"duration":    p.Duration,
 		}
 
 		event := Event{
@@ -96,7 +100,7 @@ func fetchPipelines(ctx context.Context, teamID, baseURL, project, token string,
 			SourceType: "cicd",
 			EventType:  "gitlab_ci_pipeline_" + p.Status,
 			TeamID:     teamID,
-			Payload:   mustMarshal(payload),
+			Payload:    mustMarshal(payload),
 			OccurredAt: occurredAt,
 		}
 

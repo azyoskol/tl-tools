@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Metraly - Team Engineering Metrics API
+// Copyright (C) 2026 Metraly Contributors
+
 package adapters
 
 import (
@@ -63,17 +67,17 @@ func fetchWorkflowRuns(ctx context.Context, teamID, owner, repo, token string, s
 
 	var result struct {
 		WorkflowRuns []struct {
-			ID             int       `json:"id"`
-			Name           string    `json:"name"`
-			Status         string    `json:"status"`
-			Conclusion     string    `json:"conclusion"`
-			HeadBranch     string    `json:"head_branch"`
-			HeadSha        string    `json:"head_sha"`
-			RunStartedAt   time.Time `json:"run_started_at"`
-			RunNumber      int       `json:"run_number"`
-			Event          string    `json:"event"`
-			URL            string    `json:"html_url"`
-			WorkflowID     int       `json:"workflow_id"`
+			ID           int       `json:"id"`
+			Name         string    `json:"name"`
+			Status       string    `json:"status"`
+			Conclusion   string    `json:"conclusion"`
+			HeadBranch   string    `json:"head_branch"`
+			HeadSha      string    `json:"head_sha"`
+			RunStartedAt time.Time `json:"run_started_at"`
+			RunNumber    int       `json:"run_number"`
+			Event        string    `json:"event"`
+			URL          string    `json:"html_url"`
+			WorkflowID   int       `json:"workflow_id"`
 		} `json:"workflow_runs"`
 	}
 
@@ -96,13 +100,13 @@ func fetchWorkflowRuns(ctx context.Context, teamID, owner, repo, token string, s
 		payload := map[string]interface{}{
 			"workflow_id":   run.WorkflowID,
 			"workflow_name": run.Name,
-			"run_number":   run.RunNumber,
-			"status":       run.Status,
-			"conclusion":   run.Conclusion,
-			"branch":       run.HeadBranch,
-			"sha":          run.HeadSha,
-			"event":        run.Event,
-			"url":          run.URL,
+			"run_number":    run.RunNumber,
+			"status":        run.Status,
+			"conclusion":    run.Conclusion,
+			"branch":        run.HeadBranch,
+			"sha":           run.HeadSha,
+			"event":         run.Event,
+			"url":           run.URL,
 		}
 
 		event := Event{
@@ -110,7 +114,7 @@ func fetchWorkflowRuns(ctx context.Context, teamID, owner, repo, token string, s
 			SourceType: "cicd",
 			EventType:  eventType,
 			TeamID:     teamID,
-			Payload:   mustMarshal(payload),
+			Payload:    mustMarshal(payload),
 			OccurredAt: occurredAt,
 		}
 

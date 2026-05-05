@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Metraly - Team Engineering Metrics API
+// Copyright (C) 2026 Metraly Contributors
+
 package adapters
 
 import (
@@ -43,7 +47,7 @@ func FetchPrometheusMetrics(ctx context.Context, teamID string, config map[strin
 		Data   struct {
 			Result []struct {
 				Metric map[string]string `json:"metric"`
-				Value  []interface{}    `json:"value"`
+				Value  []interface{}     `json:"value"`
 			} `json:"result"`
 		} `json:"data"`
 	}
@@ -69,7 +73,7 @@ func FetchPrometheusMetrics(ctx context.Context, teamID string, config map[strin
 			SourceType: "metrics",
 			EventType:  "prometheus_query",
 			TeamID:     teamID,
-			Payload:   mustMarshal(payload),
+			Payload:    mustMarshal(payload),
 			OccurredAt: time.Now(),
 		}
 		save(event)

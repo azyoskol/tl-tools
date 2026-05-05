@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Metraly - Team Engineering Metrics API
+// Copyright (C) 2026 Metraly Contributors
+
 package auth
 
 import (
@@ -9,9 +13,9 @@ import (
 	"github.com/getmetraly/metraly/cmd/api/biz"
 	"github.com/getmetraly/metraly/cmd/api/domain"
 	"github.com/redis/go-redis/v9"
-	"golang.org/x/crypto/bcrypt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type mockUserRepo struct {

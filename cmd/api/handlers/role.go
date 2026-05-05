@@ -1,22 +1,29 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Metraly - Team Engineering Metrics API
+// Copyright (C) 2026 Metraly Contributors
+
 package handlers
+
 import (
 	"encoding/json"
 	"net/http"
 )
+
 type RoleStats struct {
 	Icon     string    `json:"icon"`
 	Label    string    `json:"label"`
-	Value   string    `json:"value"`
-	Trend   string    `json:"trend"`
+	Value    string    `json:"value"`
+	Trend    string    `json:"trend"`
 	TrendDir string    `json:"trendDir"`
-	Color   string    `json:"color"`
-	Spark   []float64 `json:"spark"`
+	Color    string    `json:"color"`
+	Spark    []float64 `json:"spark"`
 }
 type RoleResponse struct {
-	Role    string                  `json:"role"`
+	Role    string                 `json:"role"`
 	Stats   []RoleStats            `json:"stats"`
 	Payload map[string]interface{} `json:"payload"`
 }
+
 func RoleHandler(w http.ResponseWriter, r *http.Request) {
 	role := r.URL.Query().Get("role")
 	if role == "" {
@@ -46,8 +53,8 @@ func RoleHandler(w http.ResponseWriter, r *http.Request) {
 			Payload: map[string]interface{}{
 				"sprintVelocity": 42,
 				"prCycleTime":    makeSeries(4, 14, 4, 2),
-				"heatmap":       [][]int{{2,4,3,5,2,3,4}, {3,5,4,6,3,4,5}, {1,3,2,4,2,3,4}},
-				"deliveryRisk":  "low",
+				"heatmap":        [][]int{{2, 4, 3, 5, 2, 3, 4}, {3, 5, 4, 6, 3, 4, 5}, {1, 3, 2, 4, 2, 3, 4}},
+				"deliveryRisk":   "low",
 			},
 		}
 	case "tl":
@@ -57,7 +64,7 @@ func RoleHandler(w http.ResponseWriter, r *http.Request) {
 				{Icon: "checkCircle", Label: "CI Pass Rate", Value: "94%", Trend: "+2%", TrendDir: "up", Color: "success", Spark: makeSeries(5, 10, 92, 3)},
 			},
 			Payload: map[string]interface{}{
-				"ciPassRate":     94,
+				"ciPassRate":    94,
 				"prQueue":       5,
 				"burndown":      makeSeries(6, 14, 50, 10),
 				"failingBuilds": 2,
@@ -70,10 +77,10 @@ func RoleHandler(w http.ResponseWriter, r *http.Request) {
 				{Icon: "zap", Label: "Deploy Frequency", Value: "4.2/day", Trend: "+0.8", TrendDir: "up", Color: "cyan", Spark: makeSeries(7, 10, 4, 1)},
 			},
 			Payload: map[string]interface{}{
-				"deployFreq":    4.2,
-				"mttrTrend":     makeSeries(8, 14, 12, 5),
-				"deployHeatData": [][]int{{1,2,3,4,5,4,3}, {2,3,5,6,5,4,3}},
-				"incidents":     2,
+				"deployFreq":     4.2,
+				"mttrTrend":      makeSeries(8, 14, 12, 5),
+				"deployHeatData": [][]int{{1, 2, 3, 4, 5, 4, 3}, {2, 3, 5, 6, 5, 4, 3}},
+				"incidents":      2,
 			},
 		}
 	default:
@@ -85,7 +92,7 @@ func RoleHandler(w http.ResponseWriter, r *http.Request) {
 			Payload: map[string]interface{}{
 				"myPRs":          8,
 				"ciRuns":         24,
-				"reviewQueue":   3,
+				"reviewQueue":    3,
 				"sprintProgress": 65,
 			},
 		}

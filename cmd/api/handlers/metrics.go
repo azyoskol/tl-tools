@@ -1,18 +1,25 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Metraly - Team Engineering Metrics API
+// Copyright (C) 2026 Metraly Contributors
+
 package handlers
+
 import (
 	"encoding/json"
 	"net/http"
 )
+
 type MetricResponse struct {
 	ID      string    `json:"id"`
-	Label  string    `json:"label"`
-	Unit   string    `json:"unit"`
-	Color  string    `json:"color"`
-	Current float64  `json:"current"`
-	Delta  float64  `json:"delta"`
-	Series []float64 `json:"series"`
+	Label   string    `json:"label"`
+	Unit    string    `json:"unit"`
+	Color   string    `json:"color"`
+	Current float64   `json:"current"`
+	Delta   float64   `json:"delta"`
+	Series  []float64 `json:"series"`
 	Compare []float64 `json:"compare"`
 }
+
 func MetricsHandler(w http.ResponseWriter, r *http.Request) {
 	metric := r.URL.Query().Get("metric")
 	_ = metric

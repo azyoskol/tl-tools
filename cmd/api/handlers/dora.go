@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Metraly - Team Engineering Metrics API
+// Copyright (C) 2026 Metraly Contributors
+
 package handlers
 
 import (
@@ -15,20 +19,20 @@ func makeSeries(seed int, points int, base, variance float64) []float64 {
 	res := make([]float64, points)
 	s := seed
 	for i := 0; i < points; i++ {
-		res[i] = base + (seededRand(s) - 0.5) * variance * 2
+		res[i] = base + (seededRand(s)-0.5)*variance*2
 		s++
 	}
 	return res
 }
 
 type DORAMetrics struct {
-	ID     string   `json:"id"`
-	Label  string   `json:"label"`
-	Value  string   `json:"value"`
-	Delta  string   `json:"delta"`
-	Good   bool     `json:"good"`
-	Level  string   `json:"level"`
-	Color  string   `json:"color"`
+	ID     string    `json:"id"`
+	Label  string    `json:"label"`
+	Value  string    `json:"value"`
+	Delta  string    `json:"delta"`
+	Good   bool      `json:"good"`
+	Level  string    `json:"level"`
+	Color  string    `json:"color"`
 	Series []float64 `json:"series"`
 }
 

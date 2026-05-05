@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Metraly - Team Engineering Metrics API
+// Copyright (C) 2026 Metraly Contributors
+
 package main
 
 import (
@@ -16,7 +20,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"gopkg.in/yaml.v3"
-	
+
 	"github.com/getmetraly/metraly/collectors/shared/retry"
 )
 
@@ -39,13 +43,13 @@ type Config struct {
 }
 
 type Event struct {
-	ID          string          `json:"id"`
-	SourceType  string          `json:"source_type"`
-	EventType   string          `json:"event_type"`
-	TeamID      string          `json:"team_id"`
-	ProjectID   *string         `json:"project_id"`
-	Payload     json.RawMessage `json:"payload"`
-	OccurredAt  time.Time       `json:"occurred_at"`
+	ID         string          `json:"id"`
+	SourceType string          `json:"source_type"`
+	EventType  string          `json:"event_type"`
+	TeamID     string          `json:"team_id"`
+	ProjectID  *string         `json:"project_id"`
+	Payload    json.RawMessage `json:"payload"`
+	OccurredAt time.Time       `json:"occurred_at"`
 }
 
 var config Config
@@ -166,7 +170,7 @@ func findTeamBySource(sourceType string) string {
 
 func saveEvent(event Event) {
 	ctx := context.Background()
-	
+
 	err := retry.WithRetry(ctx, func() error {
 		conn, err := clickhouse.Open(&clickhouse.Options{
 			Addr: []string{fmt.Sprintf("%s:%d", config.ClickHouse.Host, config.ClickHouse.Port)},
@@ -179,7 +183,7 @@ func saveEvent(event Event) {
 		query := `INSERT INTO events (id, source_type, event_type, team_id, payload, occurred_at) VALUES (?, ?, ?, ?, ?, ?)`
 		return conn.AsyncInsert(ctx, query, false, event.ID, event.SourceType, event.EventType, event.TeamID, event.Payload, event.OccurredAt)
 	})
-	
+
 	if err != nil {
 		log.Printf("Failed to insert event after retries: %v", err)
 		eventsFailed.Inc()

@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Metraly - Team Engineering Metrics API
+// Copyright (C) 2026 Metraly Contributors
+
 package adapters
 
 import (
@@ -29,22 +33,22 @@ func NewAsanaAdapter() *AsanaAdapter {
 
 func (a *AsanaAdapter) Fetch() ([]AsanaTask, error) {
 	url := "https://app.asana.com/api/1.0/workspaces/" + a.WorkspaceID + "/tasks?opt_fields=name,completed,created_at,assignee.name"
-	
+
 	req, _ := http.NewRequest("GET", url, nil)
 	req.SetBasicAuth(a.APIKey, "")
-	
+
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
-	
+
 	var result struct {
 		Data []AsanaTask `json:"data"`
 	}
 	json.NewDecoder(resp.Body).Decode(&result)
-	
+
 	return result.Data, nil
 }
 
@@ -53,13 +57,13 @@ func (a *AsanaAdapter) Transform(task AsanaTask) Event {
 	if task.Completed {
 		eventType = "task_completed"
 	}
-	
+
 	payload, _ := json.Marshal(map[string]string{
 		"task_id":  task.Gid,
 		"name":     task.Name,
 		"assignee": task.Assignee,
 	})
-	
+
 	return Event{
 		SourceType: "pm",
 		EventType:  eventType,

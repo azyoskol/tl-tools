@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Metraly - Team Engineering Metrics API
+// Copyright (C) 2026 Metraly Contributors
+
 package auth
 
 import (
@@ -42,7 +46,9 @@ func (p *oidcProvider) VerifyIDToken(ctx context.Context, rawIDToken string) (st
 	if err != nil {
 		return "", err
 	}
-	var claims struct{ Email string `json:"email"` }
+	var claims struct {
+		Email string `json:"email"`
+	}
 	if err := token.Claims(&claims); err != nil {
 		return "", err
 	}

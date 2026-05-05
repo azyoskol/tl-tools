@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Metraly - Team Engineering Metrics API
+// Copyright (C) 2026 Metraly Contributors
+
 package adapters
 
 import (
@@ -9,7 +13,7 @@ func TestGitHubTransform(t *testing.T) {
 	payload := map[string]interface{}{
 		"action": "opened",
 		"pull_request": map[string]interface{}{
-			"id": 123,
+			"id":   123,
 			"user": map[string]interface{}{"login": "testuser"},
 		},
 	}
@@ -50,9 +54,9 @@ func TestGitHubTransform(t *testing.T) {
 func TestGitLabTransform(t *testing.T) {
 	payload := map[string]interface{}{
 		"object_kind": "merge_request",
-		"user":       map[string]interface{}{"username": "testuser"},
+		"user":        map[string]interface{}{"username": "testuser"},
 		"object_attributes": map[string]interface{}{
-			"id": 456,
+			"id":    456,
 			"state": "opened",
 		},
 	}

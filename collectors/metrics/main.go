@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Metraly - Team Engineering Metrics API
+// Copyright (C) 2026 Metraly Contributors
+
 package main
 
 import (
@@ -19,10 +23,10 @@ import (
 )
 
 type Config struct {
-	ClickHouse  HostPortConfig `yaml:"clickhouse"`
-	Pushgateway HostPortConfig `yaml:"pushgateway"`
-	PollInterval int           `yaml:"poll_interval"`
-	Teams       []TeamConfig   `yaml:"teams"`
+	ClickHouse   HostPortConfig `yaml:"clickhouse"`
+	Pushgateway  HostPortConfig `yaml:"pushgateway"`
+	PollInterval int            `yaml:"poll_interval"`
+	Teams        []TeamConfig   `yaml:"teams"`
 }
 
 type HostPortConfig struct {
@@ -31,9 +35,9 @@ type HostPortConfig struct {
 }
 
 type TeamConfig struct {
-	ID      string             `yaml:"id"`
-	Name    string             `yaml:"name"`
-	Sources []SourceConfig     `yaml:"sources"`
+	ID      string         `yaml:"id"`
+	Name    string         `yaml:"name"`
+	Sources []SourceConfig `yaml:"sources"`
 }
 
 type SourceConfig struct {
@@ -99,7 +103,7 @@ func handlePushgateway(w http.ResponseWriter, r *http.Request) {
 		SourceType: "metrics",
 		EventType:  "prometheus_push",
 		TeamID:     teamID,
-		Payload:   mustMarshal(payload),
+		Payload:    mustMarshal(payload),
 		OccurredAt: time.Now(),
 	}
 
