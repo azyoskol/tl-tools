@@ -3,6 +3,7 @@ package repo
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
 	"github.com/getmetraly/metraly/cmd/api/domain"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -41,8 +42,12 @@ func (r *pgDashboardRepo) List(ctx context.Context, userID string) ([]*domain.Da
 		if err != nil {
 			return nil, err
 		}
-		json.Unmarshal(widgetsJSON, &d.Widgets)
-		json.Unmarshal(layoutJSON, &d.Layout)
+		if err := json.Unmarshal(widgetsJSON, &d.Widgets); err != nil {
+			return nil, fmt.Errorf("decode dashboard widgets: %w", err)
+		}
+		if err := json.Unmarshal(layoutJSON, &d.Layout); err != nil {
+			return nil, fmt.Errorf("decode dashboard layout: %w", err)
+		}
 		result = append(result, d)
 	}
 	return result, rows.Err()
@@ -60,15 +65,25 @@ func (r *pgDashboardRepo) GetByID(ctx context.Context, id string) (*domain.Dashb
 	if err != nil {
 		return nil, err
 	}
-	json.Unmarshal(widgetsJSON, &d.Widgets)
-	json.Unmarshal(layoutJSON, &d.Layout)
+	if err := json.Unmarshal(widgetsJSON, &d.Widgets); err != nil {
+		return nil, fmt.Errorf("decode dashboard widgets: %w", err)
+	}
+	if err := json.Unmarshal(layoutJSON, &d.Layout); err != nil {
+		return nil, fmt.Errorf("decode dashboard layout: %w", err)
+	}
 	return d, nil
 }
 
 func (r *pgDashboardRepo) Create(ctx context.Context, d *domain.Dashboard) error {
-	widgetsJSON, _ := json.Marshal(d.Widgets)
-	layoutJSON, _ := json.Marshal(d.Layout)
-	_, err := r.pool.Exec(ctx,
+	widgetsJSON, err := json.Marshal(d.Widgets)
+	if err != nil {
+		return fmt.Errorf("encode dashboard widgets: %w", err)
+	}
+	layoutJSON, err := json.Marshal(d.Layout)
+	if err != nil {
+		return fmt.Errorf("encode dashboard layout: %w", err)
+	}
+	_, err = r.pool.Exec(ctx,
 		`INSERT INTO dashboards(id, name, description, icon, owner_id, is_public, widgets, layout, forked_from_id)
 		 VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
 		d.ID, d.Name, d.Description, d.Icon, d.OwnerID, d.IsPublic,
@@ -78,8 +93,14 @@ func (r *pgDashboardRepo) Create(ctx context.Context, d *domain.Dashboard) error
 }
 
 func (r *pgDashboardRepo) Update(ctx context.Context, d *domain.Dashboard) (bool, error) {
-	widgetsJSON, _ := json.Marshal(d.Widgets)
-	layoutJSON, _ := json.Marshal(d.Layout)
+	widgetsJSON, err := json.Marshal(d.Widgets)
+	if err != nil {
+		return false, fmt.Errorf("encode dashboard widgets: %w", err)
+	}
+	layoutJSON, err := json.Marshal(d.Layout)
+	if err != nil {
+		return false, fmt.Errorf("encode dashboard layout: %w", err)
+	}
 	tag, err := r.pool.Exec(ctx,
 		`UPDATE dashboards SET name=$1, description=$2, icon=$3, widgets=$4, layout=$5,
 		        version=version+1, updated_at=NOW()
@@ -90,7 +111,10 @@ func (r *pgDashboardRepo) Update(ctx context.Context, d *domain.Dashboard) (bool
 }
 
 func (r *pgDashboardRepo) UpdateLayout(ctx context.Context, id string, layout []domain.WidgetLayout, version int) (bool, error) {
-	layoutJSON, _ := json.Marshal(layout)
+	layoutJSON, err := json.Marshal(layout)
+	if err != nil {
+		return false, fmt.Errorf("encode dashboard layout: %w", err)
+	}
 	tag, err := r.pool.Exec(ctx,
 		`UPDATE dashboards SET layout=$1, version=version+1, updated_at=NOW() WHERE id=$2 AND version=$3`,
 		layoutJSON, id, version,
@@ -121,8 +145,12 @@ func (r *pgDashboardRepo) ListTemplates(ctx context.Context) ([]*domain.Dashboar
 		if err := rows.Scan(&t.ID, &t.Name, &t.Description, &t.Icon, &t.Category, &widgetsJSON, &layoutJSON); err != nil {
 			return nil, err
 		}
-		json.Unmarshal(widgetsJSON, &t.Widgets)
-		json.Unmarshal(layoutJSON, &t.Layout)
+		if err := json.Unmarshal(widgetsJSON, &t.Widgets); err != nil {
+			return nil, fmt.Errorf("decode dashboard widgets: %w", err)
+		}
+		if err := json.Unmarshal(layoutJSON, &t.Layout); err != nil {
+			return nil, fmt.Errorf("decode dashboard layout: %w", err)
+		}
 		result = append(result, t)
 	}
 	return result, rows.Err()
