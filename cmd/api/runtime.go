@@ -1,0 +1,129 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Metraly - Team Engineering Metrics API
+// Copyright (C) 2026 Metraly Contributors
+
+package main
+
+import (
+	"context"
+	"fmt"
+	"log"
+	"time"
+
+	"github.com/getmetraly/metraly/cmd/api/auth"
+	"github.com/getmetraly/metraly/cmd/api/biz"
+	"github.com/getmetraly/metraly/cmd/api/cache"
+	"github.com/getmetraly/metraly/cmd/api/config"
+	"github.com/getmetraly/metraly/cmd/api/db"
+	"github.com/getmetraly/metraly/cmd/api/migrations"
+	"github.com/getmetraly/metraly/cmd/api/repo"
+	"github.com/getmetraly/metraly/cmd/api/seed"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/redis/go-redis/v9"
+)
+
+var (
+	newPostgresPool = db.New
+	// The default startup path applies embedded SQL with db.Migrate(ctx, pool, migrations.FS).
+	migratePostgres = db.Migrate
+	newRedisClient  = func(addr string) *redis.Client {
+		return redis.NewClient(&redis.Options{Addr: addr})
+	}
+	pingRedis = func(ctx context.Context, rdb *redis.Client) error {
+		return rdb.Ping(ctx).Err()
+	}
+)
+
+type runtimeDeps struct {
+	cfg          config.AppConfig
+	pool         *pgxpool.Pool
+	redis        *redis.Client
+	keyManager   *auth.KeyManager
+	dashboardSvc *biz.DashboardSvc
+	metricsSvc   *biz.MetricsSvc
+	templateSvc  *biz.TemplateSvc
+	cleanup      func()
+}
+
+func newRuntime(ctx context.Context, cfg config.AppConfig) (*runtimeDeps, error) {
+	keyManager, err := auth.NewKeyManager(cfg.JWTPrivateKey)
+	if err != nil {
+		return nil, fmt.Errorf("init jwt key manager: %w", err)
+	}
+
+	pool, err := newPostgresPool(ctx, cfg.PostgresDSN)
+	if err != nil {
+		return nil, fmt.Errorf("connect postgres: %w", err)
+	}
+
+	if err := migratePostgres(ctx, pool, migrations.FS); err != nil {
+		if pool != nil {
+			pool.Close()
+		}
+		return nil, fmt.Errorf("migrate postgres: %w", err)
+	}
+
+	dashboardRepo := repo.NewDashboardRepo(pool)
+	metricRepo := repo.NewMetricRepo(pool)
+	userRepo := repo.NewUserRepo(pool)
+	pluginRepo := repo.NewPluginRepo(pool)
+	insightRepo := repo.NewAIInsightRepo(pool)
+	activityRepo := repo.NewActivityRepo(pool)
+
+	redisAddr := cfg.RedisHost + ":" + cfg.RedisPort
+	rdb := newRedisClient(redisAddr)
+
+	dashboardCache := cache.NewNoopDashboardCache()
+	metricsCache := cache.NewNoopMetricsCache()
+	templateCache := cache.NewNoopTemplateCache()
+
+	redisCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
+	if err := pingRedis(redisCtx, rdb); err != nil {
+		log.Printf("redis unavailable; using degraded cache mode: %v", err)
+		if rdb != nil {
+			_ = rdb.Close()
+		}
+		rdb = nil
+	} else {
+		dashboardCache = cache.NewDashboardCache(rdb, time.Duration(cfg.DashboardsCacheTTL)*time.Second)
+		metricsCache = cache.NewMetricsCache(rdb, time.Duration(cfg.MetricsCacheTTL)*time.Second)
+		templateCache = cache.NewTemplateCache(rdb, time.Duration(cfg.TemplatesCacheTTL)*time.Second)
+	}
+	cancel()
+
+	deps := &runtimeDeps{
+		cfg:          cfg,
+		pool:         pool,
+		redis:        rdb,
+		keyManager:   keyManager,
+		dashboardSvc: biz.NewDashboardSvc(dashboardRepo, dashboardCache),
+		metricsSvc:   biz.NewMetricsSvc(metricRepo, metricsCache),
+		templateSvc:  biz.NewTemplateSvc(dashboardRepo, templateCache),
+	}
+
+	deps.cleanup = func() {
+		if deps.redis != nil {
+			_ = deps.redis.Close()
+		}
+		if deps.pool != nil {
+			deps.pool.Close()
+		}
+	}
+
+	if cfg.SeedOnStart {
+		runner := seed.NewRunner(userRepo, pluginRepo, insightRepo, activityRepo, metricRepo)
+		if err := runner.Run(ctx, cfg.SeedAdminEmail, cfg.SeedAdminPassword); err != nil {
+			deps.Close()
+			return nil, fmt.Errorf("seed data: %w", err)
+		}
+	}
+
+	return deps, nil
+}
+
+func (d *runtimeDeps) Close() {
+	if d == nil || d.cleanup == nil {
+		return
+	}
+	d.cleanup()
+}
