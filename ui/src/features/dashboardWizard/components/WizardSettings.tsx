@@ -135,7 +135,7 @@ export const WizardSettings: React.FC<WizardSettingsProps> = ({
         <div style={{ fontFamily: 'var(--font-head)', fontWeight: 600, fontSize: 13, marginBottom: 8, color: 'var(--text)' }}>
           Selected Widgets ({selectedWidgets.length})
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 200, overflowY: 'auto' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           {selectedWidgets.length === 0 ? (
             <div style={{ textAlign: 'center', color: 'var(--muted)', padding: 16, fontSize: 12 }}>
               No widgets selected
@@ -152,17 +152,18 @@ export const WizardSettings: React.FC<WizardSettingsProps> = ({
                   border: isEmpty ? '1.5px dashed var(--cyan)' : '1px solid var(--border)',
                   background: isEmpty ? 'rgba(0,229,255,0.06)' : 'rgba(255,255,255,0.03)',
                 }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                     <button
                       type="button"
                       onClick={() => onMoveWidget(index, index - 1)}
                       disabled={index === 0}
                       style={{
                         background: 'none', border: 'none', padding: 2, cursor: index === 0 ? 'not-allowed' : 'pointer',
-                        color: index === 0 ? 'var(--border)' : 'var(--muted)',
+                        color: index === 0 ? 'var(--border)' : 'var(--text)',
+                        opacity: index === 0 ? 0.3 : 1,
                       }}
                     >
-                      <Icon name="chevronUp" size={12} />
+                      <Icon name="chevronUp" size={14} />
                     </button>
                     <button
                       type="button"
@@ -170,28 +171,30 @@ export const WizardSettings: React.FC<WizardSettingsProps> = ({
                       disabled={index === selectedWidgets.length - 1}
                       style={{
                         background: 'none', border: 'none', padding: 2, cursor: index === selectedWidgets.length - 1 ? 'not-allowed' : 'pointer',
-                        color: index === selectedWidgets.length - 1 ? 'var(--border)' : 'var(--muted)',
+                        color: index === selectedWidgets.length - 1 ? 'var(--border)' : 'var(--text)',
+                        opacity: index === selectedWidgets.length - 1 ? 0.3 : 1,
                       }}
                     >
-                      <Icon name="chevronDown" size={12} />
+                      <Icon name="chevronDown" size={14} />
                     </button>
                   </div>
-                  <div style={{ width: 24, height: 24, borderRadius: 6, background: isEmpty ? 'rgba(0,229,255,0.15)' : `${c}18`, border: `1px solid ${isEmpty ? 'var(--cyan)' : c}22`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Icon name={widget.icon} size={12} color={isEmpty ? 'var(--cyan)' : c} />
+                  <div style={{ width: 28, height: 28, borderRadius: 6, background: isEmpty ? 'rgba(0,229,255,0.15)' : `${c}18`, border: `1px solid ${isEmpty ? 'var(--cyan)' : c}40`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <Icon name={widget.icon} size={14} color={isEmpty ? 'var(--cyan)' : c} />
                   </div>
-                  <div style={{ flex: 1, fontSize: 12.5, fontWeight: 500 }}>{widget.label}</div>
+                  <div style={{ flex: 1, fontSize: 13, fontWeight: 500, color: 'var(--text)' }}>{widget.label}</div>
                   {!isEmpty && (
                     <button
                       type="button"
                       onClick={() => onToggleSize(widget.instanceId)}
                       style={{
-                        padding: '3px 8px',
-                        borderRadius: 5,
+                        padding: '4px 10px',
+                        borderRadius: 6,
                         fontSize: 11,
+                        fontWeight: 500,
                         cursor: 'pointer',
-                        border: size === 'full' ? '1px solid rgba(0,229,255,0.3)' : '1px solid var(--border)',
-                        background: size === 'full' ? 'rgba(0,229,255,0.08)' : 'transparent',
-                        color: size === 'full' ? 'var(--cyan)' : 'var(--muted)',
+                        border: size === 'full' ? '1px solid rgba(0,229,255,0.4)' : '1px solid var(--border)',
+                        background: size === 'full' ? 'rgba(0,229,255,0.15)' : 'transparent',
+                        color: size === 'full' ? 'var(--cyan)' : 'var(--muted2)',
                       }}
                     >
                       {size === 'full' ? 'Full' : 'Flex'}
@@ -200,9 +203,9 @@ export const WizardSettings: React.FC<WizardSettingsProps> = ({
                   <button
                     type="button"
                     onClick={() => onToggleWidget(widget.instanceId)}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', padding: 4 }}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted2)', padding: 4, flexShrink: 0 }}
                   >
-                    <Icon name="x" size={14} />
+                    <Icon name="x" size={16} />
                   </button>
                 </div>
               );
