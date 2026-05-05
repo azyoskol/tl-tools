@@ -1,0 +1,23 @@
+{
+  "mode": "yolo",
+  "granularity": "coarse",
+  "parallelization": true,
+  "commit_docs": true,
+  "model_profile": "inherit",
+  "workflow": {
+    "research": true,
+    "plan_check": true,
+    "verifier": true,
+    "nyquist_validation": false,
+    "auto_advance": false
+  },
+  "planning": {
+    "canonical_status": "../docs/STATUS.md",
+    "worktree_override": "User explicitly chose current app/ workspace for initialization on 2026-05-05.",
+    "nearest_milestone": "Community Preview",
+    "roadmap_scope": "Full product roadmap",
+    "deferred_storage": {
+      "clickhouse": "Deferred for Community Preview; future candidate for raw/dirty events with curated aggregates copied into TimescaleDB."
+    }
+  }
+}
