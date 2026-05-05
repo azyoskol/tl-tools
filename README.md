@@ -17,7 +17,7 @@ Most engineering metrics tools (LinearB, Waydev, Code Climate Velocity, Swarmia,
 | **AI & LLM integration** | AI features are typically closed-source, using your data to train proprietary models (often without clear opt-out). | Built-in AI-assistant and smart insights run locally against your data. Bring your own LLM or use built-in lightweight models. No data ever leaves your environment. |
 | **Extensibility** | Closed ecosystems. Integrations are slow to add. | Open plugin architecture (data sources, widgets, alert exporters). Plugins can be written in Go or compiled to WASM and executed in a secure sandbox. |
 | **Transparency** | You can't see how metrics are calculated or how data is transformed. | Open-core. Every core calculation is visible and auditable. You can fork, modify, and contribute back. |
-| **Vendor lock-in** | High. Migrating historical data away is often impossible. | None. Your data is in standard ClickHouse tables. Export to Parquet/CSV at any time. |
+| **Vendor lock-in** | High. Migrating historical data away is often impossible. | None. Your default Community Preview data is in PostgreSQL/TimescaleDB and Redis. Future raw event ingestion may add ClickHouse as an optional store. |
 
 If you value data privacy, unlimited flexibility, and full control over your engineering intelligence layer — Metraly is built for you.
 
@@ -63,7 +63,7 @@ For organizations rolling Metraly out to hundreds of teams, the “Enterprise”
 - **Authentication & authorization**: Single Sign-On via OIDC (Okta, Azure AD, Keycloak), full RBAC (Admin, Editor, Viewer) with team-level scoping.
 - **Audit & compliance**: Immutable activity log for every user action, exportable to external SIEMs. Configurable data retention policies.
 - **White-labeling**: Replace logos, colours, and domain names. Create private dashboard templates for consistent reporting across the company.
-- **High availability**: Supports TimescaleDB for time-series, ClickHouse sharding, and Kubernetes-native deployment with Helm.
+- **High availability**: Designed around TimescaleDB for time-series data and Kubernetes-native deployment with Helm. ClickHouse is deferred as a future raw-event ingestion option.
 
 ## 🚧 Future Directions
 
@@ -84,17 +84,10 @@ cd metraly
 make docker-up
 ```
 
-This will build and start the API, ClickHouse, Redis, and the React UI.
+This will build and start the API, React UI, Postgres/TimescaleDB, and Redis.
 
 - **UI**: [http://localhost:3000](http://localhost:3000)
-- **API Health**: [http://localhost:8000/health](http://localhost:8000)
-- **ClickHouse HTTP**: [http://localhost:8123](http://localhost:8123)
-
-(Optional) Load demo data:
-
-```bash
-make docker-test-data
-```
+- **API Health**: [http://localhost:8000/api/v1/health](http://localhost:8000/api/v1/health)
 
 ## 🛠️ Development
 
@@ -120,7 +113,7 @@ make docker-logs # Watch logs from all services in real time
 ## 💻 Tech Stack
 
 - **Backend**: Go 1.26+, Chi router, JSON‑iterator, Zerolog, OpenTelemetry (future gRPC)
-- **Database**: PostgreSQL 16 + TimescaleDB (time‑series) and ClickHouse 23.8 for event storage
+- **Database**: PostgreSQL 16 + TimescaleDB (time-series). ClickHouse is deferred for future raw/dirty event ingestion feeding curated TimescaleDB aggregates.
 - **Cache**: Redis 7 (metrics 5 min TTL, dashboards 30 s TTL)
 - **Auth**: JWT RS256, optional OIDC, bcrypt for passwords
 - **UI**: React 18, TypeScript, Vite, Recharts, custom widget system
@@ -139,4 +132,4 @@ make docker-logs # Watch logs from all services in real time
 
 ## 📜 License
 
-This project is licensed under the GNU AGPLv3. See the [LICENSE](LICENSE) file for details.
+This project is licensed under `AGPL-3.0-or-later`. See the [LICENSE](LICENSE) file for details.

@@ -21,7 +21,7 @@ build:
 # Run API locally
 run: build
 	@echo "Starting API on port $(API_PORT)..."
-	CLICKHOUSE_HOST=localhost CLICKHOUSE_PORT=8123 REDIS_HOST=localhost REDIS_PORT=6379 ./bin/api
+	POSTGRES_DSN=postgres://metraly:metraly@localhost:5432/metraly?sslmode=disable REDIS_HOST=localhost REDIS_PORT=6379 ./bin/api
 
 # Run tests
 test:
@@ -43,15 +43,7 @@ docker-build:
 docker-up:
 	@echo "Starting services..."
 	$(DOCKER_COMPOSE) up -d
-	@echo "Waiting for ClickHouse..."
-	@for i in $$(seq 1 30); do \
-		if curl -s http://localhost:8123/ping > /dev/null 2>&1; then \
-			echo "ClickHouse is ready!"; \
-			break; \
-		fi; \
-		echo "Waiting... $$i/30"; \
-		sleep 1; \
-	done
+	@echo "Started Community Preview services: api, ui, postgres/timescaledb, redis"
 
 # Docker: stop all services
 docker-down:
@@ -78,24 +70,10 @@ docker-logs:
 docker-ps:
 	$(DOCKER_COMPOSE) ps
 
-# Insert test data into ClickHouse
-docker-test-data:
-	@echo "Inserting test data..."
-	@docker exec metraly-clickhouse-1 clickhouse-client -q "INSERT INTO teams (id, name) SELECT '11111111-1111-1111-1111-111111111111', 'Backend Team'" 2>/dev/null || true
-	@docker exec metraly-clickhouse-1 clickhouse-client -q "INSERT INTO teams (id, name) SELECT '22222222-2222-2222-2222-222222222222', 'Frontend Team'" 2>/dev/null || true
-	@docker exec metraly-clickhouse-1 clickhouse-client -q "INSERT INTO events (id, source_type, event_type, team_id, payload, occurred_at) VALUES ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'git', 'pr_opened', '11111111-1111-1111-1111-111111111111', '{\"author\": \"alice\", \"pr_id\": \"123\"}', now())" 2>/dev/null || true
-	@docker exec metraly-clickhouse-1 clickhouse-client -q "INSERT INTO events (id, source_type, event_type, team_id, payload, occurred_at) VALUES ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaab', 'git', 'pr_merged', '11111111-1111-1111-1111-111111111111', '{\"author\": \"alice\", \"pr_id\": \"123\"}', now()-1)" 2>/dev/null || true
-	@docker exec metraly-clickhouse-1 clickhouse-client -q "INSERT INTO events (id, source_type, event_type, team_id, payload, occurred_at) VALUES ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaac', 'pm', 'task_created', '11111111-1111-1111-1111-111111111111', '{\"assignee\": \"bob\", \"task_id\": \"task-1\"}', now()-2)" 2>/dev/null || true
-	@docker exec metraly-clickhouse-1 clickhouse-client -q "INSERT INTO events (id, source_type, event_type, team_id, payload, occurred_at) VALUES ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaad', 'pm', 'task_done', '11111111-1111-1111-1111-111111111111', '{\"assignee\": \"bob\", \"task_id\": \"task-1\"}', now()-1)" 2>/dev/null || true
-	@docker exec metraly-clickhouse-1 clickhouse-client -q "INSERT INTO events (id, source_type, event_type, team_id, payload, occurred_at) VALUES ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaae', 'pm', 'task_blocked', '11111111-1111-1111-1111-111111111111', '{\"assignee\": \"charlie\", \"task_id\": \"task-2\"}', now()-0.125)" 2>/dev/null || true
-	@docker exec metraly-clickhouse-1 clickhouse-client -q "INSERT INTO events (id, source_type, event_type, team_id, payload, occurred_at) VALUES ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaf', 'cicd', 'pipeline_success', '11111111-1111-1111-1111-111111111111', '{\"pipeline_id\": \"pip-1\"}', now()-0.166)" 2>/dev/null || true
-	@docker exec metraly-clickhouse-1 clickhouse-client -q "INSERT INTO events (id, source_type, event_type, team_id, payload, occurred_at) VALUES ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaag', 'cicd', 'pipeline_failed', '11111111-1111-1111-1111-111111111111', '{\"pipeline_id\": \"pip-2\"}', now()-0.083)" 2>/dev/null || true
-	@echo "Test data inserted!"
-
 # Health check
 health:
 	@echo "Checking API health..."
-	@curl -s http://localhost:$(API_PORT)/health | python3 -m json.tool 2>/dev/null || curl -s http://localhost:$(API_PORT)/health
+	@curl -s http://localhost:$(API_PORT)/api/v1/health | python3 -m json.tool 2>/dev/null || curl -s http://localhost:$(API_PORT)/api/v1/health
 
 # Dashboard check
 dashboard:
@@ -124,7 +102,6 @@ help:
 	@echo "  docker-restart-api - Restart API only"
 	@echo "  docker-logs        - Show Docker logs"
 	@echo "  docker-ps          - Show Docker status"
-	@echo "  docker-test-data   - Insert test data"
 	@echo "  health             - Check API health"
 	@echo "  dashboard          - Check dashboard data"
 	@echo "  clean              - Clean build artifacts"

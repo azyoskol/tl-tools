@@ -22,7 +22,7 @@ See `BACKEND_PLAN.md` for the full architecture, schema, and implementation phas
 
 ```bash
 make build           # Build Go binary
-make docker-up       # Start services (ClickHouse, Redis, API, UI)
+make docker-up       # Start services (Postgres/TimescaleDB, Redis, API, UI)
 make test            # Run tests (19 tests in internal/pkg/)
 make lint            # Run linter
 
