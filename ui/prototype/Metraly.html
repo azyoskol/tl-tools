@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Metraly — Engineering Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:        #0B0F19;
+  --glass:     #131825;
+  --glass2:    #1a2235;
+  --border:    rgba(255,255,255,0.07);
+  --border2:   rgba(255,255,255,0.12);
+  --cyan:      #00E5FF;
+  --purple:    #B44CFF;
+  --success:   #00C853;
+  --warning:   #FF9100;
+  --error:     #FF1744;
+  --text:      #E8EDF5;
+  --muted:     #6B7A9A;
+  --muted2:    #9BAABF;
+  --grad:      linear-gradient(135deg, #00E5FF, #B44CFF);
+  --font-head: 'Space Grotesk', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --sidebar-w: 228px;
+}
+
+html, body, #root {
+  height: 100%; width: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.5;
+  overflow: hidden;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.18); }
+
+/* Glass utility */
+.glass {
+  background: var(--glass);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  backdrop-filter: blur(16px);
+}
+
+/* Animations */
+@keyframes pulse-dot {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(0,229,255,0.4); opacity: 1; }
+  50% { box-shadow: 0 0 0 6px rgba(0,229,255,0); opacity: 0.7; }
+}
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes shimmer {
+  from { background-position: -200% center; }
+  to   { background-position: 200% center; }
+}
+@keyframes spin-slow { to { transform: rotate(360deg); } }
+@keyframes bar-grow {
+  from { transform: scaleY(0); }
+  to   { transform: scaleY(1); }
+}
+
+.fade-up { animation: fade-up 0.35s ease both; }
+.fade-up-1 { animation: fade-up 0.35s 0.06s ease both; }
+.fade-up-2 { animation: fade-up 0.35s 0.12s ease both; }
+.fade-up-3 { animation: fade-up 0.35s 0.18s ease both; }
+.fade-up-4 { animation: fade-up 0.35s 0.24s ease both; }
+.fade-up-5 { animation: fade-up 0.35s 0.30s ease both; }
+.fade-up-6 { animation: fade-up 0.35s 0.36s ease both; }
+
+/* Focus */
+*:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; border-radius: 4px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel" src="charts.jsx"></script>
+<script type="text/babel" src="dashboard-roles.jsx"></script>
+<script type="text/babel" src="metrics-explorer.jsx"></script>
+<script type="text/babel" src="dash-wizard.jsx"></script>
+<script type="text/babel">
+// ─── Icons (inline SVG, Lucide-style, stroke 1.5) ────────────────────────────
+const Icon = ({ name, size = 16, color = 'currentColor', style = {} }) => {
+  const paths = {
+    zap:         <><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></>,
+    home:        <><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></>,
+    bar2:        <><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></>,
+    gitPR:       <><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M13 6h3a2 2 0 0 1 2 2v7"/><line x1="6" y1="9" x2="6" y2="21"/></>,
+    xCircle:     <><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></>,
+    alertTri:    <><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></>,
+    clock:       <><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></>,
+    brain:       <><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96-.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2Z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96-.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2Z"/></>,
+    puzzle:      <><path d="M19.439 7.85c-.049.322.059.648.289.878l1.568 1.568c.47.47.706 1.087.706 1.704s-.235 1.233-.706 1.704l-1.611 1.611a.98.98 0 0 1-.837.276c-.47-.07-.802-.48-.968-.925a2.501 2.501 0 1 0-3.214 3.214c.446.166.855.497.925.968a.979.979 0 0 1-.276.837l-1.61 1.61a2.404 2.404 0 0 1-1.705.707 2.402 2.402 0 0 1-1.704-.707L8.95 19.439a.98.98 0 0 0-.837-.276c-.47.07-.802.48-.968.925a2.501 2.501 0 1 1-3.214-3.214c.446-.166.855-.497.925-.968a.979.979 0 0 0-.276-.837l-1.61-1.61a2.404 2.404 0 0 1-.707-1.705 2.402 2.402 0 0 1 .707-1.704l1.568-1.568c.23-.23.338-.556.29-.878-.07-.47-.48-.802-.926-.968a2.501 2.501 0 1 1 3.214-3.214c.166.446.497.855.968.925a.979.979 0 0 0 .837-.276l1.61-1.61a2.402 2.402 0 0 1 1.705-.707 2.404 2.404 0 0 1 1.704.707l1.568 1.567c.23.23.556.338.878.29.47-.07.802-.48.968-.925a2.501 2.501 0 1 1 3.214 3.214c-.446.166-.855.497-.925.968Z"/></>,
+    settings:    <><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></>,
+    users:       <><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></>,
+    bell:        <><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></>,
+    search:      <><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></>,
+    star:        <><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></>,
+    download:    <><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></>,
+    check:       <><polyline points="20 6 9 17 4 12"/></>,
+    github:      <><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/><path d="M9 18c-4.51 2-5-2-7-2"/></>,
+    jira:        <><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M12 8v8"/><path d="m8 12 4-4 4 4"/></>,
+    gitlab:      <><path d="m22 13.29-3.33-10a.42.42 0 0 0-.14-.18.38.38 0 0 0-.22-.11.39.39 0 0 0-.23.07.42.42 0 0 0-.14.18l-2.26 6.67H8.32L6.1 3.26a.42.42 0 0 0-.1-.17.38.38 0 0 0-.6.1L2 13.29a.43.43 0 0 0 .15.48L12 21l9.85-7.23a.43.43 0 0 0 .15-.48Z"/></>,
+    linear:      <><path d="m2 12 5.5-5.5"/><path d="M2 12h20"/><path d="m16.5 6.5 5.5 5.5"/><path d="M2 12l5.5 5.5"/><path d="m16.5 17.5 5.5-5.5"/></>,
+    slack:       <><rect width="3" height="8" x="13" y="2" rx="1.5"/><path d="M19 8.5V10h1.5A1.5 1.5 0 1 0 19 8.5"/><rect width="3" height="8" x="8" y="14" rx="1.5"/><path d="M5 15.5V14H3.5A1.5 1.5 0 1 0 5 15.5"/><rect width="8" height="3" x="14" y="13" rx="1.5"/><path d="M15.5 19H14v1.5a1.5 1.5 0 1 0 1.5-1.5"/><rect width="8" height="3" x="2" y="8" rx="1.5"/><path d="M8.5 5H10V3.5A1.5 1.5 0 1 0 8.5 5"/></>,
+    pagerduty:   <><rect width="4" height="12" x="10" y="2" rx="2"/><rect width="4" height="8" x="10" y="14" rx="2"/></>,
+    arrowRight:  <><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></>,
+    chevronDown: <><path d="m6 9 6 6 6-6"/></>,
+    activity:    <><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></>,
+    boxes:       <><path d="M2.97 12.92A2 2 0 0 0 2 14.63v3.24a2 2 0 0 0 .97 1.71l3 1.8a2 2 0 0 0 2.06 0L12 19v-5.5l-5-3-4.03 2.42Z"/><path d="m7 16.5-4.74-2.85"/><path d="m7 16.5 5-3"/><path d="M7 16.5v5.17"/><path d="M12 13.5V19l3.97 2.38a2 2 0 0 0 2.06 0l3-1.8a2 2 0 0 0 .97-1.71v-3.24a2 2 0 0 0-.97-1.71L17 10.5l-5 3Z"/><path d="m17 16.5-5-3"/><path d="m17 16.5 4.74-2.85"/><path d="M17 16.5v5.17"/><path d="M7.97 4.42A2 2 0 0 0 7 6.13v4.37l5 3 5-3V6.13a2 2 0 0 0-.97-1.71l-3-1.8a2 2 0 0 0-2.06 0l-3 1.8Z"/><path d="M12 8 7.26 5.15"/><path d="m12 8 4.74-2.85"/><path d="M12 13.5V8"/></>,
+    cpu:         <><rect width="16" height="16" x="4" y="4" rx="2"/><rect width="6" height="6" x="9" y="9" rx="1"/><path d="M15 2v2"/><path d="M15 20v2"/><path d="M2 15h2"/><path d="M2 9h2"/><path d="M20 15h2"/><path d="M20 9h2"/><path d="M9 2v2"/><path d="M9 20v2"/></>,
+    trendingUp:  <><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></>,
+    filter:      <><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></>,
+    layers:      <><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></>,
+    chart:       <><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></>,
+    plus:        <><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></>,
+    x:           <><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>,
+    database:    <><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/></>,
+    link:        <><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></>,
+    sparkles:    <><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></>,
+  };
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+      stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
+      style={style}>
+      {paths[name] || <circle cx="12" cy="12" r="8"/>}
+    </svg>
+  );
+};
+
+// ─── Sparkline ────────────────────────────────────────────────────────────────
+const Sparkline = ({ data, color = '#00E5FF', height = 36 }) => {
+  const w = 80, h = height;
+  const min = Math.min(...data), max = Math.max(...data);
+  const range = max - min || 1;
+  const pts = data.map((v, i) => {
+    const x = (i / (data.length - 1)) * w;
+    const y = h - ((v - min) / range) * (h - 4) - 2;
+    return `${x},${y}`;
+  }).join(' ');
+  const area = `M0,${h} L${pts.split(' ').map(p => p).join(' L')} L${w},${h} Z`;
+  return (
+    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{overflow:'visible'}}>
+      <defs>
+        <linearGradient id={`sg-${color.replace('#','')}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity="0.3"/>
+          <stop offset="100%" stopColor={color} stopOpacity="0"/>
+        </linearGradient>
+      </defs>
+      <path d={area} fill={`url(#sg-${color.replace('#','')})`}/>
+      <polyline points={pts} fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
+};
+
+// ─── Sidebar ──────────────────────────────────────────────────────────────────
+const Sidebar = ({ active, onNav }) => {
+  const [pinned, setPinned] = React.useState(() => {
+    try { return JSON.parse(localStorage.getItem('metraly-pinned') || '["dash-cto","dash-devops"]'); } catch { return ['dash-cto','dash-devops']; }
+  });
+  const [hoveredPin, setHoveredPin] = React.useState(null);
+
+  const togglePin = (id, e) => {
+    e.stopPropagation();
+    setPinned(prev => {
+      const next = prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id];
+      localStorage.setItem('metraly-pinned', JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const sections = [
+    { label: 'Dashboards', items: [
+      { id: 'dashboard', icon: 'home',       label: 'Overview' },
+      { id: 'dash-cto',  icon: 'trendingUp', label: 'CTO' },
+      { id: 'dash-vp',   icon: 'users',      label: 'VP Engineering' },
+      { id: 'dash-tl',   icon: 'gitPR',      label: 'Tech Lead' },
+      { id: 'dash-devops',icon: 'cpu',       label: 'DevOps / SRE' },
+      { id: 'dash-ic',   icon: 'activity',   label: 'My View' },
+      { id: 'dash-wizard',icon: 'plus',      label: 'New Dashboard', accent: true },
+    ]},
+    { label: 'Analytics', items: [
+      { id: 'metrics',   icon: 'bar2',    label: 'Metrics Explorer' },
+      { id: 'ai',        icon: 'brain',   label: 'AI Assistant' },
+    ]},
+    { label: 'Configure', items: [
+      { id: 'plugins',   icon: 'puzzle',  label: 'Marketplace' },
+      { id: 'wizard',    icon: 'link',    label: 'Connect Sources' },
+    ]},
+    { label: 'System', items: [
+      { id: 'settings',  icon: 'settings',label: 'Settings' },
+    ]},
+  ];
+
+  return (
+    <aside style={{
+      width: 'var(--sidebar-w)', flexShrink: 0, height: '100%',
+      background: 'rgba(11,15,25,0.95)',
+      borderRight: '1px solid var(--border)',
+      display: 'flex', flexDirection: 'column',
+      backdropFilter: 'blur(20px)',
+      position: 'relative', zIndex: 10,
+    }}>
+      {/* Logo */}
+      <div style={{ padding: '20px 18px 16px', borderBottom: '1px solid var(--border)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{
+            width: 32, height: 32, borderRadius: 8,
+            background: 'var(--grad)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            flexShrink: 0,
+          }}>
+            <Icon name="activity" size={16} color="#fff"/>
+          </div>
+          <span style={{
+            fontFamily: 'var(--font-head)', fontWeight: 700, fontSize: 17,
+            background: 'var(--grad)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+            letterSpacing: '-0.3px',
+          }}>Metraly</span>
+        </div>
+        {/* Status pill */}
+        <div style={{
+          marginTop: 12, display: 'flex', alignItems: 'center', gap: 6,
+          background: 'rgba(0,200,83,0.1)', border: '1px solid rgba(0,200,83,0.2)',
+          borderRadius: 20, padding: '4px 10px', width: 'fit-content',
+        }}>
+          <div style={{
+            width: 6, height: 6, borderRadius: '50%', background: 'var(--success)',
+            animation: 'pulse-dot 2s ease infinite',
+          }}/>
+          <span style={{ fontSize: 11, color: 'var(--success)', fontFamily: 'var(--font-mono)' }}>All systems nominal</span>
+        </div>
+      </div>
+
+      {/* Nav */}
+      <nav style={{ flex: 1, overflow: 'auto', padding: '12px 10px' }}>
+
+        {/* Pinned dashboards */}
+        {pinned.length > 0 && (() => {
+          const allItems = sections.flatMap(s => s.items);
+          const pinnedItems = pinned.map(id => allItems.find(it => it.id === id)).filter(Boolean);
+          return (
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.08em', color: 'var(--muted)', textTransform: 'uppercase', padding: '0 8px', marginBottom: 4 }}>Pinned</div>
+              {pinnedItems.map(item => {
+                const isActive = active === item.id;
+                return (
+                  <button key={item.id} onClick={() => onNav(item.id)}
+                    style={{
+                      width: '100%', display: 'flex', alignItems: 'center', gap: 9,
+                      padding: '7px 10px', borderRadius: 8, border: 'none', cursor: 'pointer', marginBottom: 2,
+                      background: isActive ? 'rgba(0,229,255,0.1)' : 'transparent',
+                      color: isActive ? 'var(--cyan)' : 'var(--muted2)',
+                      fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: isActive ? 500 : 400,
+                      transition: 'all 0.15s', textAlign: 'left', position: 'relative',
+                    }}
+                    onMouseEnter={e => { if (!isActive) { e.currentTarget.style.background='rgba(255,255,255,0.04)'; e.currentTarget.style.color='var(--text)'; }}}
+                    onMouseLeave={e => { if (!isActive) { e.currentTarget.style.background='transparent'; e.currentTarget.style.color='var(--muted2)'; }}}
+                  >
+                    {isActive && <div style={{ position:'absolute', left:0, top:'50%', transform:'translateY(-50%)', width:3, height:14, borderRadius:2, background:'var(--cyan)' }}/>}
+                    <span style={{ fontSize: 12 }}>📌</span>
+                    {item.label}
+                    <button onClick={e => togglePin(item.id, e)} title="Unpin"
+                      style={{ marginLeft:'auto', background:'none', border:'none', cursor:'pointer', color:'rgba(0,229,255,0.5)', fontSize:12, padding:'0 2px', display:'flex', alignItems:'center' }}>
+                      ×
+                    </button>
+                  </button>
+                );
+              })}
+              <div style={{ height: 1, background: 'var(--border)', margin: '8px 8px 0' }}/>
+            </div>
+          );
+        })()}
+
+        {sections.map(sec => (
+          <div key={sec.label} style={{ marginBottom: 16 }}>
+            <div style={{
+              fontSize: 10, fontWeight: 600, letterSpacing: '0.08em',
+              color: 'var(--muted)', textTransform: 'uppercase',
+              padding: '0 8px', marginBottom: 4,
+            }}>{sec.label}</div>
+            {sec.items.map(item => {
+              const isActive = active === item.id;
+              return (
+                <button key={item.id} onClick={() => onNav(item.id)}
+                  style={{
+                    width: '100%', display: 'flex', alignItems: 'center', gap: 9,
+                    padding: '8px 10px', borderRadius: 8, border: 'none',
+                    cursor: 'pointer', marginBottom: 2,
+                    background: isActive ? 'rgba(0,229,255,0.1)' : item.accent ? 'rgba(0,229,255,0.06)' : 'transparent',
+                    color: isActive ? 'var(--cyan)' : item.accent ? 'var(--cyan)' : 'var(--muted2)',
+                    fontFamily: 'var(--font-body)', fontSize: 13.5, fontWeight: isActive || item.accent ? 500 : 400,
+                    transition: 'all 0.18s ease', textAlign: 'left',
+                    position: 'relative',
+                    border: item.accent && !isActive ? '1px dashed rgba(0,229,255,0.2)' : 'none',
+                  }}
+                  onMouseEnter={e => { setHoveredPin(item.id); if (!isActive) { e.currentTarget.style.background='rgba(0,229,255,0.1)'; e.currentTarget.style.color='var(--cyan)'; }}}
+                  onMouseLeave={e => { setHoveredPin(null); if (!isActive) { e.currentTarget.style.background=item.accent?'rgba(0,229,255,0.06)':'transparent'; e.currentTarget.style.color=item.accent?'var(--cyan)':'var(--muted2)'; }}}
+                >
+                  {isActive && <div style={{
+                    position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)',
+                    width: 3, height: 16, borderRadius: 2, background: 'var(--cyan)',
+                  }}/>}
+                  <Icon name={item.icon} size={15} color={isActive ? 'var(--cyan)' : 'currentColor'}/>
+                  {item.label}
+                  {/* Pin button — shows on hover for dashboard items */}
+                  {sec.label === 'Dashboards' && item.id !== 'dash-wizard' && hoveredPin === item.id && (
+                    <button onClick={e => togglePin(item.id, e)} title={pinned.includes(item.id) ? 'Unpin' : 'Pin to top'}
+                      style={{
+                        marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer',
+                        color: pinned.includes(item.id) ? 'var(--cyan)' : 'var(--muted)',
+                        fontSize: 12, padding: '0 2px', display: 'flex', alignItems: 'center',
+                        transition: 'color 0.15s',
+                      }}>
+                      📌
+                    </button>
+                  )}
+                  {item.id === 'ai' && (
+                    <div style={{
+                      marginLeft: 'auto', fontSize: 10, fontFamily: 'var(--font-mono)',
+                      background: 'rgba(180,76,255,0.15)', color: 'var(--purple)',
+                      border: '1px solid rgba(180,76,255,0.25)', borderRadius: 4,
+                      padding: '1px 5px',
+                    }}>NEW</div>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        ))}
+      </nav>
+
+      {/* Footer */}
+      <div style={{
+        padding: '12px 10px', borderTop: '1px solid var(--border)',
+        display: 'flex', alignItems: 'center', gap: 10,
+      }}>
+        <div style={{
+          width: 30, height: 30, borderRadius: '50%',
+          background: 'linear-gradient(135deg, #00E5FF22, #B44CFF22)',
+          border: '1px solid var(--border2)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 12, fontWeight: 600, color: 'var(--muted2)',
+        }}>JD</div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 12.5, fontWeight: 500, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Jamie Dev</div>
+          <div style={{ fontSize: 11, color: 'var(--muted)', fontFamily: 'var(--font-mono)' }}>Admin</div>
+        </div>
+        <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', padding: 4 }}>
+          <Icon name="settings" size={14}/>
+        </button>
+      </div>
+    </aside>
+  );
+};
+
+// ─── Topbar ───────────────────────────────────────────────────────────────────
+const Topbar = ({ title, subtitle }) => (
+  <header style={{
+    height: 56, borderBottom: '1px solid var(--border)',
+    display: 'flex', alignItems: 'center', padding: '0 24px',
+    gap: 16, flexShrink: 0, background: 'rgba(11,15,25,0.6)',
+    backdropFilter: 'blur(8px)',
+  }}>
+    <div style={{ flex: 1 }}>
+      <div style={{ fontFamily: 'var(--font-head)', fontWeight: 600, fontSize: 16, color: 'var(--text)' }}>{title}</div>
+      {subtitle && <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 1 }}>{subtitle}</div>}
+    </div>
+    <div style={{
+      display: 'flex', alignItems: 'center',
+      background: 'var(--glass)', border: '1px solid var(--border)',
+      borderRadius: 8, padding: '6px 12px', gap: 8, width: 220,
+    }}>
+      <Icon name="search" size={13} color="var(--muted)"/>
+      <span style={{ fontSize: 13, color: 'var(--muted)', fontFamily: 'var(--font-body)' }}>Quick search…</span>
+      <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--muted)', fontFamily: 'var(--font-mono)', background: 'rgba(255,255,255,0.05)', padding: '1px 5px', borderRadius: 4 }}>⌘K</span>
+    </div>
+    <button style={{
+      background: 'none', border: '1px solid var(--border)', borderRadius: 8,
+      padding: '6px 8px', cursor: 'pointer', color: 'var(--muted2)', position: 'relative',
+    }}>
+      <Icon name="bell" size={15}/>
+      <div style={{
+        position: 'absolute', top: 4, right: 4, width: 7, height: 7,
+        background: 'var(--cyan)', borderRadius: '50%', border: '1.5px solid var(--bg)',
+      }}/>
+    </button>
+  </header>
+);
+
+// ─── Metric Card ─────────────────────────────────────────────────────────────
+const MetricCard = ({ icon, label, value, trend, trendDir, sparkData, accentColor, delay = 0 }) => {
+  const [hovered, setHovered] = React.useState(false);
+  const cls = ['fade-up-1','fade-up-2','fade-up-3','fade-up-4'][delay] || 'fade-up';
+  return (
+    <div className={cls}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        background: hovered ? 'var(--glass2)' : 'var(--glass)',
+        border: `1px solid ${hovered ? 'rgba(255,255,255,0.12)' : 'var(--border)'}`,
+        borderRadius: 14, padding: '20px 20px 16px',
+        display: 'flex', flexDirection: 'column', gap: 14,
+        cursor: 'default', transition: 'all 0.2s ease',
+        boxShadow: hovered ? `0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06)` : 'none',
+        transform: hovered ? 'translateY(-2px)' : 'none',
+      }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+        <div style={{
+          width: 36, height: 36, borderRadius: 10,
+          background: `${accentColor}18`,
+          border: `1px solid ${accentColor}30`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <Icon name={icon} size={16} color={accentColor}/>
+        </div>
+        <div style={{
+          fontSize: 11, fontFamily: 'var(--font-mono)',
+          color: trendDir === 'up' ? 'var(--success)' : trendDir === 'down' ? 'var(--error)' : 'var(--muted)',
+          background: trendDir === 'up' ? 'rgba(0,200,83,0.1)' : trendDir === 'down' ? 'rgba(255,23,68,0.1)' : 'rgba(107,122,154,0.15)',
+          border: `1px solid ${trendDir === 'up' ? 'rgba(0,200,83,0.2)' : trendDir === 'down' ? 'rgba(255,23,68,0.2)' : 'rgba(107,122,154,0.2)'}`,
+          borderRadius: 6, padding: '2px 7px',
+        }}>{trend}</div>
+      </div>
+      <div>
+        <div style={{ fontFamily: 'var(--font-head)', fontSize: 32, fontWeight: 700, color: 'var(--text)', lineHeight: 1 }}>{value}</div>
+        <div style={{ fontSize: 12.5, color: 'var(--muted)', marginTop: 5 }}>{label}</div>
+      </div>
+      <div style={{ marginTop: 'auto' }}>
+        <Sparkline data={sparkData} color={accentColor}/>
+      </div>
+    </div>
+  );
+};
+
+// ─── AI Insight Card ──────────────────────────────────────────────────────────
+const AIInsightCard = ({ title, body, action, delay = 0 }) => {
+  const [hovered, setHovered] = React.useState(false);
+  const cls = ['fade-up-1','fade-up-2','fade-up-3'][delay] || 'fade-up';
+  return (
+    <div className={cls}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        background: hovered ? 'var(--glass2)' : 'var(--glass)',
+        borderRadius: 14, padding: '18px 20px',
+        border: '1px solid var(--border)',
+        borderLeft: '3px solid transparent',
+        backgroundImage: hovered
+          ? `linear-gradient(var(--glass2), var(--glass2)), var(--grad)`
+          : `linear-gradient(var(--glass), var(--glass)), var(--grad)`,
+        backgroundOrigin: 'border-box',
+        backgroundClip: 'padding-box, border-box',
+        transition: 'all 0.22s ease',
+        transform: hovered ? 'translateY(-2px)' : 'none',
+        boxShadow: hovered ? '0 8px 32px rgba(0,0,0,0.35)' : 'none',
+      }}>
+      <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+        {/* Pulsing AI dot */}
+        <div style={{ position: 'relative', flexShrink: 0, marginTop: 2 }}>
+          <div style={{
+            width: 28, height: 28, borderRadius: 8,
+            background: 'linear-gradient(135deg, rgba(0,229,255,0.15), rgba(180,76,255,0.15))',
+            border: '1px solid rgba(180,76,255,0.3)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <Icon name="sparkles" size={13} color="var(--purple)"/>
+          </div>
+          <div style={{
+            position: 'absolute', top: -2, right: -2,
+            width: 8, height: 8, borderRadius: '50%',
+            background: 'var(--cyan)',
+            border: '1.5px solid var(--bg)',
+            animation: 'pulse-dot 2s ease infinite',
+          }}/>
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
+            <span style={{ fontSize: 12.5, fontWeight: 600, fontFamily: 'var(--font-head)', color: 'var(--text)' }}>{title}</span>
+            <span style={{
+              fontSize: 10, fontFamily: 'var(--font-mono)',
+              background: 'rgba(180,76,255,0.15)', color: 'var(--purple)',
+              border: '1px solid rgba(180,76,255,0.25)', borderRadius: 4, padding: '1px 6px',
+            }}>AI</span>
+          </div>
+          <p style={{ fontSize: 13, color: 'var(--muted2)', lineHeight: 1.55, margin: 0 }}>{body}</p>
+          {action && (
+            <button style={{
+              marginTop: 12, padding: '6px 14px', borderRadius: 8,
+              background: 'rgba(0,229,255,0.1)', border: '1px solid rgba(0,229,255,0.25)',
+              color: 'var(--cyan)', fontSize: 12.5, fontWeight: 500, cursor: 'pointer',
+              fontFamily: 'var(--font-body)', display: 'inline-flex', alignItems: 'center', gap: 6,
+              transition: 'all 0.15s ease',
+            }}
+              onMouseEnter={e => { e.currentTarget.style.background='rgba(0,229,255,0.18)'; }}
+              onMouseLeave={e => { e.currentTarget.style.background='rgba(0,229,255,0.1)'; }}
+            >
+              {action} <Icon name="arrowRight" size={12} color="var(--cyan)"/>
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ─── Dashboard Screen ─────────────────────────────────────────────────────────
+const DashboardScreen = () => {
+  const metrics = [
+    { icon:'gitPR',    label:'PRs awaiting review',   value:'14',    trend:'+3 today',  trendDir:'down',    accentColor:'var(--cyan)',    sparkData:[4,7,5,9,6,8,11,14], delay:0 },
+    { icon:'xCircle',  label:'Failed builds (24h)',    value:'3',     trend:'−5 vs avg', trendDir:'up',      accentColor:'var(--error)',   sparkData:[12,9,11,7,5,8,4,3],  delay:1 },
+    { icon:'alertTri', label:'Blocked tasks',          value:'7',     trend:'No change', trendDir:'neutral', accentColor:'var(--warning)', sparkData:[5,6,7,7,6,8,7,7],    delay:2 },
+    { icon:'clock',    label:'Median CI time',         value:'4m 22s',trend:'−18s',      trendDir:'up',      accentColor:'var(--purple)',  sparkData:[8,7,9,6,7,5,5,4],    delay:3 },
+  ];
+  const insights = [
+    { title:'CI slowdown detected in monorepo', body:'3 workflows exceeded p95 latency over the last 6 hours. Root cause appears to be a Docker layer cache miss introduced in commit a3f91b.', action:'View affected jobs', delay:0 },
+    { title:'PR review load imbalanced', body:'@alex.kim has 9 open PRs awaiting review while the team average is 2.3. Consider redistributing or enabling auto-assignment.', action:'Open PR queue', delay:1 },
+    { title:'Deployment cadence slowing', body:'Release frequency dropped 40% this week compared to the 4-week rolling average. No clear blocker found — recommend a retro.', delay:2 },
+  ];
+  return (
+    <div style={{ padding: '24px 28px', overflow: 'auto', flex: 1 }}>
+      {/* Metric grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 28 }}>
+        {metrics.map((m, i) => <MetricCard key={i} {...m} delay={i}/>)}
+      </div>
+      {/* AI section */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+        <span style={{ fontFamily: 'var(--font-head)', fontWeight: 600, fontSize: 14, color: 'var(--text)' }}>AI Insights</span>
+        <div style={{ flex: 1, height: 1, background: 'var(--border)' }}/>
+        <span style={{ fontSize: 11, color: 'var(--muted)', fontFamily: 'var(--font-mono)' }}>Updated 2 min ago</span>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14, marginBottom: 24 }}>
+        {insights.map((ins, i) => <AIInsightCard key={i} {...ins} delay={i}/>)}
+      </div>
+      {/* Activity strip */}
+      <div className="fade-up-4" style={{
+        background: 'var(--glass)', border: '1px solid var(--border)', borderRadius: 14, padding: '18px 20px',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+          <span style={{ fontFamily: 'var(--font-head)', fontWeight: 600, fontSize: 13.5, color: 'var(--text)' }}>Recent Activity</span>
+          <button style={{ background:'none', border:'none', color:'var(--cyan)', fontSize:12, cursor:'pointer', fontFamily:'var(--font-body)' }}>View all →</button>
+        </div>
+        {[
+          { who:'push → main', what:'CI pipeline triggered for feat/auth-tokens', when:'2 min ago', status:'running', color:'var(--cyan)' },
+          { who:'alex.kim',    what:'Merged PR #812: Add rate limiting middleware', when:'14 min ago', status:'success', color:'var(--success)' },
+          { who:'sara.chen',  what:'PR #814 opened: Refactor API layer', when:'31 min ago', status:'open', color:'var(--warning)' },
+          { who:'ci-bot',     what:'Deploy to staging failed — build #4221', when:'1 hr ago', status:'error', color:'var(--error)' },
+        ].map((ev, i) => (
+          <div key={i} style={{
+            display:'flex', alignItems:'center', gap:12, padding:'9px 0',
+            borderTop: i > 0 ? '1px solid var(--border)' : 'none',
+          }}>
+            <div style={{ width:6, height:6, borderRadius:'50%', background:ev.color, flexShrink:0 }}/>
+            <div style={{ flex:1, minWidth:0 }}>
+              <div style={{ fontSize:13, color:'var(--text)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>
+                <span style={{ fontFamily:'var(--font-mono)', fontSize:11.5, color:'var(--muted2)', marginRight:6 }}>{ev.who}</span>
+                {ev.what}
+              </div>
+            </div>
+            <span style={{ fontSize:11, color:'var(--muted)', fontFamily:'var(--font-mono)', flexShrink:0 }}>{ev.when}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// ─── Setup Wizard ─────────────────────────────────────────────────────────────
+const WizardScreen = () => {
+  const [step, setStep] = React.useState(0);
+  const steps = ['Select Sources', 'Authenticate', 'Configure', 'Review'];
+  const sources = [
+    { id:'github', icon:'github', name:'GitHub', desc:'Repos, PRs, CI workflows', color:'#E8EDF5' },
+    { id:'jira',   icon:'jira',  name:'Jira',   desc:'Issues, sprints, backlogs', color:'#2684FF' },
+    { id:'gitlab', icon:'gitlab',name:'GitLab', desc:'Merge requests & pipelines', color:'#FC6D26' },
+    { id:'linear', icon:'linear',name:'Linear', desc:'Projects, cycles & issues', color:'#5E6AD2' },
+    { id:'slack',  icon:'slack', name:'Slack',  desc:'Team communications', color:'#4A154B' },
+    { id:'pagerduty',icon:'pagerduty',name:'PagerDuty',desc:'Incidents & on-call', color:'#06AC38' },
+  ];
+  const [selected, setSelected] = React.useState(['github']);
+
+  return (
+    <div style={{ flex:1, overflow:'auto', padding:'32px 40px', display:'flex', flexDirection:'column', alignItems:'center' }}>
+      {/* Progress */}
+      <div className="fade-up" style={{ width:'100%', maxWidth:680, marginBottom:40 }}>
+        <div style={{ display:'flex', alignItems:'center', gap:0 }}>
+          {steps.map((s, i) => (
+            <React.Fragment key={i}>
+              <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:8 }}>
+                <div style={{
+                  width:32, height:32, borderRadius:'50%',
+                  background: i < step ? 'var(--cyan)' : i === step ? 'rgba(0,229,255,0.15)' : 'var(--glass)',
+                  border: i <= step ? '2px solid var(--cyan)' : '2px solid var(--border)',
+                  display:'flex', alignItems:'center', justifyContent:'center',
+                  transition:'all 0.3s ease',
+                  boxShadow: i === step ? '0 0 12px rgba(0,229,255,0.3)' : 'none',
+                }}>
+                  {i < step
+                    ? <Icon name="check" size={14} color="#0B0F19"/>
+                    : <span style={{ fontSize:12, fontWeight:600, fontFamily:'var(--font-mono)', color: i === step ? 'var(--cyan)' : 'var(--muted)' }}>{i+1}</span>
+                  }
+                </div>
+                <span style={{ fontSize:11, color: i <= step ? 'var(--text)' : 'var(--muted)', fontWeight: i === step ? 600 : 400, whiteSpace:'nowrap' }}>{s}</span>
+              </div>
+              {i < steps.length-1 && (
+                <div style={{ flex:1, height:2, background: i < step ? 'var(--cyan)' : 'var(--border)', margin:'0 8px', marginBottom:22, transition:'all 0.4s ease' }}/>
+              )}
+            </React.Fragment>
+          ))}
+        </div>
+      </div>
+
+      {/* Panel */}
+      <div className="fade-up-1" style={{
+        width:'100%', maxWidth:680,
+        background:'var(--glass)', border:'1px solid var(--border)', borderRadius:18,
+        overflow:'hidden',
+      }}>
+        <div style={{ padding:'24px 28px', borderBottom:'1px solid var(--border)' }}>
+          <div style={{ fontFamily:'var(--font-head)', fontWeight:700, fontSize:20, color:'var(--text)', marginBottom:4 }}>
+            {step === 0 && 'Choose your data sources'}
+            {step === 1 && 'Authenticate with GitHub'}
+            {step === 2 && 'Configure sync settings'}
+            {step === 3 && 'Review & activate'}
+          </div>
+          <div style={{ fontSize:13, color:'var(--muted)' }}>
+            {step === 0 && 'Select the tools your team uses. You can add more later.'}
+            {step === 1 && 'Grant read-only access to your GitHub organisation.'}
+            {step === 2 && 'Set refresh intervals and which repos to include.'}
+            {step === 3 && 'Everything looks good. Metraly will begin indexing shortly.'}
+          </div>
+        </div>
+
+        <div style={{ padding:'24px 28px' }}>
+          {step === 0 && (
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:12 }}>
+              {sources.map(src => {
+                const sel = selected.includes(src.id);
+                return (
+                  <button key={src.id} onClick={() => setSelected(p => sel ? p.filter(x=>x!==src.id) : [...p,src.id])}
+                    style={{
+                      padding:'16px 14px', borderRadius:12, cursor:'pointer',
+                      border: sel ? '2px solid var(--cyan)' : '1px solid var(--border)',
+                      background: sel ? 'rgba(0,229,255,0.06)' : 'transparent',
+                      textAlign:'left', transition:'all 0.15s ease',
+                      boxShadow: sel ? '0 0 0 1px rgba(0,229,255,0.2)' : 'none',
+                    }}>
+                    <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:8 }}>
+                      <div style={{ width:32, height:32, borderRadius:8, background:`${src.color}15`, border:`1px solid ${src.color}25`, display:'flex',alignItems:'center',justifyContent:'center' }}>
+                        <Icon name={src.icon} size={16} color={src.color}/>
+                      </div>
+                      {sel && (
+                        <div style={{ width:18, height:18, borderRadius:'50%', background:'var(--cyan)', display:'flex',alignItems:'center',justifyContent:'center' }}>
+                          <Icon name="check" size={10} color="#0B0F19"/>
+                        </div>
+                      )}
+                    </div>
+                    <div style={{ fontSize:13, fontWeight:600, color:'var(--text)', fontFamily:'var(--font-head)', marginBottom:3 }}>{src.name}</div>
+                    <div style={{ fontSize:11.5, color:'var(--muted)' }}>{src.desc}</div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {step === 1 && (
+            <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
+              <div style={{
+                background:'rgba(0,229,255,0.05)', border:'1px solid rgba(0,229,255,0.15)',
+                borderRadius:12, padding:'16px 18px', display:'flex', gap:12, alignItems:'center',
+              }}>
+                <Icon name="github" size={24} color="var(--text)"/>
+                <div>
+                  <div style={{ fontSize:14, fontWeight:600, color:'var(--text)', fontFamily:'var(--font-head)' }}>GitHub OAuth</div>
+                  <div style={{ fontSize:12, color:'var(--muted)', marginTop:2 }}>Read-only access · Your tokens are stored encrypted on your own server</div>
+                </div>
+                <button style={{
+                  marginLeft:'auto', padding:'8px 16px', borderRadius:8, cursor:'pointer',
+                  background:'var(--text)', border:'none', color:'var(--bg)', fontSize:13, fontWeight:600,
+                }}>Connect →</button>
+              </div>
+              <div style={{ fontFamily:'var(--font-mono)', fontSize:11.5, color:'var(--muted)', background:'rgba(0,0,0,0.3)', padding:'12px 16px', borderRadius:10, border:'1px solid var(--border)' }}>
+                <div style={{marginBottom:4}}>$ metraly auth github --org my-org</div>
+                <div style={{color:'var(--success)'}}>✓ Waiting for OAuth callback on localhost:7842…</div>
+              </div>
+            </div>
+          )}
+
+          {step === 2 && (
+            <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+              {[
+                { label:'Sync interval', value:'Every 5 minutes', type:'select' },
+                { label:'Repositories', value:'All repos in org', type:'select' },
+                { label:'Include archived repos', value:false, type:'toggle' },
+                { label:'Historical backfill', value:'90 days', type:'select' },
+              ].map((row,i) => (
+                <div key={i} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'12px 0', borderBottom:'1px solid var(--border)' }}>
+                  <span style={{ fontSize:13.5, color:'var(--text)' }}>{row.label}</span>
+                  {row.type === 'toggle'
+                    ? <div style={{ width:38, height:21, borderRadius:12, background:'var(--border)', padding:2, cursor:'pointer', display:'flex', alignItems:'center' }}>
+                        <div style={{ width:17, height:17, borderRadius:'50%', background:'var(--muted)' }}/>
+                      </div>
+                    : <div style={{ fontSize:13, color:'var(--cyan)', fontFamily:'var(--font-mono)', display:'flex', alignItems:'center', gap:5, cursor:'pointer' }}>
+                        {row.value} <Icon name="chevronDown" size={12} color="var(--cyan)"/>
+                      </div>
+                  }
+                </div>
+              ))}
+            </div>
+          )}
+
+          {step === 3 && (
+            <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:20, padding:'20px 0' }}>
+              <div style={{ width:64, height:64, borderRadius:20, background:'rgba(0,200,83,0.12)', border:'1px solid rgba(0,200,83,0.25)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                <Icon name="check" size={28} color="var(--success)"/>
+              </div>
+              <div style={{ textAlign:'center' }}>
+                <div style={{ fontFamily:'var(--font-head)', fontWeight:700, fontSize:18, color:'var(--text)', marginBottom:6 }}>You're all set</div>
+                <div style={{ fontSize:13, color:'var(--muted)', maxWidth:380 }}>
+                  Metraly will begin indexing your GitHub repositories. First metrics appear in ~2 minutes.
+                </div>
+              </div>
+              <div style={{ display:'flex', flexDirection:'column', gap:8, width:'100%', maxWidth:340 }}>
+                {selected.map(id => {
+                  const src = sources.find(s=>s.id===id);
+                  return src ? (
+                    <div key={id} style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 14px', background:'rgba(0,200,83,0.06)', border:'1px solid rgba(0,200,83,0.15)', borderRadius:10 }}>
+                      <Icon name={src.icon} size={15} color={src.color}/>
+                      <span style={{ fontSize:13, color:'var(--text)' }}>{src.name}</span>
+                      <div style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:5 }}>
+                        <div style={{ width:6, height:6, borderRadius:'50%', background:'var(--success)', animation:'pulse-dot 2s infinite' }}/>
+                        <span style={{ fontSize:11, color:'var(--success)', fontFamily:'var(--font-mono)' }}>Connecting</span>
+                      </div>
+                    </div>
+                  ) : null;
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Footer actions */}
+        <div style={{ padding:'16px 28px', borderTop:'1px solid var(--border)', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+          <button onClick={() => setStep(s => Math.max(0, s-1))} style={{
+            padding:'8px 18px', borderRadius:9, cursor: step===0 ? 'default':'pointer',
+            background:'transparent', border:'1px solid var(--border)',
+            color: step===0 ? 'var(--muted)' : 'var(--text)', fontSize:13, fontFamily:'var(--font-body)',
+            opacity: step===0 ? 0.4 : 1, transition:'all 0.15s',
+          }}>Back</button>
+          <button onClick={() => setStep(s => Math.min(steps.length-1, s+1))} style={{
+            padding:'8px 22px', borderRadius:9, cursor:'pointer',
+            background: step===steps.length-1 ? 'var(--success)' : 'var(--grad)',
+            border:'none', color:'#fff', fontSize:13.5, fontWeight:600, fontFamily:'var(--font-body)',
+            transition:'all 0.15s', boxShadow: step===steps.length-1 ? '0 0 16px rgba(0,200,83,0.3)' : '0 0 16px rgba(0,229,255,0.2)',
+          }}>
+            {step === steps.length-1 ? 'Go to Dashboard' : 'Continue →'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ─── Plugin Marketplace ───────────────────────────────────────────────────────
+const PluginScreen = () => {
+  const [search, setSearch] = React.useState('');
+  const [filter, setFilter] = React.useState('All');
+  const filters = ['All', 'Sources', 'Exporters', 'AI', 'Alerts'];
+  const plugins = [
+    { name:'GitHub Advanced',  cat:'Sources',   icon:'github',   desc:'Deep PR analytics, CODEOWNERS, security alerts and advanced workflow metrics.',  rating:4.9, installs:'12.4k', installed:true,  color:'#E8EDF5' },
+    { name:'Jira Sync Pro',    cat:'Sources',   icon:'jira',     desc:'Bi-directional sync with Jira epics, sprints, velocity and burndown charts.',       rating:4.7, installs:'8.1k',  installed:false, color:'#2684FF' },
+    { name:'AI Explainer',     cat:'AI',        icon:'brain',    desc:'Adds natural language summaries to any metric card. Powered by your local LLM.',    rating:4.8, installs:'5.6k',  installed:true,  color:'#B44CFF' },
+    { name:'Slack Digest',     cat:'Alerts',    icon:'slack',    desc:'Daily and weekly engineering digests posted directly to your Slack channels.',       rating:4.5, installs:'9.3k',  installed:false, color:'#4A154B' },
+    { name:'PagerDuty Bridge', cat:'Alerts',    icon:'pagerduty',desc:'Surface incident impact on engineering metrics. MTTD, MTTR in your dashboards.',     rating:4.6, installs:'3.8k',  installed:false, color:'#06AC38' },
+    { name:'CSV Exporter',     cat:'Exporters', icon:'database', desc:'Export any dashboard to CSV with configurable date ranges and field mapping.',        rating:4.2, installs:'6.7k',  installed:false, color:'#FF9100' },
+    { name:'Linear Tracker',   cat:'Sources',   icon:'linear',   desc:'Sync Linear cycles, projects and issue velocity into your engineering health view.',  rating:4.8, installs:'4.2k',  installed:false, color:'#5E6AD2' },
+    { name:'Grafana Bridge',   cat:'Exporters', icon:'chart',    desc:'Push Metraly metrics into your existing Grafana instance via a native datasource.',   rating:4.4, installs:'2.9k',  installed:false, color:'#FF6B35' },
+    { name:'AI Anomaly Guard', cat:'AI',        icon:'sparkles', desc:'ML-powered anomaly detection across all your DORA metrics with Slack/email alerts.', rating:4.9, installs:'1.7k',  installed:false, color:'#00E5FF' },
+  ];
+  const shown = plugins.filter(p =>
+    (filter === 'All' || p.cat === filter) &&
+    (p.name.toLowerCase().includes(search.toLowerCase()) || p.desc.toLowerCase().includes(search.toLowerCase()))
+  );
+  return (
+    <div style={{ flex:1, overflow:'auto', padding:'24px 28px' }}>
+      {/* Search + filters */}
+      <div className="fade-up" style={{ display:'flex', gap:12, marginBottom:22, alignItems:'center' }}>
+        <div style={{
+          flex:1, display:'flex', alignItems:'center', gap:10,
+          background:'var(--glass)', border:'1px solid var(--border)', borderRadius:10, padding:'8px 14px',
+        }}>
+          <Icon name="search" size={14} color="var(--muted)"/>
+          <input value={search} onChange={e=>setSearch(e.target.value)}
+            placeholder="Search plugins…"
+            style={{ background:'none', border:'none', outline:'none', color:'var(--text)', fontSize:13.5, fontFamily:'var(--font-body)', width:'100%' }}/>
+        </div>
+        <div style={{ display:'flex', gap:6 }}>
+          {filters.map(f => (
+            <button key={f} onClick={()=>setFilter(f)} style={{
+              padding:'7px 14px', borderRadius:8, cursor:'pointer',
+              border: filter===f ? '1px solid rgba(0,229,255,0.4)' : '1px solid var(--border)',
+              background: filter===f ? 'rgba(0,229,255,0.1)' : 'var(--glass)',
+              color: filter===f ? 'var(--cyan)' : 'var(--muted2)', fontSize:13, fontFamily:'var(--font-body)',
+              transition:'all 0.15s',
+            }}>{f}</button>
+          ))}
+        </div>
+      </div>
+      {/* Grid */}
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:14 }}>
+        {shown.map((p, i) => {
+          const [hov, setHov] = React.useState(false);
+          return (
+            <div key={p.name} className={`fade-up-${Math.min(i+1,6)}`}
+              onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
+              style={{
+                background: hov ? 'var(--glass2)' : 'var(--glass)',
+                border: hov ? '1px solid var(--border2)' : '1px solid var(--border)',
+                borderRadius:14, padding:'18px 18px 16px',
+                transition:'all 0.2s ease', transform: hov ? 'translateY(-2px)' : 'none',
+                boxShadow: hov ? '0 8px 32px rgba(0,0,0,0.35)' : 'none',
+                display:'flex', flexDirection:'column', gap:12,
+              }}>
+              <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between' }}>
+                <div style={{ width:38, height:38, borderRadius:10, background:`${p.color}15`, border:`1px solid ${p.color}25`, display:'flex', alignItems:'center', justifyContent:'center' }}>
+                  <Icon name={p.icon} size={18} color={p.color}/>
+                </div>
+                {p.installed && (
+                  <div style={{ fontSize:10.5, fontFamily:'var(--font-mono)', color:'var(--success)', background:'rgba(0,200,83,0.1)', border:'1px solid rgba(0,200,83,0.2)', borderRadius:5, padding:'2px 7px' }}>Installed</div>
+                )}
+              </div>
+              <div>
+                <div style={{ fontFamily:'var(--font-head)', fontWeight:600, fontSize:14, color:'var(--text)', marginBottom:5 }}>{p.name}</div>
+                <div style={{ fontSize:12.5, color:'var(--muted)', lineHeight:1.5 }}>{p.desc}</div>
+              </div>
+              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginTop:'auto' }}>
+                <div style={{ display:'flex', alignItems:'center', gap:5 }}>
+                  <Icon name="star" size={12} color="#FFD600" style={{ fill:'#FFD600' }}/>
+                  <span style={{ fontSize:12, color:'var(--muted2)', fontFamily:'var(--font-mono)' }}>{p.rating}</span>
+                  <span style={{ fontSize:11, color:'var(--muted)' }}>· {p.installs}</span>
+                </div>
+                <button style={{
+                  padding:'6px 14px', borderRadius:8, cursor:'pointer', fontSize:12, fontWeight:500,
+                  fontFamily:'var(--font-body)', transition:'all 0.15s',
+                  background: p.installed ? 'transparent' : 'rgba(0,229,255,0.1)',
+                  border: p.installed ? '1px solid var(--border)' : '1px solid rgba(0,229,255,0.25)',
+                  color: p.installed ? 'var(--muted)' : 'var(--cyan)',
+                }}>{p.installed ? 'Manage' : 'Install'}</button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+// ─── Empty State ──────────────────────────────────────────────────────────────
+const EmptyScreen = () => (
+  <div style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:40 }}>
+    <div className="fade-up" style={{
+      width:96, height:96, borderRadius:28,
+      background:'rgba(0,229,255,0.06)', border:'1px solid rgba(0,229,255,0.15)',
+      display:'flex', alignItems:'center', justifyContent:'center', marginBottom:28,
+      boxShadow:'0 0 60px rgba(0,229,255,0.08)',
+    }}>
+      <Icon name="chart" size={44} color="rgba(0,229,255,0.4)"/>
+    </div>
+    <div className="fade-up-1" style={{ fontFamily:'var(--font-head)', fontWeight:700, fontSize:24, color:'var(--text)', marginBottom:10, textAlign:'center' }}>
+      No data yet
+    </div>
+    <div className="fade-up-2" style={{ fontSize:14, color:'var(--muted)', maxWidth:380, textAlign:'center', lineHeight:1.7, marginBottom:30 }}>
+      This dashboard is empty because no sources are connected. Connect GitHub, Jira, or another tool to start seeing your engineering metrics here.
+    </div>
+    <div className="fade-up-3" style={{ display:'flex', gap:12 }}>
+      <button style={{
+        padding:'10px 22px', borderRadius:10, cursor:'pointer',
+        background:'var(--grad)', border:'none', color:'#fff',
+        fontSize:14, fontWeight:600, fontFamily:'var(--font-body)',
+        boxShadow:'0 0 20px rgba(0,229,255,0.25)',
+        display:'flex', alignItems:'center', gap:8,
+      }}>
+        <Icon name="link" size={15} color="#fff"/> Connect a source
+      </button>
+      <button style={{
+        padding:'10px 22px', borderRadius:10, cursor:'pointer',
+        background:'transparent', border:'1px solid var(--border)',
+        color:'var(--muted2)', fontSize:14, fontFamily:'var(--font-body)',
+      }}>View docs</button>
+    </div>
+    {/* Subtle decorative grid */}
+    <div className="fade-up-4" style={{ marginTop:52, display:'flex', gap:12 }}>
+      {[...Array(4)].map((_,i) => (
+        <div key={i} style={{
+          width:140, height:88, borderRadius:12,
+          background:'var(--glass)', border:'1px solid var(--border)',
+          opacity: 0.3 + i*0.1,
+          backgroundImage:'repeating-linear-gradient(45deg, rgba(255,255,255,0.02) 0, rgba(255,255,255,0.02) 1px, transparent 1px, transparent 50%)',
+          backgroundSize:'12px 12px',
+        }}/>
+      ))}
+    </div>
+  </div>
+);
+
+// ─── AI Insights Full Screen ──────────────────────────────────────────────────
+const AIScreen = () => {
+  const [input, setInput] = React.useState('');
+  const [messages, setMessages] = React.useState([
+    { role:'assistant', text:"Hi! I'm your Metraly AI assistant. Ask me anything about your engineering metrics, build trends, team health, or deployment patterns." },
+    { role:'user', text:'Why did CI time increase this week?' },
+    { role:'assistant', text:"Good question. Over the past 7 days, median CI time rose from 3m 41s to 4m 22s — a 19% increase.\n\nThe primary driver appears to be a 34% increase in test suite duration on the api-gateway service, starting Tuesday after commit d7a21f. That commit added 143 new integration tests.\n\nSecondary factor: Docker layer cache hit rate dropped from 91% to 67% on monorepo builds, likely due to a base image update." },
+  ]);
+
+  const send = async () => {
+    if (!input.trim()) return;
+    const userMsg = input;
+    setInput('');
+    setMessages(prev => [...prev, { role:'user', text:userMsg }]);
+    try {
+      const reply = await window.claude.complete(`You are an engineering intelligence AI for a platform called Metraly. Answer concisely and technically. User question: ${userMsg}`);
+      setMessages(prev => [...prev, { role:'assistant', text: reply }]);
+    } catch {
+      setMessages(prev => [...prev, { role:'assistant', text:'(AI unavailable in preview — responses are simulated)' }]);
+    }
+  };
+
+  return (
+    <div style={{ flex:1, display:'flex', flexDirection:'column', overflow:'hidden' }}>
+      <div style={{ flex:1, overflow:'auto', padding:'20px 28px', display:'flex', flexDirection:'column', gap:14 }}>
+        {messages.map((m, i) => (
+          <div key={i} style={{ display:'flex', gap:12, alignItems:'flex-start', animation:'fade-up 0.3s ease both', animationDelay:`${i*0.05}s` }}>
+            <div style={{
+              width:28, height:28, borderRadius:8, flexShrink:0,
+              background: m.role==='assistant' ? 'linear-gradient(135deg, rgba(0,229,255,0.2), rgba(180,76,255,0.2))' : 'rgba(255,255,255,0.06)',
+              border: m.role==='assistant' ? '1px solid rgba(180,76,255,0.3)' : '1px solid var(--border)',
+              display:'flex', alignItems:'center', justifyContent:'center',
+              marginTop:2,
+            }}>
+              {m.role==='assistant' ? <Icon name="sparkles" size={13} color="var(--purple)"/> : <span style={{fontSize:11, fontWeight:700, color:'var(--muted)'}}>JD</span>}
+            </div>
+            <div style={{
+              flex:1, background: m.role==='assistant' ? 'var(--glass)' : 'rgba(255,255,255,0.04)',
+              border:'1px solid var(--border)', borderRadius:12, padding:'12px 15px',
+              fontSize:13.5, color:'var(--text)', lineHeight:1.65,
+              whiteSpace:'pre-wrap',
+              borderTopLeftRadius: m.role==='assistant' ? 3 : 12,
+              borderTopRightRadius: m.role==='user' ? 3 : 12,
+            }}>{m.text}</div>
+          </div>
+        ))}
+      </div>
+      {/* Input */}
+      <div style={{ padding:'14px 28px', borderTop:'1px solid var(--border)', background:'rgba(11,15,25,0.7)' }}>
+        <div style={{
+          display:'flex', gap:10, alignItems:'flex-end',
+          background:'var(--glass)', border:'1px solid var(--border)',
+          borderRadius:12, padding:'10px 14px',
+        }}>
+          <div style={{ position:'relative', flexShrink:0, marginTop:1 }}>
+            <Icon name="sparkles" size={15} color="var(--purple)"/>
+            <div style={{ position:'absolute', top:-3, right:-3, width:7, height:7, borderRadius:'50%', background:'var(--cyan)', border:'1.5px solid var(--bg)', animation:'pulse-dot 2s infinite' }}/>
+          </div>
+          <input value={input} onChange={e=>setInput(e.target.value)}
+            onKeyDown={e=>e.key==='Enter'&&!e.shiftKey&&(e.preventDefault(),send())}
+            placeholder="Ask about your engineering metrics…"
+            style={{ flex:1, background:'none', border:'none', outline:'none', color:'var(--text)', fontSize:13.5, fontFamily:'var(--font-body)', resize:'none' }}/>
+          <button onClick={send} style={{
+            padding:'6px 14px', borderRadius:8, cursor:'pointer',
+            background:'var(--grad)', border:'none', color:'#fff', fontSize:12.5, fontWeight:600,
+          }}>Send</button>
+        </div>
+        <div style={{ textAlign:'center', marginTop:8, fontSize:11, color:'var(--muted)' }}>
+          Powered by your private on-premise AI · No data leaves your infra
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ─── Placeholder Screen ───────────────────────────────────────────────────────
+const PlaceholderScreen = ({ name }) => (
+  <div style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', flexDirection:'column', gap:10 }}>
+    <Icon name="layers" size={36} color="var(--muted)"/>
+    <div style={{ fontFamily:'var(--font-head)', fontSize:16, color:'var(--muted)' }}>{name}</div>
+    <div style={{ fontSize:13, color:'var(--muted)', opacity:0.6 }}>Screen in progress</div>
+  </div>
+);
+
+// ─── App Shell ────────────────────────────────────────────────────────────────
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "accentColor": "#00E5FF",
+  "sidebarCollapsed": false,
+  "density": "comfortable",
+  "showSparklines": true
+}/*EDITMODE-END*/;
+
+const App = () => {
+  const [tweaks, setTweak] = useTweaks(TWEAK_DEFAULTS);
+  const [active, setActive] = React.useState('dashboard');
+
+  const titles = {
+    dashboard:    ['Overview',          'Last updated 2 min ago'],
+    'dash-cto':   ['CTO Dashboard',     'Strategic health, DORA trends, team velocity'],
+    'dash-vp':    ['VP Engineering',    'Delivery health & team performance'],
+    'dash-tl':    ['Tech Lead',         'CI health, PR queue & sprint progress'],
+    'dash-devops':['DevOps / SRE',      'Deploy frequency, MTTR & incidents'],
+    'dash-ic':    ['My Dashboard',      'Personal metrics & sprint tasks'],
+    'dash-wizard':['New Dashboard',     'Build a custom dashboard'],
+    metrics:      ['Metrics Explorer',  'DORA, CI/CD, PR & custom metrics'],
+    ai:           ['AI Assistant',      'Private · On-premise inference'],
+    plugins:      ['Plugin Marketplace','Browse & install integrations'],
+    wizard:       ['Connect Sources',   'Onboarding wizard'],
+    settings:     ['Settings',          'Platform configuration'],
+  };
+  const [title, subtitle] = titles[active] || ['Metraly', ''];
+
+  const renderScreen = () => {
+    switch(active) {
+      case 'dashboard':   return <DashboardScreen/>;
+      case 'dash-cto':    return React.createElement(window.RoleDashboardScreen, { initialRole: 'cto',    onNewDashboard: () => setActive('dash-wizard') });
+      case 'dash-vp':     return React.createElement(window.RoleDashboardScreen, { initialRole: 'vp',     onNewDashboard: () => setActive('dash-wizard') });
+      case 'dash-tl':     return React.createElement(window.RoleDashboardScreen, { initialRole: 'tl',     onNewDashboard: () => setActive('dash-wizard') });
+      case 'dash-devops': return React.createElement(window.RoleDashboardScreen, { initialRole: 'devops', onNewDashboard: () => setActive('dash-wizard') });
+      case 'dash-ic':     return React.createElement(window.RoleDashboardScreen, { initialRole: 'ic',     onNewDashboard: () => setActive('dash-wizard') });
+      case 'dash-wizard': return React.createElement(window.DashboardWizardScreen, { onSave: () => setActive('dashboard'), onCancel: () => setActive('dashboard') });
+      case 'metrics':     return React.createElement(window.MetricsScreen);
+      case 'ai':          return <AIScreen/>;
+      case 'plugins':     return <PluginScreen/>;
+      case 'wizard':      return <WizardScreen/>;
+      default:            return <PlaceholderScreen name={title}/>;
+    }
+  };
+
+  return (
+    <div style={{ display:'flex', height:'100%', width:'100%', overflow:'hidden' }}>
+      <Sidebar active={active} onNav={setActive}/>
+      <div style={{ flex:1, display:'flex', flexDirection:'column', overflow:'hidden', minWidth:0 }}>
+        <Topbar title={title} subtitle={subtitle}/>
+        {renderScreen()}
+      </div>
+      <TweaksPanel>
+        <TweakSection title="Theme">
+          <TweakColor id="accentColor" label="Accent color" value={tweaks.accentColor} onChange={v=>setTweak('accentColor',v)}/>
+          <TweakRadio id="density" label="Density" value={tweaks.density} options={['compact','comfortable','spacious']} onChange={v=>setTweak('density',v)}/>
+        </TweakSection>
+        <TweakSection title="Display">
+          <TweakToggle id="showSparklines" label="Show sparklines" value={tweaks.showSparklines} onChange={v=>setTweak('showSparklines',v)}/>
+          <TweakToggle id="sidebarCollapsed" label="Collapse sidebar" value={tweaks.sidebarCollapsed} onChange={v=>setTweak('sidebarCollapsed',v)}/>
+        </TweakSection>
+      </TweaksPanel>
+    </div>
+  );
+};
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
