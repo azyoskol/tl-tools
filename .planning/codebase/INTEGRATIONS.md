@@ -115,4 +115,4 @@ Important docs consumed by planning:
 - Community Preview should defer ClickHouse in the runnable app.
 - TimescaleDB should be the near-term metrics query store.
 - ClickHouse remains a future candidate for raw event storage and dirty ingestion buffers.
-- `../docs/STATUS.md` should drive roadmap truth when README or local docs disagree.
+- `../docs/STATUS.md` should drive roadmap truth when moved app docs disagree.

@@ -33,7 +33,7 @@ Prevention: roadmap gates Pro work behind Community Preview data and UI readines
 
 Risk: README/marketing language claims features that are only designed.
 
-Prevention: use `../docs/STATUS.md` as canonical maturity source and keep local README honest.
+Prevention: use `../docs/STATUS.md` as canonical maturity source and keep moved app documentation honest.
 
 ### No Frontend Verification Harness
 

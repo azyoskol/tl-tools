@@ -63,9 +63,9 @@ Impact: license metadata conflicts with project instruction.
 
 ### 7. Canonical Status Lives Outside App Repo
 
-The user confirmed `../docs/STATUS.md` as canonical. The app repo has README and local docs that may disagree.
+The user confirmed `../docs/STATUS.md` as canonical. Local README and app-origin docs under `../docs/tech/app/` may disagree.
 
-Impact: future agents may plan from stale local docs unless `.planning/PROJECT.md` points to `../docs/STATUS.md`.
+Impact: future agents may plan from stale README or moved app docs unless `.planning/PROJECT.md` points to `../docs/STATUS.md`.
 
 ## Medium Priority Concerns
 
@@ -77,7 +77,7 @@ Impact: corrupt dashboard JSON can silently become zero-value state or writes ca
 
 ### 9. Auth Surface Is Partial
 
-Auth core exists, but API routes are not fully exposed in `cmd/api/main.go`. Login, refresh, logout, and OIDC endpoints from `BACKEND_PLAN.md` are absent from the active router.
+Auth core exists, but API routes are not fully exposed in `cmd/api/main.go`. Login, refresh, logout, and OIDC endpoints from `../docs/tech/app/BACKEND_PLAN.md` are absent from the active router.
 
 Impact: protected endpoints exist without a complete user-facing auth flow.
 
@@ -102,7 +102,7 @@ Impact: UI-heavy phases need manual verification until a test harness is added.
 ## Security Concerns
 
 - CORS allows `AllowedOrigins: []string{"*"}` with `AllowCredentials: true` in `cmd/api/main.go`, which is risky for authenticated endpoints.
-- Swagger/static docs serve from `docs/swagger` or `../docs/swagger`; ensure no sensitive docs are accidentally exposed.
+- Swagger/static docs serve from `../docs/tech/app/docs/swagger` or `../docs/swagger`; ensure no sensitive docs are accidentally exposed.
 - OIDC and refresh token handling need full route-level integration tests before exposure.
 - Plugin and AI systems are security-sensitive but currently unimplemented; follow `../docs/risks/technical-risks-and-mitigations.md` when planning those phases.
 

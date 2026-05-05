@@ -192,7 +192,7 @@ func main() {
 	r := NewRouter(km)
 
 	// Swagger documentation
-	swaggerDir := "docs/swagger"
+	swaggerDir := "../docs/tech/app/docs/swagger"
 	if _, err := os.Stat(swaggerDir); os.IsNotExist(err) {
 		swaggerDir = "../docs/swagger"
 	}

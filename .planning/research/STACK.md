@@ -22,7 +22,7 @@
 
 ## Known Drift
 
-- Local README and Makefile still reference ClickHouse as if it is currently part of the default stack.
+- Local README and Makefile references still need review where they describe ClickHouse as if it is currently part of the default stack.
 - `../docs/tech/stack.md` treats ClickHouse as OLAP storage, but user decision defers it for now.
 - UI dependency list is minimal and does not include drag/drop grid or chart libraries despite roadmap language around dashboard builder.
 

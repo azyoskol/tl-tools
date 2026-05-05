@@ -1,7 +1,7 @@
 # Research: Architecture
 
 **Defined:** 2026-05-05
-**Sources:** `.planning/codebase/ARCHITECTURE.md`, `../docs/STATUS.md`, `BACKEND_PLAN.md`, `docs/architecture.md`
+**Sources:** `.planning/codebase/ARCHITECTURE.md`, `../docs/STATUS.md`, `../docs/tech/app/BACKEND_PLAN.md`, `../docs/tech/app/docs/architecture.md`
 
 ## Current Architecture
 

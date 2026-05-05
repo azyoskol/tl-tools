@@ -110,7 +110,7 @@ Planning decision: the current Community Preview roadmap should not require Clic
 - UI reads mostly mock data even though backend repos/services exist.
 - README/docs promise broader capabilities than the current executable app.
 - ClickHouse appears in collectors and Makefile but not in compose.
-- `../docs/STATUS.md` is more accurate than local README for maturity and should govern planning.
+- `../docs/STATUS.md` is more accurate than moved app README for maturity and should govern planning.
 
 ## Recommended Direction
 

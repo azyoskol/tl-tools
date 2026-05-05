@@ -12,7 +12,7 @@ v1 here means the full planned product roadmap baseline, with Community Preview 
 - [ ] **FOUND-01**: Developer can run the default local stack with API, UI, PostgreSQL/TimescaleDB, and Redis using Docker Compose.
 - [ ] **FOUND-02**: API startup applies embedded SQL migrations before serving application routes.
 - [ ] **FOUND-03**: API startup wires config, Postgres pool, Redis clients, repositories, caches, services, and handlers through one runtime path.
-- [ ] **FOUND-04**: Makefile and README commands match the actual default stack and do not require ClickHouse for Community Preview.
+- [ ] **FOUND-04**: README, Makefile, and moved app documentation match the actual default stack and do not require ClickHouse for Community Preview.
 - [ ] **FOUND-05**: Every Go source file starts with the required `AGPL-3.0-or-later` SPDX header.
 
 ### Authentication And Access

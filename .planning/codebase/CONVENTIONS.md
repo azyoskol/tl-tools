@@ -93,10 +93,10 @@ See `.planning/codebase/TESTING.md` for details.
 
 ## Documentation Conventions
 
-- App-local technical notes live in `docs/`.
+- App-origin technical notes were moved to `../docs/tech/app/`.
 - Strategic and canonical product docs live in sibling repo `../docs`.
 - GSD planning docs live under `.planning/`.
-- Local issue tracker convention from `AGENTS.md`: markdown files in `docs/`, format `YYYY-MM-DD-{name}-{type}.md`.
+- Issue tracker convention from `AGENTS.md`: markdown files in `../docs/`, format `YYYY-MM-DD-{name}-{type}.md`.
 
 ## Commit And Workflow Conventions
 

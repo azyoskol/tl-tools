@@ -10,13 +10,12 @@
 .
 ├── cmd/api/                 # Main Go API
 ├── collectors/              # Separate collector services
-├── docs/                    # App-local docs and superpowers specs/plans
 ├── ui/                      # React/Vite frontend
 ├── Makefile                 # Development commands
 ├── docker-compose.yaml      # Local runtime stack
 ├── Dockerfile               # API container
-├── README.md                # Product/project overview
-├── BACKEND_PLAN.md          # Backend rewrite plan
+├── README.md                # Root project overview retained in app
+├── CLAUDE.md                # Claude-specific agent notes retained in app
 └── AGENTS.md                # Agent/project instructions
 ```
 
@@ -81,13 +80,21 @@ Each collector has its own `go.mod`, `config.yaml`, and `Dockerfile` where appli
 
 ## Documentation Structure
 
-App-local docs:
+Most app-origin docs have been moved out of this repo to `../docs/tech/app/`. Retained in app:
 
-- `docs/architecture.md`
-- `docs/dashboard_rendering.md`
-- `docs/DashboardWizard.md`
-- `docs/superpowers/specs/2026-05-03-infra-optimization-design.md`
-- `docs/superpowers/plans/2026-05-03-infra-optimization-plan.md`
+- `README.md`
+- `CLAUDE.md`
+- `ui/README.md`
+
+Moved to `../docs/tech/app/`:
+
+- `../docs/tech/app/BACKEND_PLAN.md`
+- `../docs/tech/app/docs/architecture.md`
+- `../docs/tech/app/docs/dashboard_rendering.md`
+- `../docs/tech/app/docs/DashboardWizard.md`
+- `../docs/tech/app/docs/superpowers/specs/2026-05-03-infra-optimization-design.md`
+- `../docs/tech/app/docs/superpowers/plans/2026-05-03-infra-optimization-plan.md`
+- `../docs/tech/app/ui/REFACTORING_PLAN.md`
 
 External canonical docs repo:
 
@@ -142,4 +149,4 @@ Future initialization will add:
 - Collectors are separate modules and should be treated as separate deployable services.
 - The UI mixes `.jsx`, `.js`, `.tsx`, and `.ts` files.
 - Current backend route handlers and repository/service layers are not fully connected.
-- Root `docs/` and sibling `../docs` are distinct; sibling docs are more complete and canonical for product status.
+- Sibling `../docs` is the documentation repository and canonical for product status.

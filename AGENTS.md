@@ -23,7 +23,7 @@ The worktree stays isolated from the main workspace, making it safe to run `make
 
 ## Issue Tracker
 
-- **Type**: Local markdown files in docs/
+- **Type**: Markdown files in ../docs/
 - **Labels**: Plans, Specs
 - **Format**: YYYY-MM-DD-{name}-{type}.md
 

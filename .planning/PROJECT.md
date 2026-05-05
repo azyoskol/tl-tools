@@ -50,7 +50,7 @@ Metraly must give teams a trustworthy self-hosted view of engineering delivery h
 ## Constraints
 
 - **License**: Use `AGPL-3.0-or-later` in source headers and planning docs — user-confirmed.
-- **Canonical status**: Treat `../docs/STATUS.md` as source of truth when local README/docs disagree — user-confirmed.
+- **Canonical status**: Treat `../docs/STATUS.md` as source of truth when local README or moved app documentation disagrees — user-confirmed.
 - **Storage**: Use Postgres/TimescaleDB + Redis for Community Preview; defer ClickHouse — user-confirmed.
 - **Product positioning**: Preserve self-hosted/privacy-first architecture — core product value.
 - **Workflow**: GSD settings are YOLO, coarse granularity, parallel execution, commit docs, research, plan check, verifier — user-confirmed.

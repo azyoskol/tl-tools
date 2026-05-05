@@ -81,5 +81,5 @@ The main entry point `cmd/api/main.go` currently constructs only the JWT key man
 
 - `README.md` still mentions ClickHouse as a current quick-start service, but `docker-compose.yaml` no longer starts ClickHouse.
 - `../docs/STATUS.md` is the canonical external project status; it identifies the code as an early prototype with several fully designed but unimplemented systems.
-- `docs/architecture.md` and `BACKEND_PLAN.md` describe a more complete backend than the currently wired `cmd/api/main.go`.
+- `../docs/tech/app/docs/architecture.md` and `../docs/tech/app/BACKEND_PLAN.md` describe a more complete backend than the currently wired `cmd/api/main.go`.
 - `AGENTS.md` requires Go source files to use `AGPL-3.0-or-later`; some existing Go files are missing the required SPDX header.

@@ -32,7 +32,7 @@ Metraly should be built in a foundation-first sequence. The first five phases pr
 1. `make docker-up` starts only the intended Community Preview dependencies: API, UI, Postgres/TimescaleDB, Redis.
 2. API startup applies migrations and fails clearly on migration/config/database errors.
 3. `cmd/api/main.go` wires config, DB, Redis, repos, caches, services, and handlers through one dependency path.
-4. README and Makefile no longer imply ClickHouse is required for the default preview.
+4. README, Makefile, and moved app documentation no longer imply ClickHouse is required for the default preview.
 5. Go source headers and Swagger license metadata use `AGPL-3.0-or-later`.
 
 ## Phase 2: Auth And Access
