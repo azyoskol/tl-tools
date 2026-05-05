@@ -1,39 +1,86 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Metraly - Team Engineering Metrics API
+// Copyright (C) 2026 Metraly Contributors
+
 package handlers
+
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"net/http"
-	"sync"
+
+	"github.com/getmetraly/metraly/cmd/api/biz"
+	"github.com/getmetraly/metraly/cmd/api/domain"
+	"github.com/getmetraly/metraly/cmd/api/middleware"
+	"github.com/getmetraly/metraly/cmd/api/respond"
 )
-type Dashboard struct {
-	ID          string                 `json:"id,omitempty"`
-	Name        string                 `json:"name"`
-	Description string                 `json:"description"`
-	Widgets     []string               `json:"widgets"`
-	WidgetSizes map[string]string      `json:"widgetSizes"`
-	TimeRange   string                 `json:"timeRange"`
-	Team        string                 `json:"team"`
+
+const fallbackDashboardOwnerID = "admin-seed"
+
+type DashboardHandler struct {
+	svc *biz.DashboardSvc
 }
-var (
-	dashboards = []Dashboard{
-		{ID: "1", Name: "CTO Overview", Description: "Executive summary", Widgets: []string{"dora-overview", "health-score"}, WidgetSizes: map[string]string{"dora-overview": "lg"}, TimeRange: "30d", Team: "All teams"},
-		{ID: "2", Name: "Sprint Dashboard", Description: "Current sprint metrics", Widgets: []string{"velocity", "burndown"}, WidgetSizes: map[string]string{}, TimeRange: "14d", Team: "All teams"},
-	}
-	dashboardsMu sync.Mutex
-)
-func GetDashboardsHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(dashboards)
+
+func NewDashboardHandler(svc *biz.DashboardSvc) *DashboardHandler {
+	return &DashboardHandler{svc: svc}
 }
-func PostDashboardHandler(w http.ResponseWriter, r *http.Request) {
-	var dash Dashboard
-	if err := json.NewDecoder(r.Body).Decode(&dash); err != nil {
-		http.Error(w, err.Error(), 400)
+
+func (h *DashboardHandler) List(w http.ResponseWriter, r *http.Request) {
+	if h == nil || h.svc == nil {
+		respond.Error(w, http.StatusServiceUnavailable, "SERVICE_UNAVAILABLE", "dashboard service unavailable")
 		return
 	}
-	dashboardsMu.Lock()
-	dash.ID = string(rune(len(dashboards) + 1))
-	dashboards = append(dashboards, dash)
-	dashboardsMu.Unlock()
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(dash)
+
+	dashboards, err := h.svc.List(r.Context(), dashboardOwnerID(r))
+	if err != nil {
+		respond.Error(w, http.StatusInternalServerError, "DASHBOARD_LIST_FAILED", err.Error())
+		return
+	}
+	respond.JSON(w, http.StatusOK, dashboards)
+}
+
+func (h *DashboardHandler) Create(w http.ResponseWriter, r *http.Request) {
+	if h == nil || h.svc == nil {
+		respond.Error(w, http.StatusServiceUnavailable, "SERVICE_UNAVAILABLE", "dashboard service unavailable")
+		return
+	}
+
+	var input domain.CreateDashboardInput
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		respond.Error(w, http.StatusBadRequest, "INVALID_JSON", err.Error())
+		return
+	}
+
+	dashboard := &domain.Dashboard{
+		ID:          newDashboardID(),
+		Name:        input.Name,
+		Description: input.Description,
+		Icon:        input.Icon,
+		OwnerID:     dashboardOwnerID(r),
+		IsPublic:    false,
+		Widgets:     input.Widgets,
+		Layout:      input.Layout,
+	}
+
+	if err := h.svc.Create(r.Context(), dashboard); err != nil {
+		respond.Error(w, http.StatusInternalServerError, "DASHBOARD_CREATE_FAILED", err.Error())
+		return
+	}
+	respond.JSON(w, http.StatusOK, dashboard)
+}
+
+func dashboardOwnerID(r *http.Request) string {
+	if claims := middleware.ClaimsFrom(r.Context()); claims != nil && claims.Sub != "" {
+		return claims.Sub
+	}
+	return fallbackDashboardOwnerID
+}
+
+func newDashboardID() string {
+	var b [16]byte
+	if _, err := rand.Read(b[:]); err != nil {
+		return fallbackDashboardOwnerID
+	}
+	return hex.EncodeToString(b[:])
 }

@@ -51,6 +51,10 @@ func activityHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(`{"data":[]}`))
 }
 
+func serviceUnavailableHandler(w http.ResponseWriter, r *http.Request) {
+	handlers.ServiceUnavailable(w, "dashboard service unavailable")
+}
+
 type RouterDeps struct {
 	KeyManager   *auth.KeyManager
 	DashboardSvc *biz.DashboardSvc
@@ -75,18 +79,23 @@ func NewRouter(deps RouterDeps) *chi.Mux {
 	r.Get("/api/v1/role/{role}", roleHandler)
 	r.Get("/api/v1/insights", insightsHandler)
 
+	dashboardHandler := handlers.NewDashboardHandler(deps.DashboardSvc)
+
 	// Protected routes
 	if deps.KeyManager != nil {
 		r.Group(func(r chi.Router) {
 			r.Use(localMiddleware.RequireAuth(deps.KeyManager))
-			r.Get("/api/v1/dashboards", getDashboardsHandler)
-			r.Post("/api/v1/dashboards", postDashboardHandler)
+			r.Get("/api/v1/dashboards", dashboardHandler.List)
+			r.Post("/api/v1/dashboards", dashboardHandler.Create)
 			r.Get("/api/v1/me", meHandler)
 			r.Get("/api/v1/activity", activityHandler)
 		})
+	} else if deps.DashboardSvc != nil {
+		r.Get("/api/v1/dashboards", dashboardHandler.List)
+		r.Post("/api/v1/dashboards", dashboardHandler.Create)
 	} else {
-		r.Get("/api/v1/dashboards", getDashboardsHandler)
-		r.Post("/api/v1/dashboards", postDashboardHandler)
+		r.Get("/api/v1/dashboards", serviceUnavailableHandler)
+		r.Post("/api/v1/dashboards", serviceUnavailableHandler)
 	}
 
 	// Legacy endpoints for existing UI (public)
@@ -169,28 +178,6 @@ func roleHandler(w http.ResponseWriter, r *http.Request) {
 // @Router /api/v1/insights [get]
 func insightsHandler(w http.ResponseWriter, r *http.Request) {
 	handlers.InsightsHandler(w, r)
-}
-
-// @Summary List dashboards
-// @Description Returns list of all dashboards
-// @Tags dashboards
-// @Accept json
-// @Produce json
-// @Success 200 {object} map[string]interface{}
-// @Router /api/v1/dashboards [get]
-func getDashboardsHandler(w http.ResponseWriter, r *http.Request) {
-	handlers.GetDashboardsHandler(w, r)
-}
-
-// @Summary Create dashboard
-// @Description Creates a new dashboard
-// @Tags dashboards
-// @Accept json
-// @Produce json
-// @Success 200 {object} map[string]interface{}
-// @Router /api/v1/dashboards [post]
-func postDashboardHandler(w http.ResponseWriter, r *http.Request) {
-	handlers.PostDashboardHandler(w, r)
 }
 
 func main() {

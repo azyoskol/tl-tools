@@ -71,3 +71,15 @@ func TestNewRouterWithAuth(t *testing.T) {
 		t.Fatal("X-Auth-Checked header not set")
 	}
 }
+
+func TestNewRouter_DashboardServiceUnavailable(t *testing.T) {
+	r := NewRouter(RouterDeps{})
+
+	w := httptest.NewRecorder()
+	req := httptest.NewRequest("GET", "/api/v1/dashboards", nil)
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusServiceUnavailable {
+		t.Fatalf("expected 503, got %d", w.Code)
+	}
+}
