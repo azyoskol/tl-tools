@@ -28,7 +28,7 @@ See: `.planning/PROJECT.md` (updated 2026-05-05)
 
 | Phase | Status | Goal |
 |-------|--------|------|
-| 1 | Pending | Runtime Foundation |
+| 1 | Ready to execute | Runtime Foundation |
 | 2 | Pending | Auth And Access |
 | 3 | Pending | Sandbox Onboarding |
 | 4 | Pending | Dashboard Data Path |
@@ -49,10 +49,10 @@ See: `.planning/PROJECT.md` (updated 2026-05-05)
 
 ## Next Action
 
-Phase 1 context gathered. Plan Phase 1:
+Phase 1 planned. Execute Phase 1:
 
 ```text
-$gsd-plan-phase 1
+$gsd-execute-phase 1
 ```
 
 ## Accumulated Context
@@ -60,8 +60,9 @@ $gsd-plan-phase 1
 ### Roadmap Evolution
 
 - 2026-05-05: Phase 1 discussion captured in `.planning/phases/01-runtime-foundation/01-CONTEXT.md`.
+- 2026-05-05: Phase 1 research and execution plans created in `.planning/phases/01-runtime-foundation/`.
 
 ### Resume Points
 
-- Stopped at: Phase 1 context gathered
-- Resume with: `$gsd-plan-phase 1`
+- Stopped at: Phase 1 planned
+- Resume with: `$gsd-execute-phase 1`

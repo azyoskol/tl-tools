@@ -35,6 +35,21 @@ Metraly should be built in a foundation-first sequence. The first five phases pr
 4. README, Makefile, and moved app documentation no longer imply ClickHouse is required for the default preview.
 5. Go source headers and Swagger license metadata use `AGPL-3.0-or-later`.
 
+**Plans:**
+
+**Wave 1**
+- `01A-runtime-wiring` — Runtime composition, migrations, Redis fallback, startup tests. Covers FOUND-01, FOUND-02, FOUND-03.
+- `01B-dashboard-handler` — Replace active in-memory dashboard handler path with service-backed handlers. Covers FOUND-03.
+- `01C-license-headers` — Add required Go headers and align Swagger license metadata. Covers FOUND-05.
+
+**Wave 2** *(blocked on Wave 1 completion)*
+- `01D-runtime-docs` — Clean Makefile, README, CLAUDE.md, moved app docs, and run final verification. Covers FOUND-01, FOUND-04, FOUND-05.
+
+**Cross-cutting constraints:**
+- Postgres and migrations are mandatory startup dependencies; Redis is optional only with visible degraded cache behavior.
+- ClickHouse must not be required for the default Community Preview runtime.
+- Phase 1 must not expand into Sandbox Inc. onboarding, full dashboard data-path migration, ingestion, Pro licensing, AI, plugins, or Enterprise scope.
+
 ## Phase 2: Auth And Access
 
 **Goal:** Expose a usable auth/access surface for preview users.
