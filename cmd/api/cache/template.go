@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/redis/go-redis/v9"
 	"github.com/getmetraly/metraly/cmd/api/domain"
+	"github.com/redis/go-redis/v9"
 )
 
 type TemplateCache interface {
@@ -21,6 +21,12 @@ type redisTemplateCache struct {
 
 func NewTemplateCache(rdb *redis.Client, ttl time.Duration) TemplateCache {
 	return &redisTemplateCache{rdb: rdb, ttl: ttl}
+}
+
+type noopTemplateCache struct{}
+
+func NewNoopTemplateCache() TemplateCache {
+	return noopTemplateCache{}
 }
 
 func (c *redisTemplateCache) key() string { return "templates" }
@@ -43,4 +49,12 @@ func (c *redisTemplateCache) Set(ctx context.Context, t []*domain.DashboardTempl
 		return err
 	}
 	return c.rdb.Set(ctx, c.key(), b, c.ttl).Err()
+}
+
+func (noopTemplateCache) Get(ctx context.Context) ([]*domain.DashboardTemplate, error) {
+	return nil, ErrCacheMiss
+}
+
+func (noopTemplateCache) Set(ctx context.Context, t []*domain.DashboardTemplate) error {
+	return nil
 }

@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/redis/go-redis/v9"
 	"github.com/getmetraly/metraly/cmd/api/domain"
+	"github.com/redis/go-redis/v9"
 )
 
 type DashboardCache interface {
@@ -21,6 +21,12 @@ type redisDashboardCache struct {
 
 func NewDashboardCache(rdb *redis.Client, ttl time.Duration) DashboardCache {
 	return &redisDashboardCache{rdb: rdb, ttl: ttl}
+}
+
+type noopDashboardCache struct{}
+
+func NewNoopDashboardCache() DashboardCache {
+	return noopDashboardCache{}
 }
 
 func (c *redisDashboardCache) key(id string) string { return "dashboard:" + id }
@@ -43,4 +49,12 @@ func (c *redisDashboardCache) Set(ctx context.Context, d *domain.Dashboard) erro
 		return err
 	}
 	return c.rdb.Set(ctx, c.key(d.ID), b, c.ttl).Err()
+}
+
+func (noopDashboardCache) Get(ctx context.Context, id string) (*domain.Dashboard, error) {
+	return nil, ErrCacheMiss
+}
+
+func (noopDashboardCache) Set(ctx context.Context, d *domain.Dashboard) error {
+	return nil
 }

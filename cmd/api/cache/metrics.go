@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/redis/go-redis/v9"
 	"github.com/getmetraly/metraly/cmd/api/domain"
+	"github.com/redis/go-redis/v9"
 )
 
 var ErrCacheMiss = redis.Nil
@@ -23,6 +23,12 @@ type redisMetricsCache struct {
 
 func NewMetricsCache(rdb *redis.Client, ttl time.Duration) MetricsCache {
 	return &redisMetricsCache{rdb: rdb, ttl: ttl}
+}
+
+type noopMetricsCache struct{}
+
+func NewNoopMetricsCache() MetricsCache {
+	return noopMetricsCache{}
 }
 
 func (c *redisMetricsCache) key(metricID, team string) string {
@@ -51,4 +57,12 @@ func (c *redisMetricsCache) Set(ctx context.Context, metricID, team string, pts 
 		return err
 	}
 	return c.rdb.Set(ctx, c.key(metricID, team), b, c.ttl).Err()
+}
+
+func (noopMetricsCache) Get(ctx context.Context, metricID, team string) ([]domain.MetricDataPoint, error) {
+	return nil, ErrCacheMiss
+}
+
+func (noopMetricsCache) Set(ctx context.Context, metricID, team string, pts []domain.MetricDataPoint) error {
+	return nil
 }
